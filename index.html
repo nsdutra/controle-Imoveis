@@ -1,0 +1,1359 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RUMO - Controle de Imóveis</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 pb-16">
+
+    <!-- ================= TELA DE ABERTURA (SPLASH) ================= -->
+    <div id="splash-screen" class="fixed inset-0 bg-slate-900 z-55 flex flex-col items-center justify-center text-white p-6 transition-opacity duration-500">
+        <div class="w-full max-w-sm text-center space-y-6 flex flex-col justify-between h-full py-8">
+            <div></div>
+            <div class="space-y-6">
+                <div class="w-full h-64 rounded-2xl bg-cover bg-center shadow-2xl border border-slate-700" style="background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80');"></div>
+                <div>
+                    <h1 class="text-4xl font-black tracking-widest text-blue-400">RUMO</h1>
+                    <p class="text-gray-400 text-sm mt-2 font-medium uppercase tracking-wider">Gestão Patrimonial Inteligente</p>
+                </div>
+                <button onclick="entrarNoSistema()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition transform active:scale-95">Acessar Sistema</button>
+            </div>
+            <div class="text-2xs text-slate-500 font-mono">
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v3.4.0</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= HEADER E NAVEGAÇÃO ================= -->
+    <header id="main-header" class="hidden bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="p-3 flex justify-between items-center bg-slate-950">
+            <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform" onclick="voltarParaSplash()">
+                <span class="text-lg font-black tracking-wider text-blue-400">RUMO 🏠</span>
+                <span class="text-4xs font-mono text-slate-500">v3.4.0</span>
+            </div>
+            <button onclick="voltarParaSplash()" class="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">Sair</button>
+        </div>
+        <nav class="flex overflow-x-auto text-center text-xs font-medium border-t border-slate-800">
+            <button onclick="switchTab('tab-imoveis')" class="flex-none px-4 py-3 bg-slate-800 border-b-2 border-blue-400" id="btn-tab-imoveis">Imóveis</button>
+            <button onclick="switchTab('tab-contratos')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-contratos">Contratos</button>
+            <button onclick="switchTab('tab-mensal')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-mensal">Mensal</button>
+            <button onclick="switchTab('tab-inadimplencia')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-inadimplencia">Inadimplência</button>
+            <button onclick="switchTab('tab-socios')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-socios">Sócios</button>
+            <button onclick="switchTab('tab-relatorios')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-relatorios">Métricas</button>
+        </nav>
+    </header>
+
+    <main id="main-content" class="hidden p-4 max-w-md mx-auto">
+        
+        <!-- ================= ABA: IMÓVEIS ================= -->
+        <section id="tab-imoveis" class="tab-content active">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-slate-900" id="form-imovel-titulo">Cadastrar Imóvel</h2>
+                <button id="btn-cancelar-edit-imo" onclick="cancelarEdicaoImovel()" class="hidden text-xs text-red-600 font-bold">Cancelar Edição</button>
+            </div>
+            
+            <form id="form-imovel" onsubmit="saveImovel(event)" class="bg-white p-4 rounded-xl shadow-sm mb-6 space-y-3 border border-gray-200">
+                <input type="hidden" id="imo-id">
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Empreendimento</label>
+                        <select id="imo-empreendimento" required class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="Canaã">Canaã</option>
+                            <option value="Golden">Golden</option>
+                            <option value="Guarda Mor">Guarda Mor</option>
+                            <option value="Mirante">Mirante</option>
+                            <option value="Patrocínio">Patrocínio</option>
+                            <option value="Torres da Serra">Torres da Serra</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Tipo de Imóvel</label>
+                        <select id="imo-tipo" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="Apartamento">Apartamento</option>
+                            <option value="Casa">Casa</option>
+                            <option value="Loja">Loja</option>
+                            <option value="Lote">Lote</option>
+                            <option value="Vaga Garagem">Vaga Garagem</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Endereço Completo</label>
+                    <input type="text" id="imo-endereco" required class="w-full p-2 border rounded mt-1 text-sm">
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Tamanho (m²)</label>
+                        <input type="number" id="imo-tamanho" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Nº Suítes</label>
+                        <input type="number" id="imo-suites" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Nº Banheiros</label>
+                        <input type="number" id="imo-banheiros" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Condomínio (R$)</label>
+                        <input type="number" id="imo-condominio" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">IPTU (R$)</label>
+                        <input type="number" id="imo-iptu" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Aluguel Alvo (R$)</label>
+                        <input type="number" id="imo-valor" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-black text-slate-700 uppercase">Sócios e Porcentagem (%)</span>
+                        <button type="button" onclick="adicionarSocioInput()" class="text-3xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold border border-blue-200">+ Adicionar Sócio</button>
+                    </div>
+                    <div id="proprietarios-divisao" class="space-y-2 text-xs"></div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Mídias e Fotos do Imóvel</label>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <input type="file" id="imo-file-picker" accept="image/*" class="hidden" onchange="processarFotoLocal(this)">
+                            <button type="button" onclick="document.getElementById('imo-file-picker').click()" class="bg-slate-800 text-white font-bold text-2xs py-2 px-4 rounded-lg border border-slate-700 shadow-sm">📸 Escolher Foto do Celular</button>
+                            <span id="foto-status-label" class="text-3xs text-gray-400 italic">Nenhuma foto anexada</span>
+                        </div>
+                        <div id="form-image-preview-container" class="hidden">
+                            <img id="form-image-preview" src="" class="w-24 h-24 object-cover rounded-lg border shadow-sm">
+                        </div>
+                    </div>
+                    <input type="hidden" id="imo-fotos-storage">
+                </div>
+
+                <button type="submit" id="btn-salvar-imo" class="w-full bg-blue-600 text-white p-2.5 rounded-lg font-bold text-sm shadow">Salvar Imóvel</button>
+            </form>
+
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Lista Patrimonial</h2>
+            <div id="lista-imoveis" class="space-y-3"></div>
+        </section>
+
+        <!-- ================= ABA: CONTRATOS ================= -->
+        <section id="tab-contratos" class="tab-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-slate-900" id="form-contrato-titulo">Novo Contrato de Locação</h2>
+                <button id="btn-cancelar-edit-con" onclick="cancelarEdicaoContrato()" class="hidden text-xs text-red-600 font-bold">Cancelar Edição</button>
+            </div>
+            
+            <form id="form-contrato" onsubmit="saveContrato(event)" class="bg-white p-4 rounded-xl shadow-sm mb-6 space-y-3 border border-gray-200">
+                <input type="hidden" id="con-id">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Vincular Imóvel</label>
+                    <select id="con-imovel" required class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                        <option value="">-- Escolha o Imóvel --</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Nome do Locatário</label>
+                        <input type="text" id="con-locatario" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">CPF</label>
+                        <input type="text" id="con-cpf" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">WhatsApp</label>
+                        <input type="tel" id="con-whatsapp" class="w-full p-2 border rounded mt-1 text-sm" placeholder="11999999999">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">E-mail</label>
+                        <input type="email" id="con-email" class="w-full p-2 border rounded mt-1 text-sm" placeholder="nome@email.com">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Início Vigência</label>
+                        <input type="date" id="con-inicio" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Fim Vigência</label>
+                        <input type="date" id="con-fim" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Valor Atual (R$)</label>
+                        <input type="number" id="con-valor" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Índice Reajuste</label>
+                        <select id="con-reajuste" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="IPCA">IPCA</option>
+                            <option value="IGP-M">IGP-M</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">IPTU por conta</label>
+                        <select id="con-iptu" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="Locatário">Locatário</option>
+                            <option value="Proprietário">Proprietário</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" id="btn-salvar-con" class="w-full bg-green-600 text-white p-2.5 rounded-lg font-bold text-sm shadow">Firmar / Atualizar Contrato</button>
+            </form>
+
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Contratos de Locação Ativos</h2>
+            <div id="lista-contratos" class="space-y-3"></div>
+        </section>
+
+        <!-- ================= ABA: MENSALIDADES ================= -->
+        <section id="tab-mensal" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Faturamento Mensal</h2>
+            
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Mês de Competência</label>
+                    <div class="flex gap-2 items-center mt-1">
+                        <select id="men-referencia" class="flex-1 p-2 border rounded text-sm bg-gray-50">
+                            <!-- Preenchido dinamicamente -->
+                        </select>
+                        <button onclick="gerarMensalidades()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow">Gerar Mês</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                    <span class="text-3xs font-bold uppercase text-blue-600">Total a Receber</span>
+                    <p class="text-md font-black text-blue-900 mt-0.5" id="totalizer-a-receber">R$ 0,00</p>
+                </div>
+                <div class="bg-green-50 p-3 rounded-xl border border-green-200">
+                    <span class="text-3xs font-bold uppercase text-green-600">Total Recebido</span>
+                    <p class="text-md font-black text-green-900 mt-0.5" id="totalizer-recebido">R$ 0,00</p>
+                </div>
+            </div>
+
+            <h2 class="text-lg font-bold mb-2 text-blue-900">Fila de Recebimentos</h2>
+            <div id="lista-mensalidades" class="space-y-3"></div>
+        </section>
+
+        <!-- ================= ABA: INADIMPLÊNCIA ================= -->
+        <section id="tab-inadimplencia" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-red-900">Painel de Inadimplência</h2>
+            
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-2 text-xs">
+                <div>
+                    <label class="font-bold text-gray-600">Visualizar Agrupado Por</label>
+                    <select id="inad-tipo-agrupamento" onchange="renderInadimplencia()" class="w-full p-1.5 border rounded mt-1 bg-blue-50 font-semibold text-blue-900">
+                        <option value="competencia">Agrupar por Mês / Competência</option>
+                        <option value="locatario">Agrupar por Inquilino / Locatário</option>
+                        <option value="imovel">Agrupar por Empreendimento / Imóvel</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1 border-t border-gray-100">
+                    <div>
+                        <label class="font-bold text-gray-400 text-3xs uppercase">Mês</label>
+                        <select id="inad-filtro-mes" onchange="renderInadimplencia()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-400 text-3xs uppercase">Alvo</label>
+                        <select id="inad-filtro-alvo" onchange="renderInadimplencia()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div class="bg-red-50 p-3 rounded-lg border border-red-200">
+                    <span class="text-2xs font-bold uppercase text-red-600">Total em Aberto</span>
+                    <p class="text-xl font-black text-red-700 mt-1" id="inad-total-geral">R$ 0</p>
+                </div>
+                <div class="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                    <span class="text-2xs font-bold uppercase text-amber-600">Taxa Inadimplência</span>
+                    <p class="text-xl font-black text-amber-700 mt-1" id="inad-taxa">0%</p>
+                </div>
+            </div>
+            <div id="lista-inadimplencia" class="space-y-3"></div>
+        </section>
+
+        <!-- ================= ABA: SÓCIOS ================= -->
+        <section id="tab-socios" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Prestação de Contas Societária</h2>
+            
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-2 text-xs">
+                <div class="grid grid-cols-3 gap-1">
+                    <div>
+                        <label class="font-bold text-gray-500 text-4xs uppercase">Sócio</label>
+                        <select id="socio-filtro-nome" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-500 text-4xs uppercase">Mês Ref</label>
+                        <select id="socio-filtro-mes" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-500 text-4xs uppercase">Ano Civil</label>
+                        <select id="socio-filtro-ano" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
+                            <option value="todos">Todos</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3">
+                <h3 class="text-xs font-black uppercase text-slate-500">Registrar Transferência / Repasse</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="rep-socio" class="w-full p-2 border rounded text-sm bg-gray-50"></select>
+                    <select id="rep-mes" class="w-full p-2 border rounded text-sm bg-gray-50"></select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" id="rep-valor" placeholder="Valor (R$)" class="w-full p-2 border rounded text-sm font-bold">
+                    <input type="date" id="rep-data-transferencia" class="w-full p-2 border rounded text-sm text-center bg-gray-50">
+                </div>
+                <button onclick="registrarRepasse()" class="w-full bg-slate-900 text-white py-2 rounded font-bold text-xs shadow">Confirmar e Liquidar para Sócio</button>
+            </div>
+
+            <h3 class="text-xs font-black text-slate-500 uppercase mb-2 tracking-wide">📋 Extrato de Entradas e Saídas</h3>
+            <div id="lista-socios-prestacao" class="space-y-3"></div>
+        </section>
+
+        <!-- ================= ABA: RELATÓRIOS/MÉTRICAS ================= -->
+        <section id="tab-relatorios" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Filtros das Métricas</h2>
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3">
+                <select id="filtro-imovel" onchange="renderRelatorios()" class="w-full p-2 border rounded text-sm bg-gray-50"><option value="todos">Todos os Imóveis</option></select>
+                <select id="filtro-periodo" onchange="renderRelatorios()" class="w-full p-2 border rounded text-sm bg-gray-50">
+                    <option value="todos">Todo o Período Histórico</option>
+                    <option value="ano-atual">Desde o início de 2026</option>
+                    <option value="1-mes">Último Mês</option>
+                    <option value="3-meses">Últimos 3 Meses</option>
+                    <option value="12-meses">Últimos 12 Meses</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500">
+                    <p class="text-2xs text-gray-500 font-bold uppercase">Ocupação</p>
+                    <p class="text-xl font-black text-slate-900 mt-1" id="rel-taxa">0%</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-500">
+                    <p class="text-2xs text-gray-500 font-bold uppercase">Recebido</p>
+                    <p class="text-lg font-black text-green-700 mt-1" id="rel-faturamento">R$ 0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-purple-500">
+                    <p class="text-2xs text-gray-500 font-bold uppercase">Potencial</p>
+                    <p class="text-lg font-black text-purple-700 mt-1" id="rel-potencial">R$ 0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-gray-400">
+                    <p class="text-2xs text-gray-500 font-bold uppercase">Imóveis</p>
+                    <p class="text-2xs font-semibold text-slate-700 mt-2" id="rel-contagem">-</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- ================= NOVO PAINEL HÍBRIDO (VISUALIZAR + DISPARAR LINKS SEPARADOS) ================= -->
+    <div id="pdf-wrapper" class="hidden fixed inset-0 bg-slate-900 z-99 flex flex-col p-4 overflow-y-auto">
+        <div class="flex justify-between items-center p-3 bg-slate-950 text-white rounded-t-xl max-w-lg mx-auto w-full border-b border-slate-800">
+            <span class="text-xs font-black text-blue-400">🔍 CONFERÊNCIA DE DOCUMENTO</span>
+            <button onclick="fecharPreviewPdf()" class="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-3 py-1.5 rounded shadow">Fechar</button>
+        </div>
+        
+        <!-- Recibo em Tela (Fase 1: Visualização) -->
+        <div id="pdf-template" class="bg-white p-6 max-w-lg mx-auto w-full shadow-2xl" style="font-family: Arial, sans-serif; color: #333;">
+            <div style="border: 2px solid #1a365d; padding: 22px; border-radius: 8px; background-color: #fafafa;">
+                <h1 style="color: #1a365d; border-bottom: 2px solid #1a365d; padding-bottom: 10px; text-transform: uppercase; font-size: 16px; font-weight: 900;">RUMO - Recibo de Quitação Patrimonial</h1>
+                <div style="margin-top: 15px; font-size: 13px; text-align: justify; line-height: 1.6; color: #2d3748;">
+                    Confirmamos que o locatário <strong id="pdf-locatario" style="color:#1a365d;">-</strong>, portador do CPF nº <strong id="pdf-cpf">-</strong>, efetuou o pagamento líquido de <strong style="color:#2f855a;">R$ <span id="pdf-valor">0,00</span></strong> referente à locação do imóvel em <strong id="pdf-endereco">-</strong>, para a competência de faturamento de <strong id="pdf-mes">-</strong>.
+                </div>
+                <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 12px;">
+                    <tr style="background-color: #1a365d; color: white; font-weight: bold;"><td colspan="2" style="padding: 8px;">Detalhes do Recebimento</td></tr>
+                    <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: bold; background:#edf2f7; width:40%;">Conta Destino:</td><td id="pdf-banco" style="padding: 8px; border: 1px solid #e2e8f0; color:#2d3748;">-</td></tr>
+                    <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: bold; background:#edf2f7;">Data de Liquidação:</td><td id="pdf-data" style="padding: 8px; border: 1px solid #e2e8f0; color:#2d3748;">-</td></tr>
+                    <tr><td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: bold; background:#edf2f7;">Histórico/Obs:</td><td id="pdf-obs" style="padding: 8px; border: 1px solid #e2e8f0; color:#718096; font-style: italic;">-</td></tr>
+                </table>
+            </div>
+        </div>
+
+        <!-- Fase 2: Botões de Ação Isolados (Baixar PDF local e Abrir os contatos do Inquilino com a mensagem de forma nativa) -->
+        <div class="bg-slate-950 p-4 max-w-lg mx-auto w-full rounded-b-xl border-t border-slate-800 space-y-2">
+            <button onclick="baixarArquivoPdfLocal()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-2.5 rounded-xl shadow flex items-center justify-center gap-1">
+                📥 1º Baixar Arquivo PDF Oficial no Celular
+            </button>
+            <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-800">
+                <button onclick="executarCanalComunicação('zap')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-3xs py-2 rounded-xl shadow">
+                    🟢 Enviar via WhatsApp
+                </button>
+                <button onclick="executarCanalComunicação('email')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-3xs py-2 rounded-xl border border-slate-700">
+                    🔵 Enviar via E-mail
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SCRIPT DE REGRAS DE NEGÓCIO -->
+    <script>
+        let imoveis = JSON.parse(localStorage.getItem('rumo_imoveis')) || [];
+        let contratos = JSON.parse(localStorage.getItem('rumo_contratos')) || [];
+        let mensalidades = JSON.parse(localStorage.getItem('rumo_mensalidades')) || [];
+        let repasses = JSON.parse(localStorage.getItem('rumo_repasses')) || [];
+
+        let activeMenId = null;
+        let activeConId = null;
+        let sociosAdicionais = []; 
+
+        const arrayCompetencias = [];
+        for(let ano = 2026; ano <= 2028; ano++) {
+            for(let mes = 1; mes <= 12; mes++) {
+                let mStr = mes < 10 ? '0' + mes : mes;
+                arrayCompetencias.push(`${mStr}/${ano}`);
+            }
+        }
+
+        function entrarNoSistema() {
+            document.getElementById('splash-screen').classList.add('opacity-0');
+            setTimeout(() => {
+                document.getElementById('splash-screen').classList.add('hidden');
+                document.getElementById('main-header').classList.remove('hidden');
+                document.getElementById('main-content').classList.remove('hidden');
+                
+                const hoje = new Date().toISOString().split('T')[0];
+                const inputDataRep = document.getElementById('rep-data-transferencia');
+                if (inputDataRep) inputDataRep.value = hoje;
+
+                configurarFiltrosIniciais(); 
+                saveAll(); 
+            }, 500);
+        }
+
+        function voltarParaSplash() {
+            document.getElementById('splash-screen').classList.remove('hidden', 'opacity-0');
+            document.getElementById('main-header').classList.add('hidden');
+            document.getElementById('main-content').classList.add('hidden');
+        }
+
+        function processarFotoLocal(inputElement) {
+            const file = inputElement.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const base64Data = e.target.result;
+                document.getElementById('imo-fotos-storage').value = base64Data;
+                document.getElementById('form-image-preview').src = base64Data;
+                document.getElementById('form-image-preview-container').classList.remove('hidden');
+                document.getElementById('foto-status-label').innerText = "📸 Foto carregada!";
+                document.getElementById('foto-status-label').className = "text-3xs text-green-600 font-bold";
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function configurarFiltrosIniciais() {
+            const menRefSelect = document.getElementById('men-referencia');
+            if(menRefSelect) {
+                const currentVal = menRefSelect.value;
+                menRefSelect.innerHTML = '';
+                arrayCompetencias.forEach(comp => {
+                    menRefSelect.innerHTML += `<option value="${comp}">${comp}</option>`;
+                });
+                
+                if (currentVal && arrayCompetencias.includes(currentVal)) {
+                    menRefSelect.value = currentVal;
+                } else if(mensalidades && mensalidades.length > 0) {
+                    let ultimas = mensalidades.map(m => m.referencia);
+                    let idxUltima = -1;
+                    arrayCompetencias.forEach((c, idx) => {
+                        if(ultimas.includes(c)) idxUltima = idx;
+                    });
+                    if(idxUltima !== -1 && idxUltima + 1 < arrayCompetencias.length) {
+                        menRefSelect.value = arrayCompetencias[idxUltima + 1];
+                    } else {
+                        menRefSelect.value = "07/2026";
+                    }
+                } else {
+                    menRefSelect.value = "07/2026";
+                }
+            }
+        }
+
+        function saveAll() {
+            localStorage.setItem('rumo_imoveis', JSON.stringify(imoveis));
+            localStorage.setItem('rumo_contratos', JSON.stringify(contratos));
+            localStorage.setItem('rumo_mensalidades', JSON.stringify(mensalidades));
+            localStorage.setItem('rumo_repasses', JSON.stringify(repasses));
+            
+            renderSocioInputs();
+            renderImoveis();
+            renderContratos();
+            renderMensalidades();
+            renderInadimplencia();
+            renderSociosDistribricao();
+            renderRelatorios();
+            atualizarListaSelecaoSociosRepasse();
+            atualizarDropdownFiltrosDinamicos();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('bg-slate-800', 'border-b-2', 'border-blue-400'));
+            document.getElementById('btn-' + tabId).classList.add('bg-slate-800', 'border-b-2', 'border-blue-400');
+        }
+
+        function atualizarDropdownFiltrosDinamicos() {
+            const selectInadMes = document.getElementById('inad-filtro-mes');
+            const valInadMes = selectInadMes ? selectInadMes.value : 'todos';
+            const selectInadAlvo = document.getElementById('inad-filtro-alvo');
+            const valInadAlvo = selectInadAlvo ? selectInadAlvo.value : 'todos';
+
+            if(selectInadMes) {
+                let sMes = new Set();
+                mensalidades.forEach(m => sMes.add(m.referencia));
+                selectInadMes.innerHTML = '<option value="todos">Todos os Meses</option>';
+                sMes.forEach(m => selectInadMes.innerHTML += `<option value="${m}">${m}</option>`);
+                selectInadMes.value = valInadMes;
+            }
+
+            if(selectInadAlvo) {
+                selectInadAlvo.innerHTML = '<option value="todos">Todos os Alvos</option>';
+                contratos.forEach(c => {
+                    const imo = imoveis.find(i => i.id === c.imovelId);
+                    let desc = `${c.locatario} (${imo ? imo.empreendimento : ''})`;
+                    selectInadAlvo.innerHTML += `<option value="${c.id}">${desc}</option>';
+                });
+                selectInadAlvo.value = valInadAlvo;
+            }
+
+            const selectSocioNome = document.getElementById('socio-filtro-nome');
+            const valSocioNome = selectSocioNome ? selectSocioNome.value : 'todos';
+            const selectSocioMes = document.getElementById('socio-filtro-mes');
+            const valSocioMes = selectSocioMes ? selectSocioMes.value : 'todos';
+            const selectRepMes = document.getElementById('rep-mes');
+
+            let todosSocios = new Set(["Ruyter"]);
+            imoveis.forEach(imo => { if(imo.divisao) Object.keys(imo.divisao).forEach(s => todosSocios.add(s)); });
+
+            if(selectSocioNome) {
+                selectSocioNome.innerHTML = '<option value="todos">Todos os Sócios</option>';
+                todosSocios.forEach(s => selectSocioNome.innerHTML += `<option value="${s}">${s}</option>`);
+                selectSocioNome.value = valSocioNome;
+            }
+
+            let todosMesesMensalidades = new Set();
+            mensalidades.forEach(m => todosMesesMensalidades.add(m.referencia));
+
+            if(selectSocioMes) {
+                selectSocioMes.innerHTML = '<option value="todos">Todos os Meses</option>';
+                todosMesesMensalidades.forEach(m => selectSocioMes.innerHTML += `<option value="${m}">${m}</option>`);
+                selectSocioMes.value = valSocioMes;
+            }
+
+            if(selectRepMes) {
+                const valRep = selectRepMes.value;
+                selectRepMes.innerHTML = '';
+                arrayCompetencias.forEach(m => selectRepMes.innerHTML += `<option value="${m}">${m}</option>`);
+                if(valRep) selectRepMes.value = valRep;
+            }
+        }
+
+        function renderSocioInputs() {
+            const container = document.getElementById('proprietarios-divisao');
+            if(!container) return;
+            container.innerHTML = '';
+
+            container.innerHTML += `
+                <div class="flex items-center justify-between gap-2 border-b border-gray-100 pb-1">
+                    <span class="font-bold text-slate-800">Ruyter (Padrão)</span>
+                    <div class="flex items-center space-x-1">
+                        <input type="number" id="socio-pct-Ruyter" value="100" min="0" max="100" class="w-16 p-1 border rounded text-center font-black text-blue-600 bg-gray-50">
+                        <span class="font-bold text-gray-500">%</span>
+                    </div>
+                </div>
+            `;
+
+            sociosAdicionais.forEach((socio, index) => {
+                container.innerHTML += `
+                    <div class="flex items-center justify-between gap-2 text-xs">
+                        <span class="font-medium text-slate-700">${socio.nome}</span>
+                        <div class="flex items-center space-x-1">
+                            <input type="number" data-index="${index}" value="${socio.pct}" min="0" max="100" onchange="atualizarPctSocioAdicional(${index}, this.value)" class="socio-adicional-input w-16 p-1 border rounded text-center font-bold">
+                            <span>%</span>
+                            <button type="button" onclick="removerSocioInput(${index})" class="text-red-500 font-bold px-1 ml-1">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        function adicionarSocioInput() {
+            const nome = prompt("Digite o nome do novo sócio:");
+            if(!nome || nome.trim() === "") return;
+            if(nome.trim().toLowerCase() === 'ruyter') return alert("Ruyter já é padrão!");
+            sociosAdicionais.push({ nome: nome.trim(), pct: 0 });
+            renderSocioInputs();
+        }
+
+        function removerSocioInput(index) {
+            sociosAdicionais.splice(index, 1);
+            renderSocioInputs();
+        }
+
+        function atualizarPctSocioAdicional(index, valor) {
+            sociosAdicionais[index].pct = parseFloat(valor) || 0;
+        }
+
+        function atualizarListaSelecaoSociosRepasse() {
+            const repSelect = document.getElementById('rep-socio');
+            if(!repSelect) return;
+            let todosOsSocios = new Set(["Ruyter"]);
+            imoveis.forEach(imo => {
+                if(imo.divisao) Object.keys(imo.divisao).forEach(s => todosOsSocios.add(s));
+            });
+            repSelect.innerHTML = '';
+            todosOsSocios.forEach(s => { repSelect.innerHTML += `<option value="${s}">${s}</option>`; });
+        }
+
+        function saveImovel(e) {
+            e.preventDefault();
+            const id = document.getElementById('imo-id').value;
+            
+            let divisao = {};
+            const pctRuyter = parseFloat(document.getElementById('socio-pct-Ruyter').value) || 0;
+            divisao["Ruyter"] = pctRuyter;
+            
+            let somaPct = pctRuyter;
+            sociosAdicionais.forEach(socio => {
+                divisao[socio.nome] = socio.pct;
+                somaPct += socio.pct;
+            });
+
+            if(somaPct !== 100) {
+                alert("⚠️ A soma societária precisa dar 100%. Total: " + somaPct + "%");
+                return;
+            }
+
+            const dados = {
+                id: id || 'imo_' + Date.now(),
+                empreendimento: document.getElementById('imo-empreendimento').value,
+                endereco: document.getElementById('imo-endereco').value,
+                tipo: document.getElementById('imo-tipo').value,
+                tamanho: document.getElementById('imo-tamanho').value,
+                suites: document.getElementById('imo-suites').value,
+                banheiros: document.getElementById('imo-banheiros').value,
+                condominio: parseFloat(document.getElementById('imo-condominio').value) || 0,
+                iptu: parseFloat(document.getElementById('imo-iptu').value) || 0,
+                valor: parseFloat(document.getElementById('imo-valor').value) || 0,
+                fotos: document.getElementById('imo-fotos-storage').value || '',
+                divisao: divisao,
+                status: id ? imoveis.find(i => i.id === id).status : 'Vago'
+            };
+
+            if(id) {
+                const idx = imoveis.findIndex(i => i.id === id);
+                imoveis[idx] = dados;
+            } else {
+                imoveis.push(dados);
+            }
+
+            document.getElementById('form-imovel').reset();
+            document.getElementById('imo-fotos-storage').value = '';
+            document.getElementById('form-image-preview-container').classList.add('hidden');
+            document.getElementById('foto-status-label').innerText = "Nenhuma foto anexada";
+            document.getElementById('foto-status-label').className = "text-3xs text-gray-400 italic";
+            cancelarEdicaoImovel();
+            saveAll();
+            alert("Imóvel salvo com sucesso!");
+        }
+
+        function editarImovel(id) {
+            const imo = imoveis.find(i => i.id === id);
+            if(!imo) return;
+            document.getElementById('imo-id').value = imo.id;
+            document.getElementById('imo-empreendimento').value = imo.empreendimento || 'Canaã';
+            document.getElementById('imo-endereco').value = imo.endereco;
+            document.getElementById('imo-tipo').value = imo.tipo;
+            document.getElementById('imo-tamanho').value = imo.tamanho;
+            document.getElementById('imo-suites').value = imo.suites || 0;
+            document.getElementById('imo-banheiros').value = imo.banheiros || 0;
+            document.getElementById('imo-condominio').value = imo.condominio || 0;
+            document.getElementById('imo-iptu').value = imo.iptu || 0;
+            document.getElementById('imo-valor').value = imo.valor;
+            document.getElementById('imo-fotos-storage').value = imo.fotos || '';
+            
+            if (imo.fotos) {
+                document.getElementById('form-image-preview').src = imo.fotos;
+                document.getElementById('form-image-preview-container').classList.remove('hidden');
+                document.getElementById('foto-status-label').innerText = "📸 Foto em memória";
+                document.getElementById('foto-status-label').className = "text-3xs text-blue-600 font-bold";
+            }
+
+            sociosAdicionais = [];
+            if(imo.divisao) {
+                document.getElementById('socio-pct-Ruyter').value = imo.divisao["Ruyter"] || 0;
+                Object.keys(imo.divisao).forEach(nome => {
+                    if(nome !== "Ruyter") sociosAdicionais.push({ nome: nome, pct: imo.divisao[nome] });
+                });
+            }
+            renderSocioInputs();
+            document.getElementById('form-imovel-titulo').innerText = "Editar Imóvel 📝";
+            document.getElementById('btn-cancelar-edit-imo').classList.remove('hidden');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function cancelarEdicaoImovel() {
+            document.getElementById('imo-id').value = '';
+            document.getElementById('form-imovel-titulo').innerText = "Cadastrar Imóvel";
+            document.getElementById('btn-cancelar-edit-imo').classList.add('hidden');
+            sociosAdicionais = [];
+            renderSocioInputs();
+        }
+
+        function renderImoveis() {
+            const container = document.getElementById('lista-imoveis');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const selectCon = document.getElementById('con-imovel');
+            const selConVal = selectCon ? selectCon.value : '';
+            if(selectCon) selectCon.innerHTML = '<option value="">-- Escolha o Imóvel --</option>';
+
+            const selectFiltro = document.getElementById('filtro-imovel');
+            const selFilVal = selectFiltro ? selectFiltro.value : 'todos';
+            if(selectFiltro) selectFiltro.innerHTML = '<option value="todos">Todos os Imóveis</option>';
+
+            imoveis.forEach(imo => {
+                let divSoc = '';
+                for(let s in imo.divisao) divSoc += `${s}: ${imo.divisao[s]}% | `;
+                
+                let ftHtml = '';
+                if(imo.fotos && imo.fotos.length > 20) {
+                    ftHtml = `
+                    <div class="mt-3 block">
+                        <img src="${imo.fotos}" class="w-full h-48 rounded-xl object-cover border-2 border-gray-200 shadow-md bg-slate-100" alt="Foto do Imóvel">
+                    </div>`;
+                }
+
+                container.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex justify-between items-start">
+                            <span class="text-2xs font-bold px-2 py-0.5 rounded ${imo.status==='Vago'?'bg-amber-100 text-amber-800':'bg-green-100 text-green-800'}">${imo.status} | ${imo.tipo}</span>
+                            <span class="text-sm font-black text-slate-900">R$ ${imo.valor}</span>
+                        </div>
+                        <p class="text-xs font-bold mt-1 text-blue-900 uppercase tracking-wide">🏢 ${imo.empreendimento || 'Canaã'}</p>
+                        <p class="text-xs font-medium text-slate-700">${imo.endereco}</p>
+                        <p class="text-2xs text-gray-500 mt-1">Suítes: ${imo.suites} | WC: ${imo.banheiros} | Cond: R$ ${imo.condominio} | IPTU: R$ ${imo.iptu}</p>
+                        <p class="text-2xs text-blue-950 font-semibold mt-1 bg-blue-50/50 p-1 rounded">👥 ${divSoc}</p>
+                        ${ftHtml}
+                        <div class="mt-3 flex gap-2">
+                            <button onclick="copyResumo('${imo.endereco}', '${imo.tipo}', ${imo.valor}, ${imo.suites}, ${imo.condominio})" class="text-2xs bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded border">📋 Copiar Zap</button>
+                            <button onclick="editarImovel('${imo.id}')" class="text-2xs bg-blue-50 text-blue-700 font-bold px-2 py-1 rounded border border-blue-200">📝 Editar</button>
+                        </div>
+                    </div>
+                `;
+                
+                if(selectCon && (imo.status === 'Vago' || (activeConId && contratos.find(c => c.id === activeConId)?.imovelId === imo.id))) {
+                    selectCon.innerHTML += `<option value="${imo.id}">[${imo.empreendimento || 'Canaã'}] ${imo.endereco.substring(0,25)}...</option>`;
+                }
+                if(selectFiltro) {
+                    selectFiltro.innerHTML += `<option value="${imo.id}">[${imo.empreendimento || 'Canaã'}] ${imo.endereco.substring(0,20)}...</option>`;
+                }
+            });
+            if(selectCon) selectCon.value = selConVal;
+            if(selectFiltro) selectFiltro.value = selFilVal;
+        }
+
+        function copyResumo(end, tipo, val, suites, cond) {
+            const txt = `🏠 *RUMO IMÓVEIS - OPORTUNIDADE*\n📍 *Tipo:* ${tipo}\n📍 *Endereço:* ${end}\n📐 *Suítes:* ${suites}\n💰 *Valor Locação:* R$ ${val.toLocaleString('pt-BR')}\n📦 *Condomínio:* R$ ${cond}`;
+            navigator.clipboard.writeText(txt);
+            alert("Resumo de locação copiado!");
+        }
+
+        function saveContrato(e) {
+            e.preventDefault();
+            const id = document.getElementById('con-id').value;
+            const imoId = document.getElementById('con-imovel').value;
+            const valorNovo = parseFloat(document.getElementById('con-valor').value);
+            const dataFim = document.getElementById('con-fim').value;
+
+            if(!imoId) return alert("⚠️ Selecione um imóvel.");
+
+            if(id) {
+                const idx = contratos.findIndex(c => c.id === id);
+                if(idx !== -1) {
+                    let con = contratos[idx];
+                    if(con.valor !== valorNovo || con.fim !== dataFim) {
+                        if(!con.historico) con.historico = [];
+                        con.historico.push({ valor: con.valor, inicio: con.inicio, fim: con.fim });
+                    }
+                    con.imovelId = imoId;
+                    con.locatario = document.getElementById('con-locatario').value;
+                    con.cpf = document.getElementById('con-cpf').value;
+                    con.whatsapp = document.getElementById('con-whatsapp').value.trim();
+                    con.email = document.getElementById('con-email').value.trim();
+                    con.inicio = document.getElementById('con-inicio').value;
+                    con.fim = dataFim;
+                    con.valor = valorNovo;
+                    con.reajuste = document.getElementById('con-reajuste').value;
+                    con.iptu = document.getElementById('con-iptu').value;
+                    contratos[idx] = con;
+                }
+            } else {
+                contratos.push({
+                    id: 'con_' + Date.now(),
+                    imovelId: imoId,
+                    locatario = document.getElementById('con-locatario').value,
+                    cpf: document.getElementById('con-cpf').value,
+                    whatsapp: document.getElementById('con-whatsapp').value.trim(),
+                    email: document.getElementById('con-email').value.trim(),
+                    inicio: document.getElementById('con-inicio').value,
+                    fim: dataFim,
+                    valor: valorNovo,
+                    reajuste: document.getElementById('con-reajuste').value,
+                    iptu: document.getElementById('con-iptu').value,
+                    historico: []
+                });
+                const imIdx = imoveis.findIndex(i => i.id === imoId);
+                if(imIdx !== -1) imoveis[imIdx].status = 'Alugado';
+            }
+
+            document.getElementById('form-contrato').reset();
+            cancelarEdicaoContrato();
+            saveAll();
+            alert("Contrato assinado com sucesso!");
+        }
+
+        function editarContrato(id) {
+            activeConId = id;
+            const con = contratos.find(c => c.id === id);
+            if(!con) return;
+            renderImoveis();
+            document.getElementById('con-id').value = con.id;
+            document.getElementById('con-imovel').value = con.imovelId;
+            document.getElementById('con-locatario').value = con.locatario;
+            document.getElementById('con-cpf').value = con.cpf;
+            document.getElementById('con-whatsapp').value = con.whatsapp || '';
+            document.getElementById('con-email').value = con.email || '';
+            document.getElementById('con-inicio').value = con.inicio;
+            document.getElementById('con-fim').value = con.fim;
+            document.getElementById('con-valor').value = con.valor;
+            document.getElementById('con-reajuste').value = con.reajuste;
+            document.getElementById('con-iptu').value = con.iptu;
+            document.getElementById('form-contrato-titulo').innerText = "Renovar / Editar Contrato 📝";
+            document.getElementById('btn-cancelar-edit-con').classList.remove('hidden');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+        function cancelarEdicaoContrato() {
+            activeConId = null;
+            document.getElementById('con-id').value = '';
+            document.getElementById('form-contrato-titulo').innerText = "Novo Contrato de Locação";
+            document.getElementById('btn-cancelar-edit-con').classList.add('hidden');
+            renderImoveis();
+        }
+
+        function renderContratos() {
+            const container = document.getElementById('lista-contratos');
+            if(!container) return;
+            container.innerHTML = '';
+            contratos.forEach(con => {
+                const imo = imoveis.find(i => i.id === con.imovelId);
+                container.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex justify-between font-bold text-sm text-slate-900">
+                            <span>👤 ${con.locatario}</span>
+                            <span class="text-green-700">R$ ${con.valor}/mês</span>
+                        </div>
+                        <p class="text-2xs text-gray-500 mt-1">📍 Empreendimento: ${imo ? imo.empreendimento : '-'}</p>
+                        <p class="text-2xs text-gray-600 font-semibold">Vigência: ${con.inicio} até ${con.fim}</p>
+                        <button onclick="editarContrato('${con.id}')" class="mt-2 text-2xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-1 rounded font-bold">Reajustar</button>
+                    </div>
+                `;
+            });
+        }
+
+        function gerarMensalidades() {
+            const selectRef = document.getElementById('men-referencia');
+            const ref = selectRef.value;
+            
+            if(!contratos || contratos.length === 0) {
+                alert("⚠️ A competência avançou, mas os valores continuam zerados pois não há contratos ativos na aba Contratos.");
+                const idxAtual = arrayCompetencias.indexOf(ref);
+                if(idxAtual !== -1 && idxAtual + 1 < arrayCompetencias.length) {
+                    selectRef.value = arrayCompetencias[idxAtual + 1];
+                }
+                saveAll();
+                return;
+            }
+
+            contratos.forEach(con => {
+                const existe = mensalidades.some(m => m.contratoId === con.id && m.referencia === ref);
+                if(!existe) {
+                    mensalidades.push({
+                        id: 'men_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                        contratoId: con.id,
+                        referencia: ref,
+                        status: 'Pendente',
+                        banco: '-',
+                        dataPgto: '-',
+                        observacao: '',
+                        valorConfirmado: con.valor
+                    });
+                }
+            });
+
+            const idxAtual = arrayCompetencias.indexOf(ref);
+            if(idxAtual !== -1 && idxAtual + 1 < arrayCompetencias.length) {
+                selectRef.value = arrayCompetencias[idxAtual + 1];
+            }
+
+            saveAll();
+            alert(`Faturamento da competência ${ref} gerado.`);
+        }
+
+        function liquidarMensalidade(menId) {
+            const banco = document.getElementById(`banco-${menId}`).value;
+            const dataManual = document.getElementById(`data-${menId}`).value;
+            const valorManual = parseFloat(document.getElementById(`valor-${menId}`).value);
+            const obsManual = document.getElementById(`obs-${menId}`).value.trim();
+
+            if(!dataManual || isNaN(valorManual)) return alert("Preencha a data e o valor recebido.");
+
+            const idx = mensalidades.findIndex(m => m.id === menId);
+            if(idx !== -1) {
+                mensalidades[idx].status = 'Pago';
+                mensalidades[idx].banco = banco;
+                mensalidades[idx].dataPgto = dataManual.split('-').reverse().join('/'); 
+                mensalidades[idx].valorConfirmado = valorManual;
+                mensalidades[idx].observacao = obsManual;
+                saveAll();
+            }
+        }
+
+        function estornarMensalidade(menId) {
+            if(!confirm("Deseja estornar o recebimento?")) return;
+            const idx = mensalidades.findIndex(m => m.id === menId);
+            if(idx !== -1) {
+                mensalidades[idx].status = 'Pendente';
+                mensalidades[idx].banco = '-';
+                mensalidades[idx].dataPgto = '-';
+                saveAll();
+            }
+        }
+
+        function renderMensalidades() {
+            const container = document.getElementById('lista-mensalidades');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            let totalAReceber = 0;
+            let totalRecebido = 0;
+
+            mensalidades.forEach(men => {
+                const con = contratos.find(c => c.id === men.contratoId);
+                if(!con) return;
+                
+                const partesRef = men.referencia.split('/');
+                const dataPadrao15 = `${partesRef[1]}-${partesRef[0]}-15`;
+
+                if(men.status === 'Pendente') {
+                    totalAReceber += con.valor;
+                    container.innerHTML += `
+                        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-amber-500 space-y-2">
+                            <div class="flex justify-between items-start">
+                                <div><p class="text-xs font-bold text-slate-900">${con.locatario}</p><p class="text-3xs text-gray-500">Ref: ${men.referencia}</p></div>
+                                <span class="bg-amber-100 text-amber-800 text-3xs px-2 py-0.5 rounded font-black">Pendente</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-1 text-2xs">
+                                <div>
+                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Banco Destino</label>
+                                    <select id="banco-${men.id}" class="w-full border p-1 rounded bg-gray-50"><option value="Itaú">Itaú</option><option value="Bradesco">Bradesco</option><option value="Nubank">Nubank</option></select>
+                                </div>
+                                <div>
+                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Dia Recebimento</label>
+                                    <input type="date" id="data-${men.id}" value="${dataPadrao15}" class="w-full border p-0.5 rounded bg-gray-50 text-center">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-1 text-2xs">
+                                <div>
+                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Valor Efetivo (R$)</label>
+                                    <input type="number" id="valor-${men.id}" value="${con.valor}" class="w-full border p-1 rounded bg-gray-50 font-bold text-blue-900">
+                                </div>
+                                <div>
+                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Observações Internas</label>
+                                    <input type="text" id="obs-${men.id}" placeholder="Ex: Sem juros" class="w-full border p-1 rounded bg-gray-50">
+                                </div>
+                            </div>
+                            <button onclick="liquidarMensalidade('${men.id}')" class="w-full bg-emerald-600 text-white text-2xs py-1.5 rounded font-bold shadow">Dar Baixa no Caixa</button>
+                        </div>`;
+                } else {
+                    totalRecebido += men.valorConfirmado;
+                    const log = men.envioLog ? `<p class="text-4xs text-blue-950 font-semibold">📬 Log: Notificado via ${men.envioLog.canal} (${men.envioLog.data})</p>` : `<p class="text-4xs text-gray-400">⚠️ Envio pendente</p>`;
+                    const txtObs = men.observacao ? `<p class="text-4xs text-amber-800 italic bg-amber-50 p-1 rounded mt-1">📝 Obs: ${men.observacao}</p>` : '';
+                    container.innerHTML += `
+                        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-green-500">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-xs font-bold text-gray-900">${con.locatario}</p>
+                                    <p class="text-3xs text-gray-500">Ref: ${men.referencia} | R$ ${men.valorConfirmado.toFixed(2)} (${men.banco} - ${men.dataPgto})</p>
+                                    ${log}
+                                    ${txtObs}
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <!-- Ação unificada que o usuário solicitou: visualizar primeiro de forma segura -->
+                                    <button onclick="abrirCentralReciboEActions('${men.id}', '${con.id}')" class="bg-blue-600 text-white text-3xs px-2 py-1.5 rounded font-bold shadow">📄 Abrir Recibo</button>
+                                    <button onclick="estornarMensalidade('${men.id}')" class="bg-red-50 text-red-600 border border-red-200 text-4xs px-2 py-0.5 rounded font-medium">Estornar</button>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+            });
+
+            document.getElementById('totalizer-a-receber').innerText = "R$ " + totalAReceber.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            document.getElementById('totalizer-recebido').innerText = "R$ " + totalRecebido.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        }
+
+        // CARREGA DADOS DO DOCUMENTO NA TELA DE CONFERÊNCIA
+        function abrirCentralReciboEActions(menId, conId) {
+            activeMenId = menId;
+            activeConId = conId;
+            const con = contratos.find(c => c.id === conId);
+            const men = mensalidades.find(m => m.id === menId);
+            if(!con || !men) return alert("Erro de sincronização.");
+
+            const imo = imoveis.find(i => i.id === con.imovelId);
+            
+            document.getElementById('pdf-locatario').innerText = con.locatario;
+            document.getElementById('pdf-cpf').innerText = con.cpf;
+            document.getElementById('pdf-valor').innerText = men.valorConfirmado.toLocaleString('pt-BR', {minimumFractionDigits:2});
+            document.getElementById('pdf-endereco').innerText = imo ? imo.endereco : '';
+            document.getElementById('pdf-mes').innerText = men.referencia;
+            document.getElementById('pdf-banco').innerText = men.banco;
+            document.getElementById('pdf-data').innerText = men.dataPgto;
+            document.getElementById('pdf-obs').innerText = men.observacao || 'Sem observações adicionais.';
+
+            document.getElementById('pdf-wrapper').classList.remove('hidden');
+        }
+
+        function fecharPreviewPdf() {
+            document.getElementById('pdf-wrapper').classList.add('hidden');
+        }
+
+        // ETAPA 1: Compilação gráfica e Download do PDF real no armazenamento interno do celular
+        function baixarArquivoPdfLocal() {
+            const men = mensalidades.find(m => m.id === activeMenId);
+            const element = document.getElementById('pdf-template');
+            const opt = {
+                margin: [10, 10, 10, 10],
+                filename: `Recibo_RUMO_${men ? men.referencia.replace('/','-') : 'Comprovante'}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+            alert("📥 PDF baixado! Ele está na pasta 'Downloads' do seu celular pronto para ser anexado.");
+        }
+
+        // ETAPA 2: Abertura imediata do canal com destinatário e texto preenchidos (Modelo corporativo)
+        function executarCanalComunicação(canal) {
+            const con = contratos.find(c => c.id === activeConId);
+            const men = mensalidades.find(m => m.id === activeMenId);
+            if(!con || !men) return;
+
+            if(canal === 'zap' && (!con.whatsapp || con.whatsapp.length < 5)) return alert("WhatsApp inválido.");
+            if(canal === 'email' && (!con.email || con.email.length < 5)) return alert("E-mail inválido.");
+
+            // Salva auditoria local
+            const menIdx = mensalidades.findIndex(m => m.id === men.id);
+            mensalidades[menIdx].envioLog = {
+                canal: canal === 'zap' ? 'WhatsApp' : 'E-mail',
+                destino: canal === 'zap' ? con.whatsapp : con.email,
+                data: new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+            };
+            saveAll();
+
+            const imo = imoveis.find(i => i.id === con.imovelId);
+            const empNome = imo ? imo.empreendimento : 'Patrimônio';
+
+            if(canal === 'zap') {
+                const textoMensagem = `Olá *${con.locatario}*,\n\nConfirmamos a quitação do aluguel referente à competência *${men.referencia}* [${empNome}].\n\nValor: *R$ ${men.valorConfirmado.toLocaleString('pt-BR', {minimumFractionDigits:2})}*\nBanco: *${men.banco}*\nData: *${men.dataPgto}*.\n\n_Estou te encaminhando o PDF em anexo logo abaixo._`;
+                window.open(`https://api.whatsapp.com/send?phone=55${con.whatsapp}&text=${encodeURIComponent(textoMensagem)}`, '_blank');
+            } else {
+                const assunto = `Recibo de Quitação Patrimonial - Competência ${men.referencia}`;
+                const corpoEmail = `Prezado(a) ${con.locatario},\n\nConfirmamos o recebimento e a baixa do faturamento de aluguel da competência ${men.referencia}.\n\nDetalhes:\n- Empreendimento: ${empNome}\n- Valor Pago: R$ ${men.valorConfirmado.toLocaleString('pt-BR', {minimumFractionDigits:2})}\n- Banco: ${men.banco}\n- Data: ${men.dataPgto}\n\nO PDF completo com o termo de quitação está sendo enviado em anexo nesta mensagem.`;
+                window.location.href = `mailto:${con.email}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpoEmail)}`;
+            }
+        }
+
+        function renderInadimplencia() {
+            const container = document.getElementById('lista-inadimplencia');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const tipoAgrupamento = document.getElementById('inad-tipo-agrupamento').value;
+            const fMes = document.getElementById('inad-filtro-mes').value;
+            const fAlvo = document.getElementById('inad-filtro-alvo').value;
+
+            let totalInad = 0;
+            let totalLancadoGeral = 0;
+            let itensPendentes = [];
+
+            mensalidades.forEach(men => {
+                const con = contratos.find(c => c.id === men.contratoId);
+                if(!con) return;
+                
+                totalLancadoGeral += con.valor;
+                
+                if(fMes !== 'todos' && men.referencia !== fMes) return;
+                if(fAlvo !== 'todos' && con.id !== fAlvo) return;
+
+                if(men.status === 'Pendente') {
+                    totalInad += con.valor;
+                    const imo = imoveis.find(i => i.id === con.imovelId);
+                    itensPendentes.push({ men, con, imo });
+                }
+            });
+
+            document.getElementById('inad-total-geral').innerText = "R$ " + totalInad.toLocaleString('pt-BR', {minimumFractionDigits:2});
+            const taxa = totalLancadoGeral > 0 ? ((totalInad / totalLancadoGeral) * 100).toFixed(1) : 0;
+            document.getElementById('inad-taxa').innerText = taxa + "%";
+
+            if(itensPendentes.length === 0) {
+                container.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">Nenhum débito em aberto localizado.</p>`;
+                return;
+            }
+
+            let grupos = {};
+            itensPendentes.forEach(item => {
+                let chaveGrupo = '';
+                if(tipoAgrupamento === 'competencia') chaveGrupo = `Competência: ${item.men.referencia}`;
+                else if(tipoAgrupamento === 'locatario') chaveGrupo = `Inquilino: ${item.con.locatario}`;
+                else if(tipoAgrupamento === 'imovel') chaveGrupo = `Imóvel: ${item.imo ? item.imo.empreendimento : 'Não Vinculado'}`;
+
+                if(!grupos[chaveGrupo]) grupos[chaveGrupo] = [];
+                grupos[chaveGrupo].push(item);
+            });
+
+            for(let nomeGrupo in grupos) {
+                let subItensHtml = '';
+                grupos[nomeGrupo].forEach(item => {
+                    subItensHtml += `
+                        <div class="p-2 bg-gray-50 rounded-lg border border-gray-100 text-2xs space-y-1">
+                            <div class="flex justify-between font-bold">
+                                <span class="text-slate-700">${item.con.locatario} (${item.men.referencia})</span>
+                                <span class="text-red-700">R$ ${item.con.valor.toLocaleString('pt-BR')}</span>
+                            </div>
+                            <p class="text-gray-500 text-4xs">Endereço: ${item.imo ? item.imo.endereco : '-'}</p>
+                            <button onclick="copiarCobranca('${item.con.locatario}', '${item.men.referencia}', ${item.con.valor})" class="text-4xs bg-red-100 text-red-700 px-2 py-0.5 rounded font-black">📋 Notificar</button>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML += `
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-red-200">
+                        <h3 class="text-xs font-black text-red-900 bg-red-50 p-1.5 rounded mb-2 uppercase tracking-wider">${nomeGrupo}</h3>
+                        <div class="space-y-1.5">${subItensHtml}</div>
+                    </div>`;
+            }
+        }
+
+        function copiarCobranca(nome, ref, valor) {
+            const txt = `⚠️ *RUMO NOTIFICAÇÃO*\nPrezado(a) ${nome},\nConsta em aberto o faturamento da competência *${ref}* no valor de *R$ ${valor.toLocaleString('pt-BR')}*.\n\nQualquer dúvida, estamos à disposição.`;
+            navigator.clipboard.writeText(txt);
+            alert("Mensagem de cobrança copiada!");
+        }
+
+        function registrarRepasse() {
+            const socio = document.getElementById('rep-socio').value;
+            const mes = document.getElementById('rep-mes').value;
+            const valor = parseFloat(document.getElementById('rep-valor').value);
+            const dataTransf = document.getElementById('rep-data-transferencia').value;
+
+            if(!mes || isNaN(valor) || !dataTransf) return alert("Por favor, preencha o valor e a data real do repasse.");
+            const dataFormatada = dataTransf.split('-').reverse().join('/');
+
+            repasses.push({ 
+                socio, 
+                mes, 
+                valor,
+                dataReal: dataFormatada,
+                timestamp: Date.now()
+            });
+            
+            document.getElementById('rep-valor').value = '';
+            saveAll();
+            alert("Repasse bancário registrado com sucesso no extrato.");
+        }
+
+        function renderSociosDistribricao() {
+            const container = document.getElementById('lista-socios-prestacao');
+            if(!container) return;
+            container.innerHTML = '';
+
+            const fSocio = document.getElementById('socio-filtro-nome').value;
+            const fMes = document.getElementById('socio-filtro-mes').value;
+            const fAno = document.getElementById('socio-filtro-ano').value;
+
+            let todosOsSociosHistorico = new Set(["Ruyter"]);
+            imoveis.forEach(imo => {
+                if(imo.divisao) Object.keys(imo.divisao).forEach(s => todosOsSociosHistorico.add(s));
+            });
+
+            todosOsSociosHistorico.forEach(socio => {
+                if(fSocio !== 'todos' && socio !== fSocio) return;
+
+                let extratoLinhas = [];
+                let totalEntradas = 0;
+                let totalSaidas = 0;
+
+                mensalidades.filter(m => m.status === 'Pago').forEach(men => {
+                    const partesRef = men.referencia.split('/'); 
+                    if(fMes !== 'todos' && men.referencia !== fMes) return;
+                    if(fAno !== 'todos' && partesRef[1] !== fAno) return;
+
+                    const con = contratos.find(c => c.id === men.contratoId);
+                    if(!con) return;
+                    const imo = imoveis.find(i => i.id === con.imovelId);
+                    if(!imo || !imo.divisao) return;
+                    
+                    const pctSocio = imo.divisao[socio] || 0;
+                    if(pctSocio > 0) {
+                        const cotaParte = men.valorConfirmado * (pctSocio / 100);
+                        totalEntradas += cotaParte;
+                        extratoLinhas.push({
+                            tipo: 'entrada',
+                            descricao: `Cota Aluguel - ${con.locatario} (${imo.empreendimento})`,
+                            referencia: men.referencia,
+                            dataVisual: men.dataPgto,
+                            valor: cotaParte,
+                            ordenador: partesRef[1] + partesRef[0] 
+                        });
+                    }
+                });
+
+                repasses.filter(r => r.socio === socio).forEach(rep => {
+                    const partesRef = rep.mes.split('/');
+                    if(fMes !== 'todos' && rep.mes !== fMes) return;
+                    if(fAno !== 'todos' && partesRef[1] !== fAno) return;
+
+                    totalSaidas += rep.valor;
+                    extratoLinhas.push({
+                        tipo: 'saida',
+                        descricao: `Transferência Bancária Efetuada`,
+                        referencia: rep.mes,
+                        dataVisual: rep.dataReal || rep.mes,
+                        valor: rep.valor,
+                        ordenador: partesRef[1] + partesRef[0]
+                    });
+                });
+
+                extratoLinhas.sort((a, b) => b.ordenador.localeCompare(a.ordenador));
+
+                let tabelaExtratoHtml = '';
+                extratoLinhas.forEach(linha => {
+                    if(linha.tipo === 'entrada') {
+                        tabelaExtratoHtml += `
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 text-3xs">
+                                <div>
+                                    <span class="text-green-600 font-bold font-mono">[CRÉDITO]</span>
+                                    <p class="text-slate-700 font-medium">${linha.descricao}</p>
+                                    <span class="text-gray-400">Ref: ${linha.referencia} | Data Caixa: ${linha.dataVisual}</span>
+                                </div>
+                                <span class="text-green-700 font-bold font-mono text-xs">+ R$ ${linha.valor.toFixed(2)}</span>
+                            </div>`;
+                    } else {
+                        tabelaExtratoHtml += `
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 text-3xs bg-red-50/30 px-1 rounded">
+                                <div>
+                                    <span class="text-red-600 font-bold font-mono">[DÉBITO]</span>
+                                    <p class="text-slate-700 font-medium">${linha.descricao}</p>
+                                    <span class="text-gray-400">Ref Competência: ${linha.referencia} | Transf: ${linha.dataVisual}</span>
+                                </div>
+                                <span class="text-red-700 font-bold font-mono text-xs">- R$ ${linha.valor.toFixed(2)}</span>
+                            </div>`;
+                    }
+                });
+
+                const saldoPendente = totalEntradas - totalSaidas;
+
+                container.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex justify-between items-center border-b pb-2 mb-3">
+                            <h3 class="text-sm font-black text-slate-900">👤 Sócio: ${socio}</h3>
+                            <div class="text-right">
+                                <p class="text-4xs text-gray-400 uppercase font-bold">Saldo em Aberto</p>
+                                <span class="text-xs font-black ${saldoPendente > 0 ? 'text-red-600' : 'text-blue-600'}">R$ ${saldoPendente.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mb-3 text-4xs bg-slate-50 p-2 rounded-lg font-mono">
+                            <span class="text-green-700 font-bold">Total Lucros: R$ ${totalEntradas.toFixed(2)}</span>
+                            <span class="text-red-700 font-bold text-right">Total Repassado: R$ ${totalSaidas.toFixed(2)}</span>
+                        </div>
+                        <div class="space-y-1 max-h-64 overflow-y-auto pr-1">${tabelaExtratoHtml || '<p class="text-3xs text-center text-gray-400 py-4">Nenhuma movimentação neste período.</p>'}</div>
+                    </div>`;
+            });
+        }
+
+        function obtenerMesesFiltro(opcao) {
+            const d = new Date(2026, 6, 13);
+            if (opcao === 'ano-atual') return new Date(2026, 0, 1);
+            if (opcao === '1-mes') return new Date(d.getFullYear(), d.getMonth() - 1, 1);
+            if (opcao === '3-meses') return new Date(d.getFullYear(), d.getMonth() - 3, 1);
+            if (opcao === '12-meses') return new Date(d.getFullYear(), d.getMonth() - 12, 1);
+            return new Date(1970, 0, 1);
+        }
+
+        function renderRelatorios() {
+            const fImo = document.getElementById('filtro-imovel').value;
+            const fPer = document.getElementById('filtro-periodo').value;
+            const lim = obterMesesFiltro(fPer);
+
+            let imoveisFiltrados = imoveis;
+            if (fImo !== 'todos') imoveisFiltrados = imoveis.filter(i => i.id === fImo);
+
+            const total = imoveisFiltrados.length;
+            const alugados = imoveisFiltrados.filter(i => i.status === 'Alugado').length;
+            const taxa = total > 0 ? ((alugados / total) * 100).toFixed(1) : 0;
+
+            let fat = 0, pot = 0;
+            mensalidades.forEach(men => {
+                const con = contratos.find(c => c.id === men.contratoId);
+                if(!con || (fImo !== 'todos' && con.imovelId !== fImo)) return;
+                
+                const p = men.referencia.split('/');
+                const dMen = new Date(parseInt(p[1]), parseInt(p[0]) - 1, 1);
+                
+                if(dMen >= lim) {
+                    pot += con.valor;
+                    if(men.status === 'Pago') fat += men.valorConfirmado;
+                }
+            });
+
+            document.getElementById('rel-taxa').innerText = taxa + '%';
+            document.getElementById('rel-faturamento').innerText = 'R$ ' + fat.toLocaleString('pt-BR', {minimumFractionDigits:2});
+            document.getElementById('rel-potencial').innerText = 'R$ ' + pot.toLocaleString('pt-BR', {minimumFractionDigits:2});
+            document.getElementById('rel-contagem').innerText = `Alugados: ${alugados} | Vagos: ${total - alugados}`;
+        }
+    </script>
+</body>
+</html>
