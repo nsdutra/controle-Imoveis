@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Imóveis Pro</title>
+    <!-- Tailwind CSS para um design mobile-friendly limpo -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- Biblioteca para gerar PDF direto no navegador -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 pb-12">
+
+    <!-- Menu Superior Mobile -->
+    <header class="bg-blue-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="p-4 flex justify-between items-center">
+            <h1 class="text-xl font-bold">ImóvelControl 🏠</h1>
+        </div>
+        <nav class="flex border-t border-blue-800 text-center text-sm font-medium">
+            <button onclick="switchTab('tab-imoveis')" class="flex-1 py-3 bg-blue-800 border-b-2 border-white" id="btn-tab-imoveis">Imóveis</button>
+            <button onclick="switchTab('tab-contratos')" class="flex-1 py-3 hover:bg-blue-800" id="btn-tab-contratos">Contratos</button>
+            <button onclick="switchTab('tab-mensal')" class="flex-1 py-3 hover:bg-blue-800" id="btn-tab-mensal">Mensal</button>
+            <button onclick="switchTab('tab-relatorios')" class="flex-1 py-3 hover:bg-blue-800" id="btn-tab-relatorios">Relatórios</button>
+        </nav>
+    </header>
+
+    <main class="p-4 max-w-md mx-auto">
+        
+        <!-- ================= ABA: IMÓVEIS ================= -->
+        <section id="tab-imoveis" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Cadastrar Novo Imóvel</h2>
+            <form onsubmit="addImovel(event)" class="bg-white p-4 rounded-lg shadow-sm mb-6 space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600">Endereço Completo</label>
+                    <input type="text" id="imo-endereco" required class="w-full p-2 border rounded mt-1 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600">Proprietário</label>
+                        <input type="text" id="imo-proprietario" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600">Tamanho (m²)</label>
+                        <input type="number" id="imo-tamanho" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600">Valor Base Pretendido (R$)</label>
+                    <input type="number" id="imo-valor" required class="w-full p-2 border rounded mt-1 text-sm">
+                </div>
+                <button type="submit" class="w-full bg-blue-600 text-white p-2.5 rounded font-bold text-sm shadow">Salvar Imóvel</button>
+            </form>
+
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Lista de Imóveis</h2>
+            <div id="lista-imoveis" class="space-y-3"></div>
+        </section>
+
+        <!-- ================= ABA: CONTRATOS ================= -->
+        <section id="tab-contratos" class="tab-content hidden">
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Vincular Locatário / Contrato</h2>
+            <form onsubmit="addContrato(event)" class="bg-white p-4 rounded-lg shadow-sm mb-6 space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600">Selecionar Imóvel Vago</label>
+                    <select id="con-imovel" required class="w-full p-2 border rounded mt-1 text-sm"></select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-gray-600">Nome do Locatário</label>
+                    <input type="text" id="con-locatario" required class="w-full p-2 border rounded mt-1 text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600">CPF do Locatário</label>
+                        <input type="text" id="con-cpf" required class="w-full p-2 border rounded mt-1 text-sm" placeholder="000.000.000-00">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600">WhatsApp de Contato</label>
+                        <input type="tel" id="con-whatsapp" required class="w-full p-2 border rounded mt-1 text-sm" placeholder="(11) 99999-9999">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600">Vigência Início</label>
+                        <input type="date" id="con-inicio" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600">Vigência Fim</label>
+                        <input type="date" id="con-fim" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600">Valor Aluguel (R$)</label>
+                        <input type="number" id="con-valor" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600">Reajuste Anual</label>
+                        <select id="con-reajuste" class="w-full p-2 border rounded mt-1 text-sm">
+                            <option value="IPCA">IPCA</option>
+                            <option value="IGP-M">IGP-M</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600">Quem paga IPTU?</label>
+                        <select id="con-iptu" class="w-full p-2 border rounded mt-1 text-sm">
+                            <option value="Locatário">Locatário</option>
+                            <option value="Proprietário">Proprietário</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-gray-600">Forma de Pagamento</label>
+                        <select id="con-forma" class="w-full p-2 border rounded mt-1 text-sm">
+                            <option value="Pix">Pix</option>
+                            <option value="Boleto">Boleto</option>
+                            <option value="Transferência">Transferência</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-2 py-1">
+                    <input type="checkbox" id="con-registro" class="rounded text-blue-600">
+                    <label class="text-xs font-semibold text-gray-600">Exige registro em cartório?</label>
+                </div>
+                <div class="flex items-center space-x-2 py-1">
+                    <input type="checkbox" id="con-recibo-auto" checked class="rounded text-blue-600">
+                    <label class="text-xs font-semibold text-gray-600">Ativar Recibo Automático</label>
+                </div>
+                <button type="submit" class="w-full bg-green-600 text-white p-2.5 rounded font-bold text-sm shadow">Firmar Contrato</button>
+            </form>
+
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Contratos Ativos</h2>
+            <div id="lista-contratos" class="space-y-3"></div>
+        </section>
+
+        <!-- ================= ABA: MENSALIDADES ================= -->
+        <section id="tab-mensal" class="tab-content hidden">
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Lançar Mês de Cobrança</h2>
+            <div class="bg-white p-4 rounded-lg shadow-sm mb-6 flex gap-2 items-end">
+                <div class="flex-1">
+                    <label class="block text-xs font-semibold text-gray-600">Mês/Ano Ref (Ex: 07/2026)</label>
+                    <input type="text" id="men-referencia" placeholder="07/2026" class="w-full p-2 border rounded mt-1 text-sm">
+                </div>
+                <button onclick="gerarMensalidades()" class="bg-purple-600 text-white p-2.5 rounded font-bold text-sm shadow">Gerar para Todos</button>
+            </div>
+
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Cobranças do Mês</h2>
+            <div id="lista-mensalidades" class="space-y-3"></div>
+        </section>
+
+        <!-- ================= ABA: RELATÓRIOS ================= -->
+        <section id="tab-relatorios" class="tab-content hidden">
+            <h2 class="text-lg font-bold mb-4 text-blue-900">Métricas Consolidadas</h2>
+            <div class="grid grid-cols-2 gap-3 mb-6">
+                <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-blue-500">
+                    <p class="text-xs text-gray-500 font-bold uppercase">Taxa de Ocupação</p>
+                    <p class="text-2xl font-black text-blue-900 mt-1" id="rel-taxa">0%</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
+                    <p class="text-xs text-gray-500 font-bold uppercase">Faturamento Atual</p>
+                    <p class="text-xl font-black text-green-700 mt-2" id="rel-faturamento">R$ 0</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-purple-500">
+                    <p class="text-xs text-gray-500 font-bold uppercase">Potencial Total</p>
+                    <p class="text-xl font-black text-purple-700 mt-2" id="rel-potencial">R$ 0</p>
+                </div>
+                <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-gray-400">
+                    <p class="text-xs text-gray-500 font-bold uppercase">Status Imóveis</p>
+                    <p class="text-xs text-gray-700 mt-2" id="rel-contagem">Alugados: 0 | Vagos: 0</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- CONTAINER OCULTO PARA IMPRESSÃO DO PDF DO RECIBO -->
+    <div id="pdf-template" class="hidden" style="padding: 20px; font-family: Arial, sans-serif; color: #333;">
+        <div style="border: 2px solid #1a365d; padding: 20px; border-radius: 4px; background-color: #fafafa;">
+            <h1 style="color: #1a365d; border-bottom: 2px solid #1a365d; padding-bottom: 10px; text-transform: uppercase; font-size: 20px;">Recibo de Aluguel</h1>
+            <div style="margin-top: 15px; font-size: 14px; text-align: justify; line-height: 1.6;">
+                Recebemos de <strong id="pdf-locatario">-</strong>, inscrito(a) no CPF sob o nº <strong id="pdf-cpf">-</strong>, a quantia de <strong>R$ <span id="pdf-valor">0</span></strong> referente ao pagamento do aluguel e encargos do imóvel localizado na <strong id="pdf-endereco">-</strong>, correspondente ao mês de referência <strong id="pdf-mes">-</strong>.
+            </div>
+            <table style="width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 13px;">
+                <tr style="background-color: #2b6cb0; color: white; font-weight: bold;"><td colspan="2" style="padding: 8px;">Demonstrativo</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #cbd5e0;">Forma de Pagamento:</td><td id="pdf-forma" style="padding: 8px; border: 1px solid #cbd5e0;">-</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #cbd5e0;">Banco de Crédito:</td><td id="pdf-banco" style="padding: 8px; border: 1px solid #cbd5e0;">-</td></tr>
+                <tr><td style="padding: 8px; border: 1px solid #cbd5e0;">Data de Liquidação:</td><td id="pdf-data" style="padding: 8px; border: 1px solid #cbd5e0;">-</td></tr>
+            </table>
+            <div style="margin-top: 40px; text-align: center; font-size: 14px;">
+                <div style="width: 200px; border-bottom: 1px solid #333; margin: 0 auto 5px auto;"></div>
+                <span id="pdf-proprietario">-</span><br><small>Locador / Administrador</small>
+            </div>
+        </div>
+    </div>
+
+    <!-- LÓGICA DO SISTEMA EM JAVASCRIPT -->
+    <script>
+        // Inicialização dos bancos de dados locais
+        let imoveis = JSON.parse(localStorage.getItem('imoveis')) || [];
+        let contratos = JSON.parse(localStorage.getItem('contratos')) || [];
+        let mensalidades = JSON.parse(localStorage.getItem('mensalidades')) || [];
+
+        function saveAll() {
+            localStorage.setItem('imoveis', JSON.stringify(imoveis));
+            localStorage.setItem('contratos', JSON.stringify(contratos));
+            localStorage.setItem('mensalidades', JSON.stringify(mensalidades));
+            renderImoveis();
+            renderContratos();
+            renderMensalidades();
+            renderRelatorios();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(tabId).classList.remove('hidden');
+            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('bg-blue-800', 'border-b-2', 'border-white'));
+            document.getElementById('btn-' + tabId).classList.add('bg-blue-800', 'border-b-2', 'border-white');
+        }
+
+        // --- GESTÃO DE IMÓVEIS ---
+        function addImovel(e) {
+            e.preventDefault();
+            const imovel = {
+                id: 'imo_' + Date.now(),
+                endereco: document.getElementById('imo-endereco').value,
+                proprietario: document.getElementById('imo-proprietario').value,
+                tamanho: document.getElementById('imo-tamanho').value,
+                valor: parseFloat(document.getElementById('imo-valor').value),
+                status: 'Vago'
+            };
+            imoveis.push(imovel);
+            e.target.reset();
+            saveAll();
+        }
+
+        function copyResumo(endereco, tamanho, valor) {
+            const texto = `🏠 *Imóvel disponível para Locação*\n📍 *Endereço:* ${endereco}\n📐 *Tamanho:* ${tamanho}m²\n💰 *Valor Base:* R$ ${valor.toLocaleString('pt-BR', {minimumFractionDigits:2})}\n\nEntre em contato para agendar uma visita!`;
+            navigator.clipboard.writeText(texto);
+            alert('Resumo copiado para o WhatsApp!');
+        }
+
+        function renderImoveis() {
+            const container = document.getElementById('lista-imoveis');
+            container.innerHTML = '';
+            const selectContrato = document.getElementById('con-imovel');
+            selectContrato.innerHTML = '<option value="">-- Selecione --</option>';
+
+            imoveis.forEach(imo => {
+                const badgeColor = imo.status === 'Vago' ? 'bg-amber-100 text-amber-800' : 'bg-green-100 text-green-800';
+                container.innerHTML += `
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                        <div class="flex justify-between items-start">
+                            <span class="text-xs font-bold px-2 py-0.5 rounded ${badgeColor}">${imo.status}</span>
+                            <span class="text-sm font-bold text-blue-950">R$ ${imo.valor}</span>
+                        </div>
+                        <p class="text-sm font-semibold mt-2">${imo.endereco}</p>
+                        <p class="text-xs text-gray-500 mt-1">Proprietário: ${imo.proprietario} | ${imo.tamanho}m²</p>
+                        <button onclick="copyResumo('${imo.endereco}', ${imo.tamanho}, ${imo.valor})" class="mt-3 text-xs bg-gray-100 border border-gray-300 text-gray-700 px-3 py-1.5 rounded font-bold flex items-center gap-1">📋 Copiar Resumo Zap</button>
+                    </div>
+                `;
+                if (imo.status === 'Vago') {
+                    selectContrato.innerHTML += `<option value="${imo.id}">${imo.endereco} (${imo.proprietario})</option>`;
+                }
+            });
+        }
+
+        // --- GESTÃO DE CONTRATOS ---
+        function addContrato(e) {
+            e.preventDefault();
+            const imoId = document.getElementById('con-imovel').value;
+            const contrato = {
+                id: 'con_' + Date.now(),
+                imovelId: imoId,
+                locatario: document.getElementById('con-locatario').value,
+                cpf: document.getElementById('con-cpf').value,
+                whatsapp: document.getElementById('con-whatsapp').value,
+                inicio: document.getElementById('con-inicio').value,
+                fim: document.getElementById('con-fim').value,
+                valor: parseFloat(document.getElementById('con-valor').value),
+                reajuste: document.getElementById('con-reajuste').value,
+                iptu: document.getElementById('con-iptu').value,
+                forma: document.getElementById('con-forma').value,
+                registro: document.getElementById('con-registro').checked,
+                reciboAuto: document.getElementById('con-recibo-auto').checked
+            };
+            
+            contratos.push(contrato);
+            const idx = imoveis.findIndex(i => i.id === imoId);
+            if(idx !== -1) imoveis[idx].status = 'Alugado';
+            
+            e.target.reset();
+            saveAll();
+        }
+
+        function renderContratos() {
+            const container = document.getElementById('lista-contratos');
+            container.innerHTML = '';
+            contratos.forEach(con => {
+                const imo = imoveis.find(i => i.id === con.imovelId);
+                container.innerHTML += `
+                    <div class="bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+                        <div class="flex justify-between font-bold text-sm text-green-800">
+                            <span>${con.locatario}</span>
+                            <span>R$ ${con.valor}</span>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-1">📍 ${imo ? imo.endereco : 'Imóvel removido'}</p>
+                        <div class="grid grid-cols-2 gap-1 text-2xs text-gray-600 mt-2 bg-gray-50 p-2 rounded">
+                            <p>Vigência Fim: ${con.fim}</p>
+                            <p>Taxas: ${con.iptu}</p>
+                            <p>Cartório: ${con.registro ? 'Sim' : 'Não'}</p>
+                            <p>Pgto: ${con.forma}</p>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        // --- CONTROLE MÊS A MÊS & MENSALIDADES ---
+        function gerarMensalidades() {
+            const ref = document.getElementById('men-referencia').value.trim();
+            if(!ref) return alert('Digite o mês de referência!');
+            
+            contratos.forEach(con => {
+                const jaExiste = mensalidades.some(m => m.contratoId === con.id && m.referencia === ref);
+                if(!jaExiste) {
+                    mensalidades.push({
+                        id: 'men_' + Date.now() + Math.random().toString(36).substr(2, 5),
+                        contratoId: con.id,
+                        referencia: ref,
+                        status: 'Pendente',
+                        banco: '-',
+                        dataPgto: '-'
+                    });
+                }
+            });
+            saveAll();
+            alert('Mensalidades geradas com sucesso!');
+        }
+
+        function liquidarMensalidade(menId) {
+            const banco = document.getElementById(`banco-${menId}`).value;
+            const idx = mensalidades.findIndex(m => m.id === menId);
+            if(idx !== -1) {
+                mensalidades[idx].status = 'Pago';
+                mensalidades[idx].banco = banco;
+                mensalidades[idx].dataPgto = new Date().toLocaleDateString('pt-BR');
+                
+                const con = contratos.find(c => c.id === mensalidades[idx].contratoId);
+                if(con && con.reciboAuto) {
+                    emitirPDF(mensalidades[idx], con);
+                } else {
+                    saveAll();
+                }
+            }
+        }
+
+        function emitirPDF(men, con) {
+            const imo = imoveis.find(i => i.id === con.imovelId);
+            
+            // Injeta dados no template oculto do PDF
+            document.getElementById('pdf-locatario').innerText = con.locatario;
+            document.getElementById('pdf-cpf').innerText = con.cpf;
+            document.getElementById('pdf-valor').innerText = con.valor.toLocaleString('pt-BR', {minimumFractionDigits:2});
+            document.getElementById('pdf-endereco').innerText = imo ? imo.endereco : '';
+            document.getElementById('pdf-mes').innerText = men.referencia;
+            document.getElementById('pdf-forma').innerText = con.forma;
+            document.getElementById('pdf-banco').innerText = men.banco;
+            document.getElementById('pdf-data').innerText = men.dataPgto;
+            document.getElementById('pdf-proprietario').innerText = imo ? imo.proprietario : '';
+
+            const element = document.getElementById('pdf-template');
+            element.classList.remove('hidden');
+
+            const opt = {
+                margin:       10,
+                filename:     `Recibo_${men.referencia.replace('/','-')}_${con.locatario.split(' ')[0]}.pdf`,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(() => {
+                element.classList.add('hidden');
+                saveAll();
+            });
+        }
+
+        function renderMensalidades() {
+            const container = document.getElementById('lista-mensalidades');
+            container.innerHTML = '';
+            
+            mensalidades.forEach(men => {
+                const con = contratos.find(c => c.id === men.contratoId);
+                if(!con) return;
+                const imo = imoveis.find(i => i.id === con.imovelId);
+                
+                if(men.status === 'Pendente') {
+                    container.innerHTML += `
+                        <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-amber-500">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-sm font-bold text-gray-900">${con.locatario}</p>
+                                    <p class="text-xs text-gray-500">Ref: ${men.referencia} | Valor: R$ ${con.valor}</p>
+                                </div>
+                                <span class="bg-amber-100 text-amber-800 text-2xs px-2 py-0.5 rounded font-bold">Pendente</span>
+                            </div>
+                            <div class="mt-3 flex gap-2 items-center">
+                                <select id="banco-${men.id}" class="text-xs border p-1.5 rounded flex-1 bg-gray-50">
+                                    <option value="Itaú">Itaú</option>
+                                    <option value="Bradesco">Bradesco</option>
+                                    <option value="Nubank">Nubank</option>
+                                    <option value="Santander">Santander</option>
+                                </select>
+                                <button onclick="liquidarMensalidade('${men.id}')" class="bg-emerald-600 text-white text-xs px-3 py-1.5 rounded font-bold shadow">Dar Baixa</button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    container.innerHTML += `
+                        <div class="bg-white p-4 rounded-lg shadow-sm border-l-4 border-green-500">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-sm font-bold text-gray-900">${con.locatario}</p>
+                                    <p class="text-xs text-gray-500">Ref: ${men.referencia} | Crédito: ${men.banco} (${men.dataPgto})</p>
+                                </div>
+                                <span class="bg-green-100 text-green-800 text-2xs px-2 py-0.5 rounded font-bold">✓ Pago</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            });
+        }
+
+        // --- GESTÃO DE RELATÓRIOS ---
+        function renderRelatorios() {
+            const totalImoveis = imoveis.length;
+            const alugados = imoveis.filter(i => i.status === 'Alugado').length;
+            const vagos = totalImoveis - alugados;
+            
+            const taxa = totalImoveis > 0 ? ((alugados / totalImoveis) * 100).toFixed(1) : 0;
+            const faturamento = contratos.reduce((acc, c) => acc + c.valor, 0);
+            const potencial = imoveis.reduce((acc, i) => acc + i.valor, 0);
+
+            document.getElementById('rel-taxa').innerText = taxa + '%';
+            document.getElementById('rel-faturamento').innerText = 'R$ ' + faturamento.toLocaleString('pt-BR');
+            document.getElementById('rel-potencial').innerText = 'R$ ' + potencial.toLocaleString('pt-BR');
+            document.getElementById('rel-contagem').innerText = `Alugados: ${alugados} | Vagos: ${vagos}`;
+        }
+
+        // Renderização Inicial
+        saveAll();
+    </script>
+</body>
+</html>
