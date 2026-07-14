@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RUMO - Controle de Imóveis</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 pb-16">
+
+    <div id="splash-screen" class="fixed inset-0 bg-slate-900 z-55 flex flex-col items-center justify-center text-white p-6 transition-opacity duration-500">
+        <div class="w-full max-w-sm text-center space-y-6 flex flex-col justify-between h-full py-8">
+            <div></div>
+            <div class="space-y-6">
+                <div class="w-full h-64 rounded-2xl bg-cover bg-center shadow-2xl border border-slate-700" style="background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80');"></div>
+                <div>
+                    <h1 class="text-4xl font-black tracking-widest text-blue-400">RUMO</h1>
+                    <p class="text-gray-400 text-sm mt-2 font-medium uppercase tracking-wider">Gestão Patrimonial Inteligente</p>
+                </div>
+                <button onclick="entrarNoSistema()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition transform active:scale-95">Acessar Sistema</button>
+            </div>
+            <div class="text-2xs text-slate-500 font-mono">
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v3.6.4</span>
+            </div>
+        </div>
+    </div>
+
+    <header id="main-header" class="hidden bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="p-3 flex justify-between items-center bg-slate-950">
+            <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform" onclick="voltarParaSplash()">
+                <span class="text-lg font-black tracking-wider text-blue-400">RUMO 🏠</span>
+                <span class="text-4xs font-mono text-slate-500">v3.6.4</span>
+            </div>
+            <button onclick="voltarParaSplash()" class="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">Sair</button>
+        </div>
+        <nav class="flex overflow-x-auto text-center text-xs font-medium border-t border-slate-800">
+            <button onclick="switchTab('tab-imoveis')" class="flex-none px-4 py-3 bg-slate-800 border-b-2 border-blue-400" id="btn-tab-imoveis">Imóveis</button>
+            <button onclick="switchTab('tab-contratos')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-contratos">Contratos</button>
+            <button onclick="switchTab('tab-mensal')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-mensal">Mensal</button>
+            <button onclick="switchTab('tab-inadimplencia')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-inadimplencia">Inadimplência</button>
+            <button onclick="switchTab('tab-socios')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-socios">Sócios</button>
+            <button onclick="switchTab('tab-relatorios')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-relatorios">Métricas</button>
+        </nav>
+    </header>
+
+    <main id="main-content" class="hidden p-4 max-w-md mx-auto">
+        <section id="tab-imoveis" class="tab-content active">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-slate-900" id="form-imovel-titulo">Cadastrar Imóvel</h2>
+                <button id="btn-cancelar-edit-imo" onclick="cancelarEdicaoImovel()" class="hidden text-xs text-red-600 font-bold">Cancelar Edição</button>
+            </div>
+            <form id="form-imovel" onsubmit="saveImovel(event)" class="bg-white p-4 rounded-xl shadow-sm mb-6 space-y-3 border border-gray-200">
+                <input type="hidden" id="imo-id">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Empreendimento</label>
+                        <select id="imo-empreendimento" required class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="Canaã">Canaã</option>
+                            <option value="Golden">Golden</option>
+                            <option value="Guarda Mor">Guarda Mor</option>
+                            <option value="Mirante">Mirante</option>
+                            <option value="Patrocínio">Patrocínio</option>
+                            <option value="Torres da Serra">Torres da Serra</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Tipo de Imóvel</label>
+                        <select id="imo-tipo" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="Apartamento">Apartamento</option>
+                            <option value="Casa">Casa</option>
+                            <option value="Loja">Loja</option>
+                            <option value="Lote">Lote</option>
+                            <option value="Vaga Garagem">Vaga Garagem</option>
+                        </select>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Endereço Completo</label>
+                    <input type="text" id="imo-endereco" required class="w-full p-2 border rounded mt-1 text-sm">
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Tamanho (m²)</label>
+                        <input type="number" id="imo-tamanho" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Nº Suítes</label>
+                        <input type="number" id="imo-suites" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Nº Banheiros</label>
+                        <input type="number" id="imo-banheiros" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Condomínio (R$)</label>
+                        <input type="number" id="imo-condominio" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">IPTU (R$)</label>
+                        <input type="number" id="imo-iptu" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Aluguel Alvo (R$)</label>
+                        <input type="number" id="imo-valor" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-black text-slate-700 uppercase">Sócios e Porcentagem (%)</span>
+                        <button type="button" onclick="adicionarSocioInput()" class="text-3xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold border border-blue-200">+ Adicionar Sócio</button>
+                    </div>
+                    <div id="proprietarios-divisao" class="space-y-2 text-xs"></div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Mídias e Fotos do Imóvel</label>
+                    <div class="space-y-2">
+                        <div class="flex items-center gap-2">
+                            <input type="file" id="imo-file-picker" accept="image/*" class="hidden" onchange="processarFotoLocal(this)">
+                            <button type="button" onclick="document.getElementById('imo-file-picker').click()" class="bg-slate-800 text-white font-bold text-2xs py-2 px-4 rounded-lg border border-slate-700 shadow-sm">📸 Escolher Foto do Celular</button>
+                            <span id="foto-status-label" class="text-3xs text-gray-400 italic">Nenhuma foto anexada</span>
+                        </div>
+                        <div id="form-image-preview-container" class="hidden">
+                            <img id="form-image-preview" src="" class="w-24 h-24 object-cover rounded-lg border shadow-sm">
+                        </div>
+                    </div>
+                    <input type="hidden" id="imo-fotos-storage">
+                </div>
+                <button type="submit" id="btn-salvar-imo" class="w-full bg-blue-600 text-white p-2.5 rounded-lg font-bold text-sm shadow">Salvar Imóvel</button>
+            </form>
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Lista Patrimonial</h2>
+            <div id="lista-imoveis" class="space-y-3"></div>
+        </section>
+
+        <section id="tab-contratos" class="tab-content">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-slate-900" id="form-contrato-titulo">Novo Contrato de Locação</h2>
+                <button id="btn-cancelar-edit-con" onclick="cancelarEdicaoContrato()" class="hidden text-xs text-red-600 font-bold">Cancelar Edição</button>
+            </div>
+            <form id="form-contrato" onsubmit="saveContrato(event)" class="bg-white p-4 rounded-xl shadow-sm mb-6 space-y-3 border border-gray-200">
+                <input type="hidden" id="con-id">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Vincular Imóvel</label>
+                    <select id="con-imovel" required class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                        <option value="">-- Escolha o Imóvel --</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Nome do Locatário</label>
+                        <input type="text" id="con-locatario" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">CPF</label>
+                        <input type="text" id="con-cpf" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">WhatsApp</label>
+                        <input type="tel" id="con-whatsapp" class="w-full p-2 border rounded mt-1 text-sm" placeholder="11999999999">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">E-mail</label>
+                        <input type="email" id="con-email" class="w-full p-2 border rounded mt-1 text-sm" placeholder="nome@email.com">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Início Vigência</label>
+                        <input type="date" id="con-inicio" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Fim Vigência</label>
+                        <input type="date" id="con-fim" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Valor Atual (R$)</label>
+                        <input type="number" id="con-valor" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Índice Reajuste</label>
+                        <select id="con-reajuste" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="IPCA">IPCA</option>
+                            <option value="IGP-M">IGP-M</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">IPTU por conta</label>
+                        <select id="con-iptu" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="Locatário">Locatário</option>
+                            <option value="Proprietário">Proprietário</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" id="btn-salvar-con" class="w-full bg-green-600 text-white p-2.5 rounded-lg font-bold text-sm shadow">Firmar / Atualizar Contrato</button>
+            </form>
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Contratos de Locação Ativos</h2>
+            <div id="lista-contratos" class="space-y-3"></div>
+        </section>
+
+        <section id="tab-mensal" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Faturamento Mensal</h2>
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Mês de Competência</label>
+                    <div class="flex gap-2 items-center mt-1">
+                        <select id="men-referencia" class="flex-1 p-2 border rounded text-sm bg-gray-50"></select>
+                        <button onclick="gerarMensalidades()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow">Gerar Mês</button>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                    <span class="text-3xs font-bold uppercase text-blue-600">Total a Receber</span>
+                    <p class="text-md font-black text-blue-900 mt-0.5" id="totalizer-a-receber">R$ 0,00</p>
+                </div>
+                <div class="bg-green-50 p-3 rounded-xl border border-green-200">
+                    <span class="text-3xs font-bold uppercase text-green-600">Total Recebido</span>
+                    <p class="text-md font-black text-green-900 mt-0.5" id="totalizer-recebido">R$ 0,00</p>
+                </div>
+            </div>
+            <h2 class="text-lg font-bold mb-2 text-blue-900">Fila de Recebimentos</h2>
+            <div id="lista-mensalidades" class="space-y-3"></div>
+        </section>
+
+        <section id="tab-inadimplencia" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-red-900">Painel de Inadimplência</h2>
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-2 text-xs">
+                <div>
+                    <label class="font-bold text-gray-600">Visualizar Agrupado Por</label>
+                    <select id="inad-tipo-agrupamento" onchange="renderInadimplencia()" class="w-full p-1.5 border rounded mt-1 bg-blue-50 font-semibold text-blue-900">
+                        <option value="competencia">Agrupar por Mês / Competência</option>
+                        <option value="locatario">Agrupar por Inquilino / Locatário</option>
+                        <option value="imovel">Agrupar por Empreendimento / Imóvel</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1 border-t border-gray-100">
+                    <div>
+                        <label class="font-bold text-gray-400 text-3xs uppercase">Mês</label>
+                        <select id="inad-filtro-mes" onchange="renderInadimplencia()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-400 text-3xs uppercase">Alvo</label>
+                        <select id="inad-filtro-alvo" onchange="renderInadimplencia()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                    </div>
+                </div>
+            </div>
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div class="bg-red-50 p-3 rounded-lg border border-red-200">
+                    <span class="text-2xs font-bold uppercase text-red-600">Total em Aberto</span>
+                    <p class="text-xl font-black text-red-700 mt-1" id="inad-total-geral">R$ 0</p>
+                </div>
+                <div class="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                    <span class="text-2xs font-bold uppercase text-amber-600">Taxa Inadimplência</span>
+                    <p class="text-xl font-black text-amber-700 mt-1" id="inad-taxa">0%</p>
+                </div>
+            </div>
+            <div id="lista-inadimplencia" class="space-y-3"></div>
+        </section>
+
+        <section id="tab-socios" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Prestação de Contas Societária</h2>
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-2 text-xs">
+                <div class="grid grid-cols-3 gap-1">
+                    <div>
+                        <label class="font-bold text-gray-500 text-4xs uppercase">Sócio</label>
+                        <select id="socio-filtro-nome" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-500 text-4xs uppercase">Mês Ref</label>
+                        <select id="socio-filtro-mes" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-500 text-4xs uppercase">Ano Civil</label>
+                        <select id="socio-filtro-ano" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
+                            <option value="todos">Todos</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3">
+                <h3 class="text-xs font-black uppercase text-slate-500">Registrar Transferência / Repasse</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="rep-socio" class="w-full p-2 border rounded text-sm bg-gray-50"></select>
+                    <select id="rep-mes" class="w-full p-2 border rounded text-sm bg-gray-50"></select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" id="rep-valor" placeholder="Valor (R$)" class="w-full p-2 border rounded text-sm font-bold">
+                    <input type="date" id="rep-data-transferencia" class="w-full p-2 border rounded text-sm text-center bg-gray-50">
+                </div>
+                <button onclick="registrarRepasse()" class="w-full bg-slate-900 text-white py-2 rounded font-bold text-xs shadow">Confirmar e Liquidar para Sócio</button>
+            </div>
+            <h3 class="text-xs font-black text-slate-500 uppercase mb-2 tracking-wide">📋 Extrato de Entradas e Saídas</h3>
+            <div id="lista-socios-prestacao" class="space-y-3"></div>
+        </section>
+
+        <section id="tab-relatorios" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Filtros das Métricas</h2>
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3">
+                <select id="filtro-imovel" onchange="renderRelatorios()" class="w-full p-2 border rounded text-sm bg-gray-50"><option value="todos">Todos os Imóveis</option></select>
+                <select id="filtro-periodo" onchange="renderRelatorios()" class="w-full p-2 border rounded text-sm bg-gray-50">
+                    <option value="todos">Todo o Período Histórico</option>
+                    <option value="ano-atual">Desde o início de 2026</option>
+                    <option value="1-mes">Último Mês</option>
+                    <option value="3-meses">Últimos 3 Meses</option>
+                    <option value="12-meses">Últimos 12 Meses</option>
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-3">
+                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500">
+                    <p class="text-2xs text-gray-500 font-bold uppercase">Ocupação</p>
+                    <p class="text-xl font-black text-slate-900 mt-1" id="rel-taxa">0%</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-500">
+                    <p class="text-2xs text-gray-500 font-bold uppercase">Recebido</p>
+                    <p class="text-lg font-black text-green-700 mt-1" id="rel-faturamento">R$ 0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-purple-500">
+                    <p class="text-2xs text-gray-500 font-bold uppercase">Potencial</p>
+                    <p class="text-lg font-black text-purple-700 mt-1" id="rel-potencial">R$ 0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow border-l-4 border-gray-400">
+                    <p class="text-2xs text-gray-500 font-bold uppercase">Imóveis</p>
+                    <p class="text-2xs font-semibold text-slate-700 mt-2" id="rel-contagem">-</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <div id="modal-opcoes-recibo" class="hidden fixed inset-0 bg-slate-900/80 z-99 flex items-center justify-center p-4">
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-800">
+                <div>
+                    <h3 class="text-sm font-black text-blue-400 uppercase tracking-wide">Recibo de Quitação</h3>
+                    <p class="text-4xs text-slate-400 mt-0.5" id="modal-subtitulo-info">-</p>
+                </div>
+                <button onclick="fecharModalOpcoes()" class="text-slate-400 hover:text-white font-bold text-sm bg-slate-900 w-7 h-7 rounded-full flex items-center justify-center transition active:scale-90">✕</button>
+            </div>
+            <div class="space-y-2.5">
+                <button onclick="dispararAcaoDoMenu('visualizar')" class="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow">👁️ Visualizar Recibo na Tela</button>
+                <button onclick="dispararAcaoDoMenu('pdf')" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow">📥 Gerar e Baixar PDF Oficial</button>
+                <div class="pt-2 border-t border-slate-900 grid grid-cols-2 gap-2">
+                    <button onclick="dispararAcaoDoMenu('zap')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-2xs py-2.5 rounded-xl flex items-center justify-center gap-1 transition active:scale-95 shadow">🟢 WhatsApp</button>
+                    <button onclick="dispararAcaoDoMenu('email')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-2xs py-2.5 rounded-xl border border-slate-700 flex items-center justify-center gap-1 transition active:scale-95 shadow">🔵 E-mail</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pdf-wrapper" class="hidden fixed inset-0 bg-slate-900/90 z-100 flex flex-col p-4 overflow-y-auto">
+        <div class="flex justify-between items-center p-3 bg-slate-950 text-white rounded-t-xl max-w-lg mx-auto w-full border-b border-slate-800 shadow-lg">
+            <span class="text-xs font-black text-blue-400">🔍 VISUALIZANDO RECIBO</span>
+            <button onclick="fecharPreviewPdfOnly()" class="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-3 py-1.5 rounded shadow transition active:scale-95">Voltar</button>
+        </div>
+        <div class="bg-white max-w-lg mx-auto w-full p-4 shadow-2xl flex-1 flex flex-col justify-center overflow-hidden">
+            <div id="pdf-template" class="bg-white p-6 rounded-lg" style="font-family: Arial, sans-serif; color: #333; line-height: 1.5; width: 100%;">
+                <div style="border: 2px solid #1a365d; padding: 25px; border-radius: 8px; background-color: #fafafa; min-height: 380px;">
+                    <h1 style="color: #1a365d; border-bottom: 2px solid #1a365d; padding-bottom: 12px; text-transform: uppercase; font-size: 15px; font-weight: 900; letter-spacing: 1px; margin-top: 0;">RUMO - Recibo de Quitação Patrimonial</h1>
+                    <div style="margin-top: 20px; font-size: 13px; text-align: justify; line-height: 1.6; color: #2d3748;">
+                        Confirmamos que o locatário <strong id="pdf-locatario" style="color:#1a365d;">-</strong>, portador do CPF nº <strong id="pdf-cpf">-</strong>, efetuou o pagamento líquido de <strong style="color:#2f855a;">R$ <span id="pdf-valor">0,00</span></strong> referente à locação do imóvel localizado no endereço <strong id="pdf-endereco">-</strong>, para a competência de faturamento de <strong id="pdf-mes">-</strong>.
+                    </div>
+                    <table style="width: 100%; border-collapse: collapse; margin-top: 25px; font-size: 11px;">
+                        <tr style="background-color: #1a365d; color: white; font-weight: bold;">
+                            <td colspan="2" style="padding: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Detalhamento do Caixa</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: bold; background:#edf2f7; width:40%;">Conta Destino:</td>
+                            <td id="pdf-banco" style="padding: 8px; border: 1px solid #e2e8f0; color:#2d3748;">-</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: bold; background:#edf2f7;">Data de Liquidação:</td>
+                            <td id="pdf-data" style="padding: 8px; border: 1px solid #e2e8f0; color:#2d3748;">-</td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #e2e8f0; font-weight: bold; background:#edf2f7;">Histórico / Obs:</td>
+                            <td id="pdf-obs" style="padding: 8px; border: 1px solid #e2e8f0; color:#718096; font-style: italic;">-</td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let imoveis = JSON.parse(localStorage.getItem('rumo_imoveis')) || [];
+        let contratos = JSON.parse(localStorage.getItem('rumo_contratos')) || [];
+        let mensalidades = JSON.parse(localStorage.getItem('rumo_mensalidades')) || [];
+        let repasses = JSON.parse(localStorage.getItem('rumo_repasses')) || [];
+        let activeMenId = null;
+        let activeConId = null;
+        let sociosAdicionais = []; 
+        const arrayCompetencias = [];
+        for(let ano = 2026; ano <= 2028; ano++) { for(let mes = 1; mes <= 12; mes++) { let mStr = mes < 10 ? '0' + mes : mes; arrayCompetencias.push(`${mStr}/${ano}`); } }
+
+        function entrarNoSistema() { document.getElementById('splash-screen').classList.add('opacity-0'); setTimeout(() => { document.getElementById('splash-screen').classList.add('hidden'); document.getElementById('main-header').classList.remove('hidden'); document.getElementById('main-content').classList.remove('hidden'); configurarFiltrosIniciais(); saveAll(); }, 500); }
+        function voltarParaSplash() { document.getElementById('splash-screen').classList.remove('hidden', 'opacity-0'); document.getElementById('main-header').classList.add('hidden'); document.getElementById('main-content').classList.add('hidden'); }
+        function processarFotoLocal(inputElement) { const file = inputElement.files[0]; if (!file) return; const reader = new FileReader(); reader.onload = function(e) { document.getElementById('imo-fotos-storage').value = e.target.result; document.getElementById('form-image-preview').src = e.target.result; document.getElementById('form-image-preview-container').classList.remove('hidden'); document.getElementById('foto-status-label').innerText = "📸 Foto carregada!"; }; reader.readAsDataURL(file); }
+        function configurarFiltrosIniciais() { const menRefSelect = document.getElementById('men-referencia'); if(menRefSelect) { menRefSelect.innerHTML = arrayCompetencias.map(c => `<option value="${c}">${c}</option>`).join(''); menRefSelect.value = "07/2026"; } }
+        function saveAll() { localStorage.setItem('rumo_imoveis', JSON.stringify(imoveis)); localStorage.setItem('rumo_contratos', JSON.stringify(contratos)); localStorage.setItem('rumo_mensalidades', JSON.stringify(mensalidades)); localStorage.setItem('rumo_repasses', JSON.stringify(repasses)); renderSocioInputs(); renderImoveis(); renderContratos(); renderMensalidades(); renderInadimplencia(); renderSociosDistribricao(); renderRelatorios(); atualizarListaSelecaoSociosRepasse(); atualizarDropdownFiltrosDinamicos(); }
+        function switchTab(tabId) { document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active')); document.getElementById(tabId).classList.add('active'); document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('bg-slate-800', 'border-b-2', 'border-blue-400')); document.getElementById('btn-' + tabId).classList.add('bg-slate-800', 'border-b-2', 'border-blue-400'); }
+        function renderSocioInputs() { const container = document.getElementById('proprietarios-divisao'); if(!container) return; container.innerHTML = `<div class="flex items-center justify-between gap-2 border-b border-gray-100 pb-1"><span class="font-bold text-slate-800">Ruyter (Padrão)</span><div class="flex items-center space-x-1"><input type="number" id="socio-pct-Ruyter" value="100" class="w-16 p-1 border rounded text-center font-black text-blue-600 bg-gray-50"><span class="font-bold text-gray-500">%</span></div></div>` + sociosAdicionais.map((s, i) => `<div class="flex items-center justify-between gap-2 text-xs"><span class="font-medium text-slate-700">${s.nome}</span><div class="flex items-center space-x-1"><input type="number" value="${s.pct}" onchange="sociosAdicionais[${i}].pct=parseFloat(this.value)" class="w-16 p-1 border rounded text-center font-bold"><span>%</span><button type="button" onclick="sociosAdicionais.splice(${i},1);renderSocioInputs()" class="text-red-500 font-bold px-1 ml-1">✕</button></div></div>`).join(''); }
+        function adicionarSocioInput() { const nome = prompt("Nome do sócio:"); if(nome) { sociosAdicionais.push({ nome: nome.trim(), pct: 0 }); renderSocioInputs(); } }
+        function saveImovel(e) { e.preventDefault(); const id = document.getElementById('imo-id').value; let divisao = { "Ruyter": parseFloat(document.getElementById('socio-pct-Ruyter').value) || 0 }; sociosAdicionais.forEach(s => divisao[s.nome] = s.pct); if(Object.values(divisao).reduce((a,b)=>a+b,0) !== 100) return alert("A soma deve ser 100%"); const dados = { id: id || 'imo_' + Date.now(), empreendimento: document.getElementById('imo-empreendimento').value, endereco: document.getElementById('imo-endereco').value, tipo: document.getElementById('imo-tipo').value, tamanho: document.getElementById('imo-tamanho').value, suites: document.getElementById('imo-suites').value, banheiros: document.getElementById('imo-banheiros').value, condominio: parseFloat(document.getElementById('imo-condominio').value) || 0, iptu: parseFloat(document.getElementById('imo-iptu').value) || 0, valor: parseFloat(document.getElementById('imo-valor').value) || 0, fotos: document.getElementById('imo-fotos-storage').value || '', divisao: divisao, status: id ? imoveis.find(i => i.id === id).status : 'Vago' }; if(id) { const idx = imoveis.findIndex(i => i.id === id); imoveis[idx] = dados; } else { imoveis.push(dados); } saveAll(); cancelarEdicaoImovel(); alert("Imóvel salvo!"); }
+        function renderImoveis() { const container = document.getElementById('lista-imoveis'); if(!container) return; container.innerHTML = imoveis.map(i => `<div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200"><div class="flex justify-between items-start"><span class="text-2xs font-bold px-2 py-0.5 rounded ${i.status==='Vago'?'bg-amber-100 text-amber-800':'bg-green-100 text-green-800'}">${i.status}</span><span class="text-sm font-black text-slate-900">R$ ${i.valor}</span></div><p class="text-xs font-bold mt-1 text-blue-900 uppercase tracking-wide">🏢 ${i.empreendimento}</p><p class="text-xs font-medium text-slate-700">${i.endereco}</p><button onclick="editarImovel('${i.id}')" class="mt-2 text-2xs bg-blue-50 text-blue-700 font-bold px-2 py-1 rounded border border-blue-200">📝 Editar</button></div>`).join(''); }
+        function saveContrato(e) { e.preventDefault(); const id = document.getElementById('con-id').value; const imoId = document.getElementById('con-imovel').value; if(!imoId) return alert("Selecione um imóvel."); const con = { id: id || 'con_' + Date.now(), imovelId: imoId, locatario: document.getElementById('con-locatario').value, cpf: document.getElementById('con-cpf').value, whatsapp: document.getElementById('con-whatsapp').value, email: document.getElementById('con-email').value, inicio: document.getElementById('con-inicio').value, fim: document.getElementById('con-fim').value, valor: parseFloat(document.getElementById('con-valor').value), reajuste: document.getElementById('con-reajuste').value, iptu: document.getElementById('con-iptu').value }; if(id) { const idx = contratos.findIndex(c => c.id === id); contratos[idx] = con; } else { contratos.push(con); const imIdx = imoveis.findIndex(i => i.id === imoId); if(imIdx !== -1) imoveis[imIdx].status = 'Alugado'; } saveAll(); alert("Contrato salvo!"); }
+        function renderMensalidades() { const container = document.getElementById('lista-mensalidades'); if(!container) return; container.innerHTML = mensalidades.map(m => { const con = contratos.find(c => c.id === m.contratoId); if(!con) return ''; return `<div class="bg-white p-3 rounded-xl shadow-sm border-l-4 ${m.status==='Pendente'?'border-amber-500':'border-green-500'}"><div class="flex justify-between items-center"><p class="text-xs font-bold">${con.locatario}</p>${m.status==='Pago'?`<button onclick="abrirModalOpcoesRecibo('${m.id}', '${con.id}')" class="bg-blue-600 text-white text-3xs px-2 py-1 rounded font-bold">📄 Recibo</button>`:`<button onclick="liquidarMensalidade('${m.id}')" class="bg-emerald-600 text-white text-3xs px-2 py-1 rounded font-bold">Baixar</button>`}</div></div>` }).join(''); }
+        function abrirModalOpcoesRecibo(menId, conId) { activeMenId = menId; activeConId = conId; const con = contratos.find(c => c.id === conId); const men = mensalidades.find(m => m.id === menId); const imo = imoveis.find(i => i.id === con.imovelId); document.getElementById('modal-subtitulo-info').innerText = `${con.locatario} (${men.referencia})`; document.getElementById('modal-opcoes-recibo').classList.remove('hidden'); document.getElementById('pdf-locatario').innerText = con.locatario; document.getElementById('pdf-cpf').innerText = con.cpf; document.getElementById('pdf-valor').innerText = men.valorConfirmado.toLocaleString('pt-BR', {minimumFractionDigits:2}); document.getElementById('pdf-endereco').innerText = imo.endereco; document.getElementById('pdf-mes').innerText = men.referencia; document.getElementById('pdf-banco').innerText = men.banco; document.getElementById('pdf-data').innerText = men.dataPgto; document.getElementById('pdf-obs').innerText = men.observacao || '-'; }
+        function fecharModalOpcoes() { document.getElementById('modal-opcoes-recibo').classList.add('hidden'); }
+        function dispararAcaoDoMenu(opcao) { fecharModalOpcoes(); if(opcao === 'visualizar') document.getElementById('pdf-wrapper').classList.remove('hidden'); else if(opcao === 'pdf') baixarArquivoPdfLocal(); }
+        function fecharPreviewPdfOnly() { document.getElementById('pdf-wrapper').classList.add('hidden'); }
+        function gerarNomeArquivoPadronizado() { const con = contratos.find(c => c.id === activeConId); const men = mensalidades.find(m => m.id === activeMenId); const imo = imoveis.find(i => i.id === con.imovelId); const emp = imo.empreendimento.split(' ').map(p=>p[0]).join('').toUpperCase().substring(0,3); const loc = imo.endereco.replace(/\D/g, '').substring(0,6) || imo.endereco.substring(0,3).toUpperCase(); return `R_${emp}_${loc}_${men.referencia.replace('/', '').substring(0,2)+men.referencia.substring(5)}.pdf`.substring(0,20) + ".pdf"; }
+        function baixarArquivoPdfLocal() { const element = document.getElementById('pdf-template'); document.getElementById('pdf-wrapper').classList.remove('hidden'); const opt = { margin: 10, filename: gerarNomeArquivoPadronizado(), html2canvas: { scale: 2 }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' } }; setTimeout(() => { html2pdf().set(opt).from(element).save().then(() => { alert("PDF Gerado!"); document.getElementById('pdf-wrapper').classList.add('hidden'); }).catch(e => alert("Erro ao gerar PDF")); }, 500); }
+    </script>
+</body>
+</html>
