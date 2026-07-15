@@ -1,0 +1,2956 @@
+<!-- 
+==================================================================
+   SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
+   VERSÃO: v4.1.0 (Cloud-Sync Fix + Photo Compression)
+   TOTAL DE LINHAS DE CÓDIGO: 1225 linhas
+==================================================================
+-->
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RUMO - Controle de Imóveis</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas-pro@2.2.4/dist/html2canvas-pro.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Mrs+Saint+Delafield&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
+
+
+    <style>
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+        .rubrica-digital {
+            font-family: 'Mrs Saint Delafield', cursive;
+            font-size: 42px;
+            color: #0f172a;
+            font-weight: 400;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 pb-16">
+
+
+    <!-- ================= TELA DE ABERTURA (SPLASH) ================= -->
+    <div id="splash-screen" class="fixed inset-0 bg-slate-900 z-55 flex flex-col items-center justify-center text-white p-6 transition-opacity duration-500">
+        <div class="w-full max-w-sm text-center space-y-6 flex flex-col justify-between h-full py-8">
+            <div></div>
+            <div class="space-y-6">
+                <div class="w-full h-64 rounded-2xl bg-cover bg-center shadow-2xl border border-slate-700" style="background-image: url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?auto=format&fit=crop&w=600&q=80');"></div>
+                <div>
+                    <h1 class="text-4xl font-black tracking-widest text-blue-400">RUMO</h1>
+                    <p class="text-gray-400 text-sm mt-2 font-medium uppercase tracking-wider">Gestão Patrimonial Inteligente</p>
+                </div>
+                <button id="btn-entrar" onclick="entrarNoSistema()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition transform active:scale-95 flex justify-center items-center gap-2">
+                    <span>Acessar Sistema</span>
+                </button>
+                <div id="splash-status" class="text-2xs text-amber-400 font-semibold px-4 break-words"></div>
+                <div id="splash-error-detail" class="text-3xs text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
+            </div>
+            <div class="text-2xs text-slate-500 font-mono">
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v4.1.0</span>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= HEADER E NAVEGAÇÃO ================= -->
+    <header id="main-header" class="hidden bg-slate-900 text-white sticky top-0 z-50 shadow-md">
+        <div class="p-3 flex justify-between items-center bg-slate-955">
+            <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" ondblclick="ativarModoDesenvolvedor()">
+                <span class="text-lg font-black tracking-wider text-blue-400">RUMO 🏠</span>
+                <span id="header-offline-tag" class="hidden text-3xs bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
+            </div>
+            <button onclick="voltarParaSplash()" class="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">Sair</button>
+        </div>
+        <nav class="flex overflow-x-auto text-center text-xs font-medium border-t border-slate-800">
+            <button onclick="switchTab('tab-imoveis')" class="flex-none px-4 py-3 bg-slate-800 border-b-2 border-blue-400" id="btn-tab-imoveis">Imóveis</button>
+            <button onclick="switchTab('tab-contratos')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-contratos">Contratos</button>
+            <button onclick="switchTab('tab-mensal')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-mensal">Mensal</button>
+            <button onclick="switchTab('tab-inadimplencia')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-inadimplencia">Inadimplência</button>
+            <button onclick="switchTab('tab-vitrine')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-vitrine">Vitrine</button>
+            <button onclick="switchTab('tab-relatorios')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-relatorios">Métricas</button>
+            <button onclick="switchTab('tab-socios')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-socios">Sócios</button>
+            <button onclick="switchTab('tab-developer')" class="hidden flex-none px-4 py-3 text-red-400 font-bold bg-slate-950 border-l border-red-900/50" id="btn-tab-developer">⚙️ DEV</button>
+        </nav>
+    </header>
+
+
+    <main id="main-content" class="hidden p-4 max-w-md mx-auto">
+        
+        <!-- Alerta de Restrição Offline -->
+        <div id="offline-warning-banner" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-center">
+            <p class="text-xs font-black text-red-800">⚠️ MODO CONSULTA ATIVO (SISTEMA OFFLINE)</p>
+            <p class="text-4xs text-red-600 mt-0.5">As abas de alteração de caixa e cadastros estão suspensas.</p>
+        </div>
+
+
+        <!-- ================= ABA: IMÓVEIS ================= -->
+        <section id="tab-imoveis" class="tab-content active">
+            <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 mb-4 text-center">
+                <p class="text-xs font-bold text-blue-900">Total de Imóveis Cadastrados: <span id="total-imoveis-contador" class="text-sm font-black">0</span></p>
+            </div>
+
+
+            <!-- PAINEL DE DIAGNÓSTICO EM TEMPO REAL -->
+            <div class="bg-slate-950 text-green-400 p-3 rounded-xl font-mono text-3xs mb-4 border border-slate-800 shadow-inner">
+                <div class="flex justify-between items-center border-b border-slate-800 pb-1.5 mb-1.5">
+                    <span class="font-bold text-blue-400">⚡ CONSOLE DE DIAGNÓSTICO RUMO</span>
+                    <button onclick="limparLogsTela()" class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded text-4xs hover:bg-slate-700">Limpar</button>
+                </div>
+                <div id="system-diagnostic-logs" class="max-h-36 overflow-y-auto space-y-1">
+                    <p class="text-slate-500">// Aguardando inicialização do sistema...</p>
+                </div>
+            </div>
+
+
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-slate-900" id="form-imovel-titulo">Cadastrar Imóvel</h2>
+                <button id="btn-cancelar-edit-imo" onclick="cancelarEdicaoImovel()" class="hidden text-xs text-red-600 font-bold">Cancelar Edição</button>
+            </div>
+            
+            <form id="form-imovel" onsubmit="saveImovel(event)" class="bg-white p-4 rounded-xl shadow-sm mb-6 space-y-3 border border-gray-200 offline-disable">
+                <input type="hidden" id="imo-id">
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Empreendimento</label>
+                        <select id="imo-empreendimento" required class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="Canaã">Canaã</option>
+                            <option value="Golden">Golden</option>
+                            <option value="Guarda Mor">Guarda Mor</option>
+                            <option value="Mirante">Mirante</option>
+                            <option value="Patrocínio">Patrocínio</option>
+                            <option value="Torres da Serra">Torres da Serra</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Tipo de Imóvel</label>
+                        <select id="imo-tipo" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="Apartamento">Apartamento</option>
+                            <option value="Casa">Casa</option>
+                            <option value="Loja">Loja</option>
+                            <option value="Lote">Lote</option>
+                            <option value="Vaga Garagem">Vaga Garagem</option>
+                        </select>
+                    </div>
+                </div>
+
+
+                <!-- Desmembramento do Endereço -->
+                <div class="grid grid-cols-3 gap-2">
+                    <div class="col-span-2">
+                        <label class="block text-xs font-bold text-gray-600">Endereço / Logradouro</label>
+                        <input type="text" id="imo-endereco-rua" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Número</label>
+                        <input type="text" id="imo-endereco-num" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Complemento</label>
+                        <input type="text" id="imo-endereco-comp" class="w-full p-2 border rounded mt-1 text-sm" placeholder="Opcional">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Bairro</label>
+                        <input type="text" id="imo-endereco-bairro" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Cidade</label>
+                        <input type="text" id="imo-endereco-cidade" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Tamanho (m²)</label>
+                        <input type="number" id="imo-tamanho" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Nº Suítes</label>
+                        <input type="number" id="imo-suites" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Nº Banheiros</label>
+                        <input type="number" id="imo-banheiros" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+
+
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Condomínio (R$)</label>
+                        <input type="number" id="imo-condominio" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">IPTU (R$)</label>
+                        <input type="number" id="imo-iptu" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Aluguel Alvo (R$)</label>
+                        <input type="number" id="imo-valor" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+
+
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-xs font-black text-slate-700 uppercase">Sócios e Porcentagem (%)</span>
+                        <button type="button" onclick="adicionarSocioInput()" class="text-3xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold border border-blue-200">+ Adicionar Sócio</button>
+                    </div>
+                    <div id="proprietarios-divisao" class="space-y-2 text-xs"></div>
+                </div>
+
+
+                <!-- Gestão de Múltiplas Fotos (Até 5) -->
+                <div class="bg-slate-50 p-3 rounded-xl border">
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Mídias e Fotos do Imóvel (Até 5)</label>
+                    <input type="file" id="imo-file-picker" accept="image/*" multiple class="hidden" onchange="processarMultiplasFotos(this)">
+                    <button type="button" onclick="document.getElementById('imo-file-picker').click()" class="w-full bg-slate-800 text-white font-bold text-2xs py-2 px-4 rounded-lg border shadow-sm">📸 Escolher Fotos do Celular</button>
+                    <div id="form-images-preview-container" class="grid grid-cols-5 gap-2 mt-2"></div>
+                </div>
+
+
+                <button type="submit" id="btn-salvar-imo" class="w-full bg-blue-600 text-white p-2.5 rounded-lg font-bold text-sm shadow">Salvar Imóvel</button>
+            </form>
+
+
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Lista Patrimonial</h2>
+            <div id="lista-imoveis" class="space-y-3"></div>
+        </section>
+
+
+        <!-- ================= ABA: CONTRATOS ================= -->
+        <section id="tab-contratos" class="tab-content">
+            <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 mb-4 text-center">
+                <p class="text-xs font-bold text-blue-900">Contratos: <span id="contratos-ativos-contador" class="text-sm font-black">0</span> ativos / <span id="contratos-totais-contador" class="text-sm font-black">0</span> cadastrados</p>
+            </div>
+
+
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-lg font-bold text-slate-900" id="form-contrato-titulo">Novo Contrato de Locação</h2>
+                <button id="btn-cancelar-edit-con" onclick="cancelarEdicaoContrato()" class="hidden text-xs text-red-600 font-bold">Cancelar Edição</button>
+            </div>
+            
+            <form id="form-contrato" onsubmit="saveContrato(event)" class="bg-white p-4 rounded-xl shadow-sm mb-6 space-y-3 border border-gray-200 offline-disable">
+                <input type="hidden" id="con-id">
+                
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Vincular Imóvel</label>
+                        <select id="con-imovel" required class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="">-- Escolha o Imóvel --</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Status do Contrato</label>
+                        <select id="con-status" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="Ativo">Ativo</option>
+                            <option value="Suspenso">Suspenso</option>
+                            <option value="Finalizado">Finalizado</option>
+                        </select>
+                    </div>
+                </div>
+
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Nome do Locatário</label>
+                        <input type="text" id="con-locatario" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Tipo de Documento</label>
+                        <select id="con-doc-tipo" onchange="limparDocumentoAoMudarTipo()" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="CPF">CPF (Padrão)</option>
+                            <option value="CNPJ">CNPJ</option>
+                        </select>
+                    </div>
+                </div>
+
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Documento (Apenas Números)</label>
+                        <input type="text" id="con-cpf" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Dia Vencimento (1 a 31)</label>
+                        <input type="number" id="con-vencimento-dia" required min="1" max="31" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">WhatsApp</label>
+                        <input type="tel" id="con-whatsapp" class="w-full p-2 border rounded mt-1 text-sm" placeholder="11999999999">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">E-mail</label>
+                        <input type="email" id="con-email" class="w-full p-2 border rounded mt-1 text-sm" placeholder="nome@email.com">
+                    </div>
+                </div>
+
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Início Vigência</label>
+                        <input type="date" id="con-inicio" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Fim Vigência</label>
+                        <input type="date" id="con-fim" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                </div>
+
+
+                <div class="grid grid-cols-4 gap-2">
+                    <div>
+                        <label class="block text-4xs font-bold text-gray-600">Valor Vigente</label>
+                        <input type="number" id="con-valor" required class="w-full p-1.5 border rounded mt-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-4xs font-bold text-gray-600">Valor Anterior</label>
+                        <input type="number" id="con-valor-anterior" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-4xs font-bold text-gray-600">Desconto Vig.</label>
+                        <input type="number" id="con-desconto" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
+                    </div>
+                    <div>
+                        <label class="block text-4xs font-bold text-gray-600">Contrato IPTU</label>
+                        <input type="number" id="con-iptu" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
+                    </div>
+                </div>
+
+
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Reajuste Aplicado (%)</label>
+                        <input type="number" step="0.01" id="con-reajuste-aplicado" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Reajuste Previsto</label>
+                        <select id="con-reajuste" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="IPCA">IPCA</option>
+                            <option value="IGP-M">IGP-M</option>
+                        </select>
+                    </div>
+                </div>
+
+
+                <button type="submit" id="btn-salvar-con" class="w-full bg-green-600 text-white p-2.5 rounded-lg font-bold text-sm shadow">Firmar / Atualizar Contrato</button>
+            </form>
+
+
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Contratos de Locação Ativos</h2>
+            <div id="lista-contratos" class="space-y-3"></div>
+        </section>
+
+
+        <!-- ================= ABA: MENSALIDADES ================= -->
+        <section id="tab-mensal" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Faturamento Mensal</h2>
+            
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3 offline-disable">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Mês de Competência</label>
+                    <div class="flex gap-2 items-center mt-1">
+                        <select id="men-referencia" class="flex-1 p-2 border rounded text-sm bg-gray-50"></select>
+                        <button onclick="gerarMensalidades()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow">Gerar Mês</button>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
+                    <span class="text-3xs font-bold uppercase text-blue-600">Total a Receber</span>
+                    <p class="text-md font-black text-blue-900 mt-0.5" id="totalizer-a-receber">R$ 0,00</p>
+                </div>
+                <div class="bg-green-50 p-3 rounded-xl border border-green-200">
+                    <span class="text-3xs font-bold uppercase text-green-600">Total Recebido</span>
+                    <p class="text-md font-black text-green-900 mt-0.5" id="totalizer-recebido">R$ 0,00</p>
+                </div>
+            </div>
+
+
+            <h2 class="text-lg font-bold mb-2 text-blue-900">Fila de Recebimentos</h2>
+            <div id="lista-mensalidades" class="space-y-3"></div>
+        </section>
+
+
+        <!-- ================= ABA: INADIMPLÊNCIA ================= -->
+        <section id="tab-inadimplencia" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-red-900">Painel de Inadimplência</h2>
+            
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-2 text-xs">
+                <div>
+                    <label class="font-bold text-gray-600">Visualizar Agrupado Por</label>
+                    <select id="inad-tipo-agrupamento" onchange="renderInadimplencia()" class="w-full p-1.5 border rounded mt-1 bg-blue-50 font-semibold text-blue-900">
+                        <option value="competencia">Agrupar por Mês / Competência</option>
+                        <option value="locatario">Agrupar por Inquilino / Locatário</option>
+                        <option value="imovel">Agrupar por Empreendimento / Imóvel</option>
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-2 pt-1 border-t border-gray-100">
+                    <div>
+                        <label class="font-bold text-gray-400 text-3xs uppercase">Mês de Referência</label>
+                        <select id="inad-filtro-mes" onchange="renderInadimplencia()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-400 text-3xs uppercase">Locatário / Inquilino</label>
+                        <select id="inad-filtro-alvo" onchange="renderInadimplencia()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="grid grid-cols-2 gap-2 mb-4">
+                <div class="bg-red-50 p-3 rounded-lg border border-red-200">
+                    <span class="text-2xs font-bold uppercase text-red-600">Total em Aberto</span>
+                    <p class="text-xl font-black text-red-700 mt-1" id="inad-total-geral">R$ 0</p>
+                </div>
+                <div class="bg-amber-50 p-3 rounded-lg border border-amber-200">
+                    <span class="text-2xs font-bold uppercase text-amber-600">Taxa Inadimplência</span>
+                    <p class="text-xl font-black text-amber-700 mt-1" id="inad-taxa">0%</p>
+                </div>
+            </div>
+            <div id="lista-inadimplencia" class="space-y-3"></div>
+        </section>
+
+
+        <!-- ================= ABA: VITRINE (SHOWCASE) ================= -->
+        <section id="tab-vitrine" class="tab-content">
+            <h2 class="text-lg font-bold text-slate-900 mb-3">Vitrine Imobiliária</h2>
+            <p class="text-3xs text-gray-500 mb-3">Selecione os imóveis do portfólio para criar um card de divulgação customizado e compartilhá-lo via link ou WhatsApp.</p>
+
+
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-2 text-xs">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="font-bold text-gray-500 text-4xs uppercase">Empreendimento</label>
+                        <select id="vitrine-filtro-emp" onchange="renderVitrine()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
+                            <option value="todos">Todos</option>
+                            <option value="Canaã">Canaã</option>
+                            <option value="Golden">Golden</option>
+                            <option value="Guarda Mor">Guarda Mor</option>
+                            <option value="Mirante">Mirante</option>
+                            <option value="Patrocínio">Patrocínio</option>
+                            <option value="Torres da Serra">Torres da Serra</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-500 text-4xs uppercase">Status</label>
+                        <select id="vitrine-filtro-status" onchange="renderVitrine()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
+                            <option value="todos">Todos</option>
+                            <option value="Vago">Apenas Vagos</option>
+                            <option value="Alugado">Apenas Alugados</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
+
+            <div id="lista-vitrine" class="space-y-3"></div>
+            
+            <button onclick="gerarLinkVitrine()" class="w-full mt-4 bg-green-600 hover:bg-green-500 text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow">
+                🟢 Compartilhar Link da Vitrine
+            </button>
+        </section>
+
+
+        <!-- ================= ABA: RELATÓRIOS/MÉTRICAS ================= -->
+        <section id="tab-relatorios" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Filtros das Métricas</h2>
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3">
+                <select id="filtro-imovel" onchange="renderRelatorios()" class="w-full p-2 border rounded text-sm bg-gray-50"><option value="todos">Todos os Imóveis</option></select>
+                <select id="filtro-periodo" onchange="renderRelatorios()" class="w-full p-2 border rounded text-sm bg-gray-50">
+                    <option value="todos">Todo o Período Histórico</option>
+                    <option value="ano-atual">Desde o início de 2026</option>
+                    <option value="1-mes">Último Mês</option>
+                    <option value="3-meses">Últimos 3 Meses</option>
+                    <option value="12-meses">Últimos 12 Meses</option>
+                </select>
+            </div>
+            
+            <div id="capture-relatorios-pdf" class="bg-transparent p-1">
+                <div class="grid grid-cols-2 gap-3">
+                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500">
+                        <p class="text-2xs text-gray-500 font-bold uppercase">Ocupação</p>
+                        <p class="text-xl font-black text-slate-900 mt-1" id="rel-taxa">0%</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-500">
+                        <p class="text-2xs text-gray-500 font-bold uppercase">Recebido</p>
+                        <p class="text-lg font-black text-green-700 mt-1" id="rel-faturamento">R$ 0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-purple-500">
+                        <p class="text-2xs text-gray-500 font-bold uppercase">Potencial</p>
+                        <p class="text-lg font-black text-purple-700 mt-1" id="rel-potencial">R$ 0</p>
+                    </div>
+                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-gray-400">
+                        <p class="text-2xs text-gray-500 font-bold uppercase">Imóveis</p>
+                        <p class="text-2xs font-semibold text-slate-700 mt-2" id="rel-contagem">-</p>
+                    </div>
+                </div>
+            </div>
+
+
+            <button onclick="baixarRelatorioPdfLocal()" class="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow">
+                📊 Exportar Relatório Analítico PDF
+            </button>
+        </section>
+
+
+        <!-- ================= ABA: SÓCIOS ================= -->
+        <section id="tab-socios" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Prestação de Contas Societária</h2>
+            
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-2 text-xs">
+                <div class="grid grid-cols-3 gap-1">
+                    <div>
+                        <label class="font-bold text-gray-500 text-4xs uppercase">Sócio</label>
+                        <select id="socio-filtro-nome" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-500 text-4xs uppercase">Mês Ref</label>
+                        <select id="socio-filtro-mes" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                    </div>
+                    <div>
+                        <label class="font-bold text-gray-500 text-4xs uppercase">Ano Civil</label>
+                        <select id="socio-filtro-ano" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
+                            <option value="todos">Todos</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                        </select>
+                    </div>
+                </div>
+                <button onclick="exportarRelatorioSocioPDF()" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-2xs py-2 rounded-lg shadow transition active:scale-95">
+                    📄 Exportar Extrato Sócio PDF
+                </button>
+            </div>
+
+
+            <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3 offline-disable">
+                <h3 class="text-xs font-black uppercase text-slate-500">Registrar Transferência / Repasse</h3>
+                <div class="grid grid-cols-2 gap-2">
+                    <select id="rep-socio" class="w-full p-2 border rounded text-sm bg-gray-50"></select>
+                    <select id="rep-mes" class="w-full p-2 border rounded text-sm bg-gray-50"></select>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <input type="number" id="rep-valor" placeholder="Valor (R$)" class="w-full p-2 border rounded text-sm font-bold">
+                    <input type="date" id="rep-data-transferencia" class="w-full p-2 border rounded text-sm text-center bg-gray-50">
+                </div>
+                <button onclick="registrarRepasse()" class="w-full bg-slate-900 text-white py-2 rounded font-bold text-xs shadow">Confirmar e Liquidar para Sócio</button>
+            </div>
+
+
+            <h3 class="text-xs font-black text-slate-500 uppercase mb-2 tracking-wide">📋 Extrato de Entradas e Saídas</h3>
+            <div id="lista-socios-prestacao" class="space-y-3"></div>
+        </section>
+
+
+        <!-- ================= ABA OCULTA: DEVELOPER CENTRALLOG ================= -->
+        <section id="tab-developer" class="tab-content">
+            <h2 class="text-lg font-bold mb-3 text-red-500">⚙️ Central do Desenvolvedor</h2>
+            <p class="text-3xs text-gray-500 mb-4">Aba de depuração ativada. Use as ferramentas abaixo para monitorar a gravação de contratos e a integridade do banco.</p>
+
+
+            <div class="flex gap-2 mb-4">
+                <button onclick="copiarLogsDoDesenvolvedor()" class="flex-1 bg-red-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition">📋 Copiar Logs de Erro</button>
+                <button onclick="limparLogsDoDesenvolvedor()" class="bg-slate-800 text-slate-300 font-bold text-xs py-2.5 px-4 rounded-lg border border-slate-700 active:scale-95 transition">Limpar</button>
+            </div>
+
+
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-slate-300 font-mono text-3xs space-y-2 max-h-96 overflow-y-auto" id="dev-detailed-log-box">
+                <p class="text-red-400">// Central de Logs ativa. Iniciando captura de escopos...</p>
+            </div>
+        </section>
+    </main>
+
+
+    <!-- ================= MODAL CENTRAL DE OPÇÕES ================= -->
+    <div id="modal-opcoes-recibo" class="hidden fixed inset-0 bg-slate-900/80 z-99 flex items-center justify-center p-4">
+        <div class="bg-slate-950 border border-slate-800 rounded-2xl w-full max-w-sm p-6 space-y-4 shadow-2xl">
+            <div class="flex justify-between items-center pb-2 border-b border-slate-800">
+                <div>
+                    <h3 class="text-sm font-black text-blue-400 uppercase tracking-wide">Recibo de Aluguel</h3>
+                    <p class="text-4xs text-slate-400 mt-0.5" id="modal-subtitulo-info">-</p>
+                </div>
+                <button onclick="fecharModalOpcoes()" class="text-slate-400 hover:text-white font-bold text-sm bg-slate-900 w-7 h-7 rounded-full flex items-center justify-center transition active:scale-90">✕</button>
+            </div>
+            
+            <div class="space-y-2.5">
+                <button onclick="dispararAcaoDoMenu('visualizar')" class="w-full bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow">
+                    👁️ Visualizar Recibo na Tela
+                </button>
+                <button onclick="dispararAcaoDoMenu('pdf')" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow">
+                    📥 Gerar e Baixar PDF Oficial
+                </button>
+                <div class="pt-2 border-t border-slate-900 grid grid-cols-2 gap-2">
+                    <button onclick="dispararAcaoDoMenu('zap')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-2xs py-2.5 rounded-xl flex items-center justify-center gap-1 transition active:scale-95 shadow">
+                        🟢 WhatsApp
+                    </button>
+                    <button onclick="dispararAcaoDoMenu('email')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-2xs py-2.5 rounded-xl border border-slate-700 flex items-center justify-center gap-1 transition active:scale-95 shadow">
+                        🔵 E-mail
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ================= CONTÊINER DE VISUALIZAÇÃO DO RECIBO ================= -->
+    <div id="pdf-wrapper" class="hidden fixed inset-0 bg-slate-900/90 z-100 flex flex-col p-4 overflow-y-auto">
+        <div class="flex justify-between items-center p-3 bg-slate-950 text-white rounded-t-xl max-w-lg mx-auto w-full border-b border-slate-800 shadow-lg">
+            <span class="text-xs font-black text-blue-400">🔍 VISUALIZANDO RECIBO</span>
+            <button onclick="fecharPreviewPdfOnly()" class="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-3 py-1.5 rounded shadow transition active:scale-95">Voltar</button>
+        </div>
+        
+        <div class="bg-white max-w-lg mx-auto w-full p-4 shadow-2xl flex-1 flex flex-col justify-center">
+            <div id="pdf-template" style="font-family: Arial, sans-serif; color: #333; line-height: 1.4; width: 100%; background-color: #ffffff; padding: 12px; border-radius: 8px;">
+                <div style="border: 2px solid #1a365d; padding: 16px; border-radius: 8px; background-color: #fafafa; min-height: 200px; position: relative;">
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: flex-end; border-bottom: 2px solid #1a365d; padding-bottom: 5px; margin-bottom: 10px;">
+                        <div>
+                            <div style="color: #1a365d; font-size: 15px; font-weight: 900; letter-spacing: 0.5px;">RUMO</div>
+                            <div style="color: #718096; font-size: 8px; letter-spacing: 0.3px;">CNPJ: 18.661.505/0001-62</div>
+                        </div>
+                        <div style="color: #4a5568; font-size: 9px; font-weight: bold; text-transform: uppercase; letter-spacing: 0.5px;">Recibo de Aluguel</div>
+                    </div>
+
+
+                    <div style="margin-top: 10px; font-size: 11px; text-align: justify; line-height: 1.6; color: #2d3748;">
+                        Confirmamos que o locatário <strong id="pdf-locatario" style="color:#1a365d;">-</strong>, portador do documento nº <strong id="pdf-cpf">-</strong>, efetuou o pagamento de <strong style="color:#2f855a;">R$ <span id="pdf-valor">0,00</span> (<span id="pdf-extenso">-</span>)</strong> referente à locação do imóvel localizado no endereço <strong id="pdf-endereco">-</strong>, para a competência de <strong id="pdf-mes">-</strong>, pago em <strong id="pdf-data">-</strong>. <span id="pdf-obs-texto"></span>
+                    </div>
+
+
+                    <div style="margin-top: 25px; font-size: 10px; color: #4a5568; text-align: right;">
+                        Belo Horizonte, <span id="pdf-data-emissao">-</span>.
+                    </div>
+
+
+                    <div style="margin-top: 20px; text-align: center; position: relative; height: 65px;">
+                        <div class="rubrica-digital" style="transform: rotate(-3deg); position: absolute; left: 0; right: 0; bottom: 18px; z-index: 10; opacity: 0.85;">
+                            R. Silva
+                        </div>
+                        <div style="width: 220px; margin: 0 auto; border-top: 1px solid #1a365d; padding-top: 2px; position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;">
+                            <div style="font-size: 10px; font-weight: bold; color: #1a365d;">Ruyter Carlos da Silva</div>
+                            <div style="font-size: 7.5px; color: #718096;">Sócio &ndash; RUMO (CNPJ 18.661.505/0001-62)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- SCRIPT DE REGRAS DE NEGÓCIO -->
+    <script>
+        const GOOGLE_API_URL = "https://script.google.com/macros/s/AKfycbzB5-odn-1WsjsL9-USER-Rxx1u93syrIesTXi6ytIwvkB6cSaq1ZAw2nXles6fZYlG/exec";
+
+
+        let imoveis = [];
+        let contratos = [];
+        let mensalidades = [];
+        let repasses = [];
+
+
+        let isOffline = false;
+        let syncSuccess = false; 
+        let isDevModeActive = false;
+        let activeMenId = null;
+        let activeConId = null;
+        let sociosAdicionais = []; 
+        let fotosCarregadasBase64 = []; 
+
+
+        const arrayCompetencias = [];
+        for(let ano = 2026; ano <= 2028; ano++) {
+            for(let mes = 1; mes <= 12; mes++) {
+                let mStr = mes < 10 ? '0' + mes : mes;
+                arrayCompetencias.push(`${mStr}/${ano}`);
+            }
+        }
+
+
+        // --- SISTEMA DE LOGS DO DESENVOLVEDOR ---
+        const MAX_LOG_ENTRIES = 200; // limite de entradas mantidas em tela/memória por log
+        let devLogEntries = [];      // buffer do log detalhado (Central Dev)
+        let screenLogEntries = [];   // buffer do console de diagnóstico
+
+        function devLog(origin, message, objectPayload = null) {
+            const container = document.getElementById('dev-detailed-log-box');
+            if(!container) return;
+            
+            const time = new Date().toLocaleTimeString('pt-BR');
+            let payloadStr = '';
+            
+            if(objectPayload) {
+                try {
+                    payloadStr = `<pre class="bg-slate-900 p-1.5 rounded text-4xs mt-1 border border-slate-800 text-amber-400 overflow-x-auto">${JSON.stringify(objectPayload, null, 2)}</pre>`;
+                } catch(e) {
+                    payloadStr = `<span class="text-red-500">[Falha stringify: ${e.message}]</span>`;
+                }
+            }
+
+            const entryHtml = `
+                <div class="border-b border-slate-900 pb-1.5">
+                    <span class="text-red-400 font-bold">[${time}]</span> 
+                    <span class="bg-slate-800 text-slate-100 px-1 py-0.2 rounded font-black text-4xs uppercase tracking-wider">${origin}</span> 
+                    <span class="text-slate-200 ml-1">${message}</span>
+                    ${payloadStr}
+                </div>
+            `;
+
+            devLogEntries.push(entryHtml);
+            // Limpeza automática: mantém somente as últimas MAX_LOG_ENTRIES entradas,
+            // evitando que o log cresça indefinidamente e comprometa a performance/memória.
+            if (devLogEntries.length > MAX_LOG_ENTRIES) {
+                devLogEntries = devLogEntries.slice(devLogEntries.length - MAX_LOG_ENTRIES);
+            }
+
+            container.innerHTML = devLogEntries.join('');
+            container.scrollTop = container.scrollHeight;
+            logScreen(`[DEV][${origin}] ${message}`);
+        }
+
+
+        function ativarModoDesenvolvedor() {
+            isDevModeActive = true;
+            document.getElementById('btn-tab-developer').classList.remove('hidden');
+            devLog("SISTEMA", "Modo desenvolvedor ativado por duplo clique no Header.");
+            alert("⚙️ Central de Desenvolvedor Rumo ATIVADA com sucesso!");
+        }
+
+
+        function copiarLogsDoDesenvolvedor() {
+            const container = document.getElementById('dev-detailed-log-box');
+            if(!container) return;
+            const textToCopy = container.innerText;
+
+            function baixarComoArquivo() {
+                try {
+                    const blob = new Blob([textToCopy], { type: 'text/plain;charset=utf-8' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `rumo-log-${Date.now()}.txt`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    setTimeout(() => URL.revokeObjectURL(url), 2000);
+                    alert("📄 Não foi possível copiar automaticamente. Baixei o log como arquivo .txt — envie esse arquivo aqui na conversa.");
+                } catch (e2) {
+                    alert("⚠️ Não foi possível copiar nem baixar o log: " + e2.message);
+                }
+            }
+
+            function copiarComExecCommand() {
+                try {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = textToCopy;
+                    textarea.style.position = 'fixed';
+                    textarea.style.left = '-9999px';
+                    textarea.style.top = '0';
+                    document.body.appendChild(textarea);
+                    textarea.focus();
+                    textarea.select();
+                    const ok = document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    if (ok) {
+                        alert("📋 Logs copiados para a área de transferência! Cole aqui na nossa conversa.");
+                    } else {
+                        baixarComoArquivo();
+                    }
+                } catch (e) {
+                    baixarComoArquivo();
+                }
+            }
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    alert("📋 Logs copiados para a área de transferência! Cole aqui na nossa conversa.");
+                }).catch(() => {
+                    copiarComExecCommand();
+                });
+            } else {
+                copiarComExecCommand();
+            }
+        }
+
+
+        function limparLogsDoDesenvolvedor() {
+            const container = document.getElementById('dev-detailed-log-box');
+            devLogEntries = [];
+            if(container) container.innerHTML = '<p class="text-red-400">// Central de Logs reiniciada.</p>';
+        }
+
+
+        // --- MOTOR DE LOGS NA TELA ---
+        function logScreen(msg, isError = false) {
+            const consoleDiv = document.getElementById('system-diagnostic-logs');
+            if (!consoleDiv) return;
+            const time = new Date().toLocaleTimeString('pt-BR');
+            const colorClass = isError ? 'text-red-400' : 'text-green-400';
+
+            screenLogEntries.push(`<p class="${colorClass}">[${time}] ${msg}</p>`);
+            if (screenLogEntries.length > MAX_LOG_ENTRIES) {
+                screenLogEntries = screenLogEntries.slice(screenLogEntries.length - MAX_LOG_ENTRIES);
+            }
+
+            consoleDiv.innerHTML = screenLogEntries.join('');
+            consoleDiv.scrollTop = consoleDiv.scrollHeight;
+            console.log(`[DIAG] ${msg}`);
+        }
+
+
+        function limparLogsTela() {
+            const consoleDiv = document.getElementById('system-diagnostic-logs');
+            screenLogEntries = [];
+            if (consoleDiv) consoleDiv.innerHTML = '<p class="text-slate-500">// Console de logs limpo.</p>';
+        }
+
+
+        // --- MOTOR DE NORMALIZAÇÃO DE CHAVES (Sheets -> App) ---
+        function normalizarImovel(raw) {
+            try {
+                logScreen(`Normalizando imóvel ID: ${raw.id || raw.ID || 'S/ID'}.`);
+
+
+                let fotosTratadas = [];
+                if (raw.fotos || raw.Fotos) {
+                    const rawFotos = raw.fotos || raw.Fotos;
+                    if (Array.isArray(rawFotos)) {
+                        fotosTratadas = rawFotos;
+                    } else if (typeof rawFotos === 'string') {
+                        if (rawFotos.trim().startsWith('[')) {
+                            try {
+                                fotosTratadas = JSON.parse(rawFotos);
+                            } catch(e) {
+                                fotosTratadas = [];
+                            }
+                        } else if (rawFotos.trim() !== '') {
+                            fotosTratadas = rawFotos.split(',').map(f => f.trim());
+                        }
+                    }
+                }
+
+
+                let divisaoTratada = { "Ruyter": 100 };
+                if (raw.divisao || raw.Divisao || raw.divisao_socios) {
+                    const rawDiv = raw.divisao || raw.Divisao || raw.divisao_socios;
+                    if (typeof rawDiv === 'object') {
+                        divisaoTratada = rawDiv;
+                    } else if (typeof rawDiv === 'string') {
+                        try {
+                            divisaoTratada = JSON.parse(rawDiv);
+                        } catch(e) {
+                            divisaoTratada = { "Ruyter": 100 };
+                        }
+                    }
+                }
+
+
+                return {
+                    id: raw.id || raw.ID || raw.id_imovel || 'imo_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                    empreendimento: raw.empreendimento || raw.Empreendimento || raw.nome_empreendimento || 'Canaã',
+                    enderecoRua: raw.enderecoRua || raw.endereco || raw.rua || raw.Endereco || raw.Rua || '',
+                    enderecoNum: raw.enderecoNum || raw.numero || raw.Num || raw.Numero || '',
+                    enderecoComp: raw.enderecoComp || raw.complemento || raw.Complemento || '',
+                    enderecoBairro: raw.enderecoBairro || raw.bairro || raw.Bairro || '',
+                    enderecoCidade: raw.enderecoCidade || raw.cidade || raw.Cidade || 'Belo Horizonte',
+                    tipo: raw.tipo || raw.Tipo || 'Apartamento',
+                    tamanho: raw.tamanho || raw.Tamanho || 0,
+                    suites: raw.suites || raw.Suites || 0,
+                    banheiros: raw.banheiros || raw.banheiros || 0,
+                    condominio: parseFloat(raw.condominio || raw.Condominio || 0) || 0,
+                    iptu: parseFloat(raw.iptu || raw.IPTU || 0) || 0,
+                    valor: parseFloat(raw.valor || raw.Valor || raw.aluguel_alvo || 0) || 0,
+                    fotos: fotosTratadas,
+                    divisao: divisaoTratada,
+                    status: raw.status || raw.Status || 'Vago'
+                };
+            } catch (err) {
+                logScreen(`Falha de normalização no imóvel: ${err.message}`, true);
+                return null;
+            }
+        }
+
+
+        function normalizarContrato(raw) {
+            return {
+                id: raw.id || raw.ID || raw.id_contrato || 'con_' + Date.now(),
+                imovelId: raw.imovelId || raw.imovel_id || raw.id_imovel || raw.ImovelId || '',
+                status: raw.status || raw.Status || 'Ativo',
+                locatario: raw.locatario || raw.Locatario || raw.nome || '',
+                docTipo: raw.docTipo || raw.tipo_documento || 'CPF',
+                cpf: raw.cpf || raw.CPF || raw.cnpj || raw.CNPJ || raw.documento || '',
+                vencimentoDia: parseInt(raw.vencimentoDia || raw.dia_vencimento || raw.vencimento || 15),
+                whatsapp: raw.whatsapp || raw.WhatsApp || raw.celular || '',
+                email: raw.email || raw.Email || '',
+                inicio: normalizarDataPlanilha(raw.inicio || raw.data_inicio),
+                fim: normalizarDataPlanilha(raw.fim || raw.data_fim),
+                valor: parseFloat(raw.valor || raw.Valor || 0) || 0,
+                valorAnterior: parseFloat(raw.valorAnterior || raw.valor_anterior || 0) || 0,
+                desconto: parseFloat(raw.desconto || raw.Desconto || 0) || 0,
+                reajusteAplicado: parseFloat(raw.reajusteAplicado || raw.reajuste_aplicado || 0) || 0,
+                reajuste: raw.reajuste || 'IPCA',
+                iptu: parseFloat(raw.iptu || raw.IPTU || raw.iptu_contrato || 0) || 0,
+                historico: raw.historico || []
+            };
+        }
+
+
+        function normalizarMensalidade(raw) {
+            return {
+                id: raw.id || raw.ID || 'men_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                contratoId: raw.contratoId || raw.contrato_id || raw.id_contrato || '',
+                referencia: normalizarCompetencia(raw.referencia),
+                status: raw.status || raw.Status || 'Pendente',
+                banco: raw.banco || raw.Banco || '-',
+                dataPgto: raw.dataPgto || raw.data_pagamento || '',
+                observacao: raw.observacao || raw.Observacao || '',
+                valorConfirmado: parseFloat(raw.valorConfirmado || raw.valor_pago || raw.valor || 0) || 0,
+                envioLog: raw.envioLog || null
+            };
+        }
+
+
+        function normalizarDataPlanilha(dataRaw) {
+            if(!dataRaw) return '';
+            if(typeof dataRaw === 'string' && dataRaw.includes('T')) {
+                return dataRaw.split('T')[0];
+            }
+            return dataRaw;
+        }
+
+
+        function normalizarCompetencia(ref) {
+            if(!ref) return '';
+            if(typeof ref === 'string' && ref.includes('T')) {
+                const partes = ref.split('T')[0].split('-');
+                return `${partes[1]}/${partes[0]}`;
+            }
+            return ref;
+        }
+
+
+        function valorPorExtenso(valor) {
+            let decimal = Math.round((valor - Math.floor(valor)) * 100);
+            let inteiro = Math.floor(valor);
+
+
+            const unidades = ["", "um", "dois", "três", "quatro", "cinco", "seis", "sete", "oito", "nove"];
+            const dezenas1 = ["dez", "onze", "doze", "treze", "quatorze", "quinze", "dezesseis", "dezessete", "dezoito", "dezenove"];
+            const dezenas = ["", "", "vinte", "trinta", "quarenta", "cinquenta", "sessenta", "setenta", "oitenta", "noventa"];
+            const centenas = ["", "cento", "duzentos", "trezentos", "quatrocentos", "quinhentos", "seiscentos", "setecentos", "oitocentos", "novecentos"];
+
+
+            function converterGrupo(n) {
+                let c = Math.floor(n / 100);
+                let d = Math.floor((n % 100) / 10);
+                let u = n % 10;
+                let partes = [];
+
+
+                if (n === 100) return "cem";
+                if (c > 0) partes.push(centenas[c]);
+                if (d === 1) {
+                    partes.push(dezenas1[u]);
+                } else {
+                    if (d > 1) partes.push(dezenas[d]);
+                    if (u > 0) partes.push(unidades[u]);
+                }
+                return partes.join(" e ");
+            }
+
+
+            if (inteiro === 0) return "zero reais";
+            
+            let texto = [];
+            let milhoes = Math.floor(inteiro / 1000000);
+            let milhares = Math.floor((inteiro % 1000000) / 1000);
+            let resto = inteiro % 1000;
+
+
+            if (milhoes > 0) {
+                texto.push(converterGrupo(milhoes) + (milhoes > 1 ? " milhões" : " milhão"));
+            }
+            if (milhares > 0) {
+                texto.push(converterGrupo(milhares) + " mil");
+            }
+            if (resto > 0) {
+                texto.push(converterGrupo(resto));
+            }
+
+
+            let resultado = texto.join(" e ") + (inteiro > 1 ? " reais" : " real");
+
+
+            if (decimal > 0) {
+                let centavosTexto = "";
+                if (decimal < 10) {
+                    centavosTexto = unidades[decimal];
+                } else if (decimal < 20) {
+                    centavosTexto = dezenas1[decimal - 10];
+                } else {
+                    let d = Math.floor(decimal / 10);
+                    let u = decimal % 10;
+                    centavosTexto = dezenas[d] + (u > 0 ? " e " : "") + unidades[u];
+                }
+                resultado += " e " + centavosTexto + (decimal > 1 ? " centavos" : " centavo");
+            }
+
+
+            return resultado;
+        }
+
+
+        function validarCPF(cpf) {
+            cpf = cpf.replace(/[^\d]+/g, '');
+            if (cpf == '') return false;
+            if (cpf.length !== 11 || /^(\d)\1{10}$/.test(cpf)) return false;
+            let add = 0;
+            for (let i = 0; i < 9; i++) add += parseInt(cpf.charAt(i)) * (10 - i);
+            let rev = 11 - (add % 11);
+            if (rev == 10 || rev == 11) rev = 0;
+            if (rev != parseInt(cpf.charAt(9))) return false;
+            add = 0;
+            for (let i = 0; i < 10; i++) add += parseInt(cpf.charAt(i)) * (11 - i);
+            rev = 11 - (add % 11);
+            if (rev == 10 || rev == 11) rev = 0;
+            if (rev != parseInt(cpf.charAt(10))) return false;
+            return true;
+        }
+
+
+        function validarCNPJ(cnpj) {
+            cnpj = cnpj.replace(/[^\d]+/g,'');
+            if(cnpj == '') return false;
+            if (cnpj.length !== 14) return false;
+            if (/^(\d)\1{13}$/.test(cnpj)) return false;
+            let tamanho = cnpj.length - 2;
+            let numeros = cnpj.substring(0,tamanho);
+            let digitos = cnpj.substring(tamanho);
+            let soma = 0;
+            let pos = tamanho - 7;
+            for (let i = tamanho; i >= 1; i--) {
+                soma += numeros.charAt(tamanho - i) * pos--;
+                if (pos < 2) pos = 9;
+            }
+            let resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+            if (resultado != digitos.charAt(0)) return false;
+            tamanho = tamanho + 1;
+            numeros = cnpj.substring(0,tamanho);
+            soma = 0;
+            pos = tamanho - 7;
+            for (let i = tamanho; i >= 1; i--) {
+                soma += numeros.charAt(tamanho - i) * pos--;
+                if (pos < 2) pos = 9;
+            }
+            resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
+            if (resultado != digitos.charAt(1)) return false;
+            return true;
+        }
+
+
+        function limparDocumentoAoMudarTipo() {
+            document.getElementById('con-cpf').value = '';
+        }
+
+
+        // Redimensiona e comprime a imagem antes de gerar o base64.
+        // Fotos de celular sem tratamento chegam a 3-8 MB (300 mil+ caracteres em base64),
+        // o que estoura tanto o payload de rede quanto o limite de 50.000 caracteres por
+        // célula do Google Sheets. Aqui limitamos a maior dimensão a 1024px e comprimimos
+        // como JPEG qualidade 0.6, o que normalmente resulta em 40-120 KB por foto.
+        function comprimirImagem(file, maxDimensao = 1024, qualidade = 0.6) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onerror = () => reject(new Error('Falha ao ler o arquivo de imagem.'));
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onerror = () => reject(new Error('Falha ao decodificar a imagem.'));
+                    img.onload = () => {
+                        let largura = img.width;
+                        let altura = img.height;
+
+                        if (largura > altura && largura > maxDimensao) {
+                            altura = Math.round(altura * (maxDimensao / largura));
+                            largura = maxDimensao;
+                        } else if (altura > maxDimensao) {
+                            largura = Math.round(largura * (maxDimensao / altura));
+                            altura = maxDimensao;
+                        }
+
+                        const canvas = document.createElement('canvas');
+                        canvas.width = largura;
+                        canvas.height = altura;
+                        const ctx = canvas.getContext('2d');
+                        ctx.drawImage(img, 0, 0, largura, altura);
+
+                        resolve(canvas.toDataURL('image/jpeg', qualidade));
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+
+        async function processarMultiplasFotos(inputElement) {
+            const files = inputElement.files;
+            if (!files || files.length === 0) return;
+
+            fotosCarregadasBase64 = [];
+            const previewContainer = document.getElementById('form-images-preview-container');
+            previewContainer.innerHTML = '<p class="text-4xs text-slate-400 col-span-5">🔄 Processando imagens...</p>';
+
+            const count = Math.min(files.length, 5);
+            if (files.length > 5) {
+                alert("⚠️ Máximo de 5 fotos por imóvel. Apenas as 5 primeiras selecionadas serão usadas.");
+            }
+
+            try {
+                const promessas = [];
+                for (let i = 0; i < count; i++) {
+                    promessas.push(comprimirImagem(files[i]));
+                }
+                const resultados = await Promise.all(promessas);
+
+                fotosCarregadasBase64 = resultados;
+                previewContainer.innerHTML = '';
+                resultados.forEach(base64Data => {
+                    previewContainer.innerHTML += `
+                        <div class="relative">
+                            <img src="${base64Data}" class="w-10 h-10 object-cover rounded border">
+                        </div>
+                    `;
+                });
+                devLog("FOTOS", `${resultados.length} foto(s) comprimida(s) e prontas para envio.`);
+            } catch (err) {
+                previewContainer.innerHTML = '<p class="text-4xs text-red-500 col-span-5">⚠️ Falha ao processar imagens.</p>';
+                devLog("ERRO_FOTOS", `Falha ao comprimir imagens: ${err.message}`);
+                alert("⚠️ Não foi possível processar uma ou mais fotos. Tente novamente com outras imagens.");
+            }
+        }
+
+
+        async function entrarNoSistema() {
+            const btn = document.getElementById('btn-entrar');
+            const statusLabel = document.getElementById('splash-status');
+            const errorContainer = document.getElementById('splash-error-detail');
+            
+            btn.disabled = true;
+            btn.innerHTML = `<span class="animate-spin mr-2">🔄</span> Sincronizando Banco...`;
+            statusLabel.innerText = "Buscando dados na nuvem...";
+            errorContainer.classList.add('hidden');
+
+
+            try {
+                logScreen("=== INICIANDO SINC DA NUVEM ===");
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 12000);
+
+
+                const response = await fetch(GOOGLE_API_URL, { signal: controller.signal });
+                clearTimeout(timeoutId);
+
+
+                const resData = await response.json();
+                
+                if (resData.status === "sucesso" && resData.dados) {
+                    const rawImoveis = resData.dados.imoveis || [];
+                    const rawContratos = resData.dados.contratos || [];
+                    const rawMensalidades = resData.dados.mensalidades || [];
+                    const rawRepasses = resData.dados.repasses || [];
+
+
+                    logScreen(`Carregados do Sheets Raw: ${rawImoveis.length} imóveis, ${rawContratos.length} contratos.`);
+
+
+                    imoveis = rawImoveis.map(normalizarImovel).filter(Boolean);
+                    contratos = rawContratos.map(normalizarContrato).filter(Boolean);
+                    mensalidades = rawMensalidades.map(normalizarMensalidade).filter(Boolean);
+                    repasses = rawRepasses || [];
+
+
+                    logScreen(`Normalizados com sucesso: ${imoveis.length} imóveis, ${contratos.length} contratos.`);
+
+
+                    localStorage.setItem('rumo_imoveis', JSON.stringify(imoveis));
+                    localStorage.setItem('rumo_contratos', JSON.stringify(contratos));
+                    localStorage.setItem('rumo_mensalidades', JSON.stringify(mensalidades));
+                    localStorage.setItem('rumo_repasses', JSON.stringify(repasses));
+                    
+                    statusLabel.innerText = "Sincronização concluída!";
+                    isOffline = false;
+                    syncSuccess = true; 
+                } else {
+                    throw new Error(resData.mensagem || "Status de retorno inválido.");
+                }
+            } catch (err) {
+                logScreen(`Erro ao buscar dados: ${err.message || String(err)}`, true);
+                isOffline = true;
+                syncSuccess = false;
+                statusLabel.innerText = "Modo Offline Ativo.";
+                
+                imoveis = JSON.parse(localStorage.getItem('rumo_imoveis')) || [];
+                contratos = JSON.parse(localStorage.getItem('rumo_contratos')) || [];
+                mensalidades = JSON.parse(localStorage.getItem('rumo_mensalidades')) || [];
+                repasses = JSON.parse(localStorage.getItem('rumo_repasses')) || [];
+                
+                logScreen(`Carregada última cópia local: ${imoveis.length} imóveis, ${contratos.length} contratos.`);
+                errorContainer.innerText = `Detalhe do erro: ${err.message || String(err)}`;
+                errorContainer.classList.remove('hidden');
+            }
+
+
+            setTimeout(() => {
+                document.getElementById('splash-screen').classList.add('opacity-0');
+                setTimeout(() => {
+                    document.getElementById('splash-screen').classList.add('hidden');
+                    document.getElementById('main-header').classList.remove('hidden');
+                    document.getElementById('main-content').classList.remove('hidden');
+                    
+                    const hoje = new Date().toISOString().split('T')[0];
+                    const inputDataRep = document.getElementById('rep-data-transferencia');
+                    if (inputDataRep) inputDataRep.value = hoje;
+
+
+                    btn.disabled = false;
+                    btn.innerText = "Acessar Sistema";
+
+
+                    configurarFiltrosIniciais(); 
+                    aplicarRestricoesOffline();
+                    
+                    try {
+                        renderSocioInputs();
+                        renderImoveis();
+                        renderContratos();
+                        renderMensalidades();
+                        renderInadimplencia();
+                        renderSociosDistribricao();
+                        renderRelatorios();
+                        renderVitrine();
+                        atualizarListaSelecaoSociosRepasse();
+                        atualizarDropdownFiltrosDinamicos();
+                        logScreen("=== COMPONENTES INICIALIZADOS COM SUCESSO ===");
+                    } catch(e) {
+                        logScreen(`Erro crítico durante a montagem da tela: ${e.message}`, true);
+                    }
+                }, 500);
+            }, isOffline ? 3000 : 800);
+        }
+
+
+        function configurarFiltrosIniciais() {
+            const selectInadMes = document.getElementById('inad-filtro-mes');
+            if (selectInadMes) selectInadMes.value = 'todos';
+
+
+            const selectInadAlvo = document.getElementById('inad-filtro-alvo');
+            if (selectInadAlvo) selectInadAlvo.value = 'todos';
+
+
+            const menRefSelect = document.getElementById('men-referencia');
+            if (menRefSelect) {
+                menRefSelect.innerHTML = '';
+                arrayCompetencias.forEach(comp => {
+                    menRefSelect.innerHTML += `<option value="${comp}">${comp}</option>`;
+                });
+                const hoje = new Date();
+                const mCorrente = hoje.getMonth() + 1;
+                const refSugerida = `${mCorrente < 10 ? '0' + mCorrente : mCorrente}/${hoje.getFullYear()}`;
+                menRefSelect.value = refSugerida;
+            }
+        }
+
+
+        function aplicarRestricoesOffline() {
+            const headerTag = document.getElementById('header-offline-tag');
+            const warningBanner = document.getElementById('offline-warning-banner');
+            
+            if (isOffline) {
+                headerTag.classList.remove('hidden');
+                warningBanner.classList.remove('hidden');
+                document.querySelectorAll('.offline-disable').forEach(el => {
+                    el.style.opacity = '0.5';
+                    el.style.pointerEvents = 'none';
+                });
+                switchTab('tab-inadimplencia');
+            } else {
+                headerTag.classList.add('hidden');
+                warningBanner.classList.add('hidden');
+                document.querySelectorAll('.offline-disable').forEach(el => {
+                    el.style.opacity = '1';
+                    el.style.pointerEvents = 'auto';
+                });
+            }
+        }
+
+
+        function voltarParaSplash() {
+            document.getElementById('splash-screen').classList.remove('hidden', 'opacity-0');
+            document.getElementById('main-header').classList.add('hidden');
+            document.getElementById('main-content').classList.add('hidden');
+        }
+
+
+        // Registro de rotas que falharam ao gravar na nuvem, para permitir reenvio manual.
+        // Mantemos os últimos dados de cada rota aqui até a gravação ser confirmada com sucesso.
+        let pendenciasSync = {}; // { imoveis: [...], contratos: [...], mensalidades: [...], repasses: [...] }
+
+        async function enviarDadosParaGoogleSheets(rota, dadosArray) {
+            if (isOffline) {
+                devLog("ERRO_GRAVACAO_NUVEM", `Tentativa de gravar '${rota}' bloqueada: sistema está em modo offline (sem sincronização inicial confirmada).`);
+                return false;
+            }
+            try {
+                devLog("ENVIO_NUVEM", `Tentando transmitir canal '${rota}' para URL externa. Total de registros: ${dadosArray.length}`, dadosArray);
+
+                // IMPORTANTE: usamos 'text/plain;charset=utf-8' propositalmente (NÃO 'application/json').
+                // O Google Apps Script Web App não responde a requisições de pre-flight (OPTIONS) do CORS.
+                // Se o Content-Type for 'application/json', o navegador exige esse pre-flight antes do POST
+                // e a chamada é bloqueada com erro "Failed to fetch" antes mesmo de sair do dispositivo.
+                // Usando 'text/plain', a requisição é tratada como "simples" e não dispara pre-flight.
+                // O Apps Script (doPost) deve continuar fazendo JSON.parse(e.postData.contents) normalmente.
+                const response = await fetch(GOOGLE_API_URL, {
+                    method: "POST",
+                    headers: { "Content-Type": "text/plain;charset=utf-8" },
+                    body: JSON.stringify({ rota: rota, dados: dadosArray })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Servidor respondeu com status HTTP ${response.status}`);
+                }
+
+                devLog("ENVIO_NUVEM", `Gravação de '${rota}' confirmada com sucesso.`);
+                delete pendenciasSync[rota];
+                return true;
+            } catch (err) {
+                devLog("ERRO_GRAVACAO_NUVEM", `Falha de rede ao persistir '${rota}': ${err.message}`, err);
+                logScreen(`Erro de envio na rota ${rota}: ${err.message}`, true);
+                pendenciasSync[rota] = dadosArray;
+                return false;
+            }
+        }
+
+
+        async function saveAll(enviarParaNuvem = true, mensagemSucesso = null) {
+            // A cópia local é apenas uma cópia de segurança temporária para permitir a
+            // visualização em caso de perda de conexão — ela NÃO é a fonte oficial dos dados.
+            // A fonte oficial é sempre a planilha (nuvem). Por isso todo salvamento aguarda
+            // a confirmação real do servidor antes de avisar o usuário que "deu certo".
+            localStorage.setItem('rumo_imoveis', JSON.stringify(imoveis));
+            localStorage.setItem('rumo_contratos', JSON.stringify(contratos));
+            localStorage.setItem('rumo_mensalidades', JSON.stringify(mensalidades));
+            localStorage.setItem('rumo_repasses', JSON.stringify(repasses));
+
+            renderSocioInputs();
+            renderImoveis();
+            renderContratos();
+            renderMensalidades();
+            renderInadimplencia();
+            renderSociosDistribricao();
+            renderRelatorios();
+            renderVitrine();
+            atualizarListaSelecaoSociosRepasse();
+            atualizarDropdownFiltrosDinamicos();
+
+            if (!enviarParaNuvem) return;
+
+            if (isOffline) {
+                alert("⚠️ Você está no modo offline (sem conexão confirmada com a nuvem). Este registro NÃO foi salvo na planilha. Verifique sua internet e tente sincronizar novamente antes de continuar editando.");
+                return;
+            }
+
+            const nomesAmigaveis = { imoveis: "Imóveis", contratos: "Contratos", mensalidades: "Mensalidades", repasses: "Repasses" };
+
+            const resultados = await Promise.all([
+                enviarDadosParaGoogleSheets("imoveis", imoveis).then(ok => ({ rota: "imoveis", ok })),
+                enviarDadosParaGoogleSheets("contratos", contratos).then(ok => ({ rota: "contratos", ok })),
+                enviarDadosParaGoogleSheets("mensalidades", mensalidades).then(ok => ({ rota: "mensalidades", ok })),
+                enviarDadosParaGoogleSheets("repasses", repasses).then(ok => ({ rota: "repasses", ok }))
+            ]);
+
+            const falhas = resultados.filter(r => !r.ok).map(r => nomesAmigaveis[r.rota] || r.rota);
+
+            if (falhas.length > 0) {
+                mostrarBannerPendencia();
+                alert(`⚠️ Falha ao salvar na nuvem: ${falhas.join(', ')}.\n\nSeu registro NÃO foi confirmado na planilha (outros usuários não vão vê-lo). Verifique sua internet e toque em "Reenviar Agora" na faixa vermelha no topo assim que possível.`);
+            } else {
+                esconderBannerPendencia();
+                if (mensagemSucesso) alert(mensagemSucesso);
+            }
+        }
+
+
+        async function reenviarPendencias() {
+            const rotasPendentes = Object.keys(pendenciasSync);
+            if (rotasPendentes.length === 0) {
+                esconderBannerPendencia();
+                return;
+            }
+            devLog("REENVIO_MANUAL", `Reenviando rotas pendentes: ${rotasPendentes.join(', ')}`);
+            const resultados = await Promise.all(
+                rotasPendentes.map(rota => enviarDadosParaGoogleSheets(rota, pendenciasSync[rota]).then(ok => ({ rota, ok })))
+            );
+            const aindaFalhando = resultados.filter(r => !r.ok);
+            if (aindaFalhando.length === 0) {
+                esconderBannerPendencia();
+                alert("✅ Dados reenviados e confirmados na planilha com sucesso!");
+            } else {
+                alert(`⚠️ Ainda não foi possível sincronizar: ${aindaFalhando.map(r => r.rota).join(', ')}. Tente novamente em instantes.`);
+            }
+        }
+
+
+        function mostrarBannerPendencia() {
+            let banner = document.getElementById('banner-pendencia-sync');
+            if (!banner) {
+                banner = document.createElement('div');
+                banner.id = 'banner-pendencia-sync';
+                banner.style.cssText = 'position:fixed; top:0; left:0; right:0; z-index:200; background:#c53030; color:#fff; padding:10px 14px; font-size:12px; display:flex; align-items:center; justify-content:space-between; gap:10px; box-shadow:0 2px 6px rgba(0,0,0,0.3);';
+                banner.innerHTML = `
+                    <span style="flex:1;">⚠️ Há dados não confirmados na nuvem. Toque para reenviar.</span>
+                    <button onclick="reenviarPendencias()" style="background:#fff; color:#c53030; font-weight:bold; border:none; padding:6px 10px; border-radius:6px; font-size:12px;">🔄 Reenviar Agora</button>
+                `;
+                document.body.prepend(banner);
+            }
+            banner.style.display = 'flex';
+        }
+
+
+        function esconderBannerPendencia() {
+            const banner = document.getElementById('banner-pendencia-sync');
+            if (banner) banner.style.display = 'none';
+        }
+
+
+        function switchTab(tabId) {
+            if (isOffline && ['tab-imoveis', 'tab-contratos', 'tab-mensal', 'tab-socios'].includes(tabId)) {
+                alert("⚠️ Aba bloqueada no modo offline de consulta.");
+                return;
+            }
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById(tabId).classList.add('active');
+            document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('bg-slate-800', 'border-b-2', 'border-blue-400'));
+            document.getElementById('btn-' + tabId).classList.add('bg-slate-800', 'border-b-2', 'border-blue-400');
+            devLog("NAVEGACAO", `Usuário acessou a aba: ${tabId}`);
+        }
+
+
+        function atualizarDropdownFiltrosDinamicos() {
+            const selectInadMes = document.getElementById('inad-filtro-mes');
+            const valInadMes = selectInadMes ? selectInadMes.value : 'todos';
+            const selectInadAlvo = document.getElementById('inad-filtro-alvo');
+            const valInadAlvo = selectInadAlvo ? selectInadAlvo.value : 'todos';
+
+
+            if(selectInadMes) {
+                let sMes = new Set();
+                mensalidades.forEach(m => sMes.add(m.referencia));
+                selectInadMes.innerHTML = '<option value="todos">Todos os Meses</option>';
+                sMes.forEach(m => {
+                    if (m && !m.includes('T')) {
+                        selectInadMes.innerHTML += `<option value="${m}">${m}</option>`;
+                    }
+                });
+                selectInadMes.value = valInadMes;
+            }
+
+
+            if(selectInadAlvo) {
+                selectInadAlvo.innerHTML = '<option value="todos">Todos os Locatários</option>';
+                contratos.forEach(c => {
+                    selectInadAlvo.innerHTML += `<option value="${c.id}">${c.locatario}</option>`;
+                });
+                selectInadAlvo.value = valInadAlvo;
+            }
+
+
+            const selectSocioNome = document.getElementById('socio-filtro-nome');
+            const valSocioNome = selectSocioNome ? selectSocioNome.value : 'todos';
+            const selectSocioMes = document.getElementById('socio-filtro-mes');
+            const valSocioMes = selectSocioMes ? selectSocioMes.value : 'todos';
+            const selectRepMes = document.getElementById('rep-mes');
+
+
+            let todosSocios = new Set(["Ruyter"]);
+            imoveis.forEach(imo => { if(imo.divisao) Object.keys(imo.divisao).forEach(s => todosSocios.add(s)); });
+
+
+            if(selectSocioNome) {
+                selectSocioNome.innerHTML = '<option value="todos">Todos os Sócios</option>';
+                todosSocios.forEach(s => selectSocioNome.innerHTML += `<option value="${s}">${s}</option>`);
+                selectSocioNome.value = valSocioNome;
+            }
+
+
+            let todosMesesMensalidades = new Set();
+            mensalidades.forEach(m => { if(m.referencia && !m.referencia.includes('T')) todosMesesMensalidades.add(m.referencia); });
+
+
+            if(selectSocioMes) {
+                selectSocioMes.innerHTML = '<option value="todos">Todos os Meses</option>';
+                todosMesesMensalidades.forEach(m => selectSocioMes.innerHTML += `<option value="${m}">${m}</option>`);
+                selectSocioMes.value = valSocioMes;
+            }
+
+
+            if(selectRepMes) {
+                const valRep = selectRepMes.value;
+                selectRepMes.innerHTML = '';
+                arrayCompetencias.forEach(m => selectRepMes.innerHTML += `<option value="${m}">${m}</option>`);
+                if(valRep) selectRepMes.value = valRep;
+            }
+        }
+
+
+        function renderSocioInputs() {
+            const container = document.getElementById('proprietarios-divisao');
+            if(!container) return;
+            container.innerHTML = '';
+
+
+            container.innerHTML += `
+                <div class="flex items-center justify-between gap-2 border-b border-gray-100 pb-1">
+                    <span class="font-bold text-slate-800">Ruyter (Padrão)</span>
+                    <div class="flex items-center space-x-1">
+                        <input type="number" id="socio-pct-Ruyter" value="100" min="0" max="100" class="w-16 p-1 border rounded text-center font-black text-blue-600 bg-gray-50">
+                        <span class="font-bold text-gray-500">%</span>
+                    </div>
+                </div>
+            `;
+
+
+            sociosAdicionais.forEach((socio, index) => {
+                container.innerHTML += `
+                    <div class="flex items-center justify-between gap-2 text-xs">
+                        <span class="font-medium text-slate-700">${socio.nome}</span>
+                        <div class="flex items-center space-x-1">
+                            <input type="number" data-index="${index}" value="${socio.pct}" min="0" max="100" onchange="atualizarPctSocioAdicional(${index}, this.value)" class="socio-adicional-input w-16 p-1 border rounded text-center font-bold">
+                            <span>%</span>
+                            <button type="button" onclick="removerSocioInput(${index})" class="text-red-500 font-bold px-1 ml-1">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+
+        function adicionarSocioInput() {
+            const nome = prompt("Digite o nome do novo sócio:");
+            if(!nome || nome.trim() === "") return;
+            if(nome.trim().toLowerCase() === 'ruyter') return alert("Ruyter já é padrão!");
+            sociosAdicionais.push({ nome: nome.trim(), pct: 0 });
+            renderSocioInputs();
+        }
+
+
+        function removerSocioInput(index) {
+            sociosAdicionais.splice(index, 1);
+            renderSocioInputs();
+        }
+
+
+        function atualizarPctSocioAdicional(index, valor) {
+            sociosAdicionais[index].pct = parseFloat(valor) || 0;
+        }
+
+
+        function atualizarListaSelecaoSociosRepasse() {
+            const repSelect = document.getElementById('rep-socio');
+            if(!repSelect) return;
+            let todosOsSocios = new Set(["Ruyter"]);
+            imoveis.forEach(imo => {
+                if(imo.divisao) Object.keys(imo.divisao).forEach(s => todosOsSocios.add(s));
+            });
+            repSelect.innerHTML = '';
+            todosOsSocios.forEach(s => { repSelect.innerHTML += `<option value="${s}">${s}</option>`; });
+        }
+
+
+        function saveImovel(e) {
+            e.preventDefault();
+            const id = document.getElementById('imo-id').value;
+            
+            let divisao = {};
+            const pctRuyter = parseFloat(document.getElementById('socio-pct-Ruyter').value) || 0;
+            divisao["Ruyter"] = pctRuyter;
+            
+            let somaPct = pctRuyter;
+            sociosAdicionais.forEach(socio => {
+                divisao[socio.nome] = socio.pct;
+                somaPct += socio.pct;
+            });
+
+
+            if(somaPct !== 100) {
+                alert("⚠️ A soma societária precisa ser exatamente 100%. Total atual: " + somaPct + "%");
+                return;
+            }
+
+
+            const empreendimentoSalvo = document.getElementById('imo-empreendimento').value;
+            const tipoSalvo = document.getElementById('imo-tipo').value;
+            const ruaSalva = document.getElementById('imo-endereco-rua').value;
+            const bairroSalvo = document.getElementById('imo-endereco-bairro').value;
+            const cidadeSalva = document.getElementById('imo-endereco-cidade').value;
+
+
+            const dados = {
+                id: id || 'imo_' + Date.now(),
+                empreendimento: empreendimentoSalvo,
+                enderecoRua: ruaSalva,
+                enderecoNum: document.getElementById('imo-endereco-num').value,
+                enderecoComp: document.getElementById('imo-endereco-comp').value,
+                enderecoBairro: bairroSalvo,
+                enderecoCidade: cidadeSalva,
+                tipo: tipoSalvo,
+                tamanho: document.getElementById('imo-tamanho').value,
+                suites: document.getElementById('imo-suites').value,
+                banheiros: document.getElementById('imo-banheiros').value,
+                condominio: parseFloat(document.getElementById('imo-condominio').value) || 0,
+                iptu: parseFloat(document.getElementById('imo-iptu').value) || 0,
+                valor: parseFloat(document.getElementById('imo-valor').value) || 0,
+                fotos: fotosCarregadasBase64.length > 0 ? fotosCarregadasBase64 : (id ? (imoveis.find(i => i.id === id).fotos || []) : []),
+                divisao: divisao,
+                status: id ? imoveis.find(i => i.id === id).status : 'Vago'
+            };
+
+
+            devLog("FORM_IMOVEL", `Tentativa de gravação do imóvel. ID: ${dados.id}`, dados);
+
+
+            if(id) {
+                const idx = imoveis.findIndex(i => i.id === id);
+                imoveis[idx] = dados;
+            } else {
+                imoveis.push(dados);
+            }
+
+
+            document.getElementById('form-imovel').reset();
+            fotosCarregadasBase64 = [];
+            document.getElementById('form-images-preview-container').innerHTML = '';
+            
+            document.getElementById('imo-empreendimento').value = empreendimentoSalvo;
+            document.getElementById('imo-tipo').value = tipoSalvo;
+            document.getElementById('imo-endereco-rua').value = ruaSalva;
+            document.getElementById('imo-endereco-bairro').value = bairroSalvo;
+            document.getElementById('imo-endereco-cidade').value = cidadeSalva;
+
+
+            cancelarEdicaoImovel();
+            saveAll(true, "Imóvel salvo com sucesso!");
+        }
+
+
+        function editarImovel(id) {
+            const imo = imoveis.find(i => i.id === id);
+            if(!imo) return;
+            document.getElementById('imo-id').value = imo.id;
+            document.getElementById('imo-empreendimento').value = imo.empreendimento || 'Canaã';
+            document.getElementById('imo-endereco-rua').value = imo.enderecoRua || '';
+            document.getElementById('imo-endereco-num').value = imo.enderecoNum || '';
+            document.getElementById('imo-endereco-comp').value = imo.enderecoComp || '';
+            document.getElementById('imo-endereco-bairro').value = imo.enderecoBairro || '';
+            document.getElementById('imo-endereco-cidade').value = imo.enderecoCidade || '';
+            document.getElementById('imo-tipo').value = imo.tipo;
+            document.getElementById('imo-tamanho').value = imo.tamanho;
+            document.getElementById('imo-suites').value = imo.suites || 0;
+            document.getElementById('imo-banheiros').value = imo.banheiros || 0;
+            document.getElementById('imo-condominio').value = imo.condominio || 0;
+            document.getElementById('imo-iptu').value = imo.iptu || 0;
+            document.getElementById('imo-valor').value = imo.valor;
+            
+            const previewContainer = document.getElementById('form-images-preview-container');
+            previewContainer.innerHTML = '';
+            fotosCarregadasBase64 = imo.fotos || [];
+            
+            fotosCarregadasBase64.forEach(foto => {
+                previewContainer.innerHTML += `
+                    <div class="relative">
+                        <img src="${foto}" class="w-14 h-14 object-cover rounded border shadow-sm">
+                    </div>
+                `;
+            });
+
+
+            sociosAdicionais = [];
+            if(imo.divisao) {
+                document.getElementById('socio-pct-Ruyter').value = imo.divisao["Ruyter"] || 0;
+                Object.keys(imo.divisao).forEach(nome => {
+                    if(nome !== "Ruyter") sociosAdicionais.push({ nome: nome, pct: imo.divisao[nome] });
+                });
+            }
+            renderSocioInputs();
+            document.getElementById('form-imovel-titulo').innerText = "Editar Imóvel 📝";
+            document.getElementById('btn-cancelar-edit-imo').classList.remove('hidden');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+
+        function cancelarEdicaoImovel() {
+            document.getElementById('imo-id').value = '';
+            document.getElementById('form-imovel-titulo').innerText = "Cadastrar Imóvel";
+            document.getElementById('btn-cancelar-edit-imo').classList.add('hidden');
+            sociosAdicionais = [];
+            fotosCarregadasBase64 = [];
+            document.getElementById('form-images-preview-container').innerHTML = '';
+            renderSocioInputs();
+        }
+
+
+        function renderImoveis() {
+            const container = document.getElementById('lista-imoveis');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            logScreen(`Disparada renderImoveis(). Array possui ${imoveis.length} registros em memória.`);
+            document.getElementById('total-imoveis-contador').innerText = imoveis.length;
+
+
+            const selectCon = document.getElementById('con-imovel');
+            const selConVal = selectCon ? selectCon.value : '';
+            if(selectCon) selectCon.innerHTML = '<option value="">-- Escolha o Imóvel --</option>';
+
+
+            const selectFiltro = document.getElementById('filtro-imovel');
+            const selFilVal = selectFiltro ? selectFiltro.value : 'todos';
+            if(selectFiltro) selectFiltro.innerHTML = '<option value="todos">Todos os Imóveis</option>';
+
+
+            imoveis.forEach((imo, index) => {
+                try {
+                    let divSoc = '';
+                    if (imo.divisao) {
+                        for(let s in imo.divisao) divSoc += `${s}: ${imo.divisao[s]}% | `;
+                    } else {
+                        divSoc = "Sem divisão cadastrada";
+                    }
+                    
+                    let ftHtml = '';
+                    if(imo.fotos && Array.isArray(imo.fotos) && imo.fotos.length > 0) {
+                        ftHtml = '<div class="mt-2 flex gap-1 overflow-x-auto py-1">';
+                        imo.fotos.forEach(foto => {
+                            if(foto && typeof foto === 'string' && foto.length > 5) {
+                                ftHtml += `<img src="${foto}" class="w-8 h-8 rounded object-cover border shadow-sm flex-none">`;
+                            }
+                        });
+                        ftHtml += '</div>';
+                    }
+
+
+                    const endExibivel = `${imo.enderecoRua || ''}, ${imo.enderecoNum || ''} ${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}, ${imo.enderecoBairro || ''}, ${imo.enderecoCidade || ''}`;
+
+
+                    container.innerHTML += `
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                            <div class="flex justify-between items-start">
+                                <span class="text-2xs font-bold px-2 py-0.5 rounded ${imo.status==='Vago'?'bg-amber-100 text-amber-800':'bg-green-100 text-green-800'}">${imo.status} | ${imo.tipo}</span>
+                                <span class="text-sm font-black text-slate-900">R$ ${imo.valor}</span>
+                            </div>
+                            <p class="text-xs font-bold mt-1 text-blue-900 uppercase tracking-wide">🏢 ${imo.empreendimento || 'Canaã'}</p>
+                            <p class="text-2xs font-medium text-slate-700">${endExibivel}</p>
+                            <p class="text-2xs text-gray-500 mt-1">Tamanho: ${imo.tamanho}m² | Suítes: ${imo.suites} | WC: ${imo.banheiros} | Cond: R$ ${imo.condominio} | IPTU: R$ ${imo.iptu}</p>
+                            <p class="text-2xs text-blue-950 font-semibold mt-1 bg-blue-50/50 p-1 rounded">👥 ${divSoc}</p>
+                            ${ftHtml}
+                            <div class="mt-3 flex gap-2">
+                                <button onclick="copyResumo('${endExibivel}', '${imo.tipo}', ${imo.valor}, ${imo.suites}, ${imo.condominio})" class="text-2xs bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded border">📋 Copiar Zap</button>
+                                <button onclick="editarImovel('${imo.id}')" class="text-2xs bg-blue-50 text-blue-700 font-bold px-2 py-1 rounded border border-blue-200">📝 Editar</button>
+                            </div>
+                        </div>
+                    `;
+                    
+                    if(selectCon) {
+                        selectCon.innerHTML += `<option value="${imo.id}">[${imo.empreendimento || 'Canaã'}] ${endExibivel.substring(0,25)}...</option>`;
+                    }
+                    if(selectFiltro) {
+                        selectFiltro.innerHTML += `<option value="${imo.id}">[${imo.empreendimento || 'Canaã'}] ${endExibivel.substring(0,20)}...</option>`;
+                    }
+                } catch(renderErr) {
+                    logScreen(`Falha renderizando imóvel index [${index}]: ${renderErr.message}`, true);
+                }
+            });
+            if(selectCon) selectCon.value = selConVal;
+            if(selectFiltro) selectFiltro.value = selFilVal;
+        }
+
+
+        function copyResumo(end, tipo, val, suites, cond) {
+            const txt = `🏠 *RUMO IMÓVEIS - OPORTUNIDADE*\n📍 *Tipo:* ${tipo}\n📍 *Endereço:* ${end}\n📐 *Suítes:* ${suites}\n💰 *Valor Locação:* R$ ${val.toLocaleString('pt-BR')}\n📦 *Condomínio:* R$ ${cond}`;
+            navigator.clipboard.writeText(txt);
+            alert("Resumo de locação copiado!");
+        }
+
+
+        function saveContrato(e) {
+            e.preventDefault();
+            const id = document.getElementById('con-id').value;
+            const imoId = document.getElementById('con-imovel').value;
+            const docTipo = document.getElementById('con-doc-tipo').value;
+            const docVal = document.getElementById('con-cpf').value.trim();
+            const valorNovo = parseFloat(document.getElementById('con-valor').value);
+            const dataFim = document.getElementById('con-fim').value;
+
+
+            devLog("FORM_CONTRATO", `Iniciando rotina de submissão. ID: ${id || 'NOVO'}, Imovel ID: ${imoId}`);
+
+
+            if(!imoId) return alert("⚠️ Selecione um imóvel.");
+
+
+            if(docTipo === 'CPF' && !validarCPF(docVal)) {
+                return alert("⚠️ O CPF informado não é válido.");
+            }
+            if(docTipo === 'CNPJ' && !validarCNPJ(docVal)) {
+                return alert("⚠️ O CNPJ informado não é válido.");
+            }
+
+
+            let contratoDados = {
+                id: id || 'con_' + Date.now(),
+                imovelId: imoId,
+                status: document.getElementById('con-status').value,
+                locatario: document.getElementById('con-locatario').value,
+                docTipo: docTipo,
+                cpf: docVal,
+                vencimentoDia: parseInt(document.getElementById('con-vencimento-dia').value),
+                whatsapp: document.getElementById('con-whatsapp').value.trim(),
+                email: document.getElementById('con-email').value.trim(),
+                inicio: document.getElementById('con-inicio').value,
+                fim: dataFim,
+                valor: valorNovo,
+                valorAnterior: parseFloat(document.getElementById('con-valor-anterior').value) || 0,
+                desconto: parseFloat(document.getElementById('con-desconto').value) || 0,
+                reajusteAplicado: parseFloat(document.getElementById('con-reajuste-aplicado').value) || 0,
+                reajuste: document.getElementById('con-reajuste').value,
+                iptu: parseFloat(document.getElementById('con-iptu').value) || 0,
+                historico: []
+            };
+
+
+            devLog("FORM_CONTRATO", "Payload do Contrato Estruturado:", contratoDados);
+
+
+            if(id) {
+                const idx = contratos.findIndex(c => c.id === id);
+                if(idx !== -1) {
+                    contratoDados.historico = contratos[idx].historico || [];
+                    contratos[idx] = contratoDados;
+                    devLog("FORM_CONTRATO", `Contrato existente ID: ${id} modificado no index: ${idx}`);
+                }
+            } else {
+                contratos.push(contratoDados);
+                devLog("FORM_CONTRATO", "Novo contrato adicionado ao banco local.");
+                
+                // Marca o status do imóvel vinculado como "Alugado"
+                const imIdx = imoveis.findIndex(i => i.id === imoId);
+                if(imIdx !== -1) {
+                    imoveis[imIdx].status = 'Alugado';
+                    devLog("FORM_CONTRATO", `Imóvel ID: ${imoId} localizado e atualizado para status 'Alugado'`);
+                } else {
+                    devLog("FORM_CONTRATO_AVISO", `Imóvel com ID: ${imoId} não foi localizado na memória para atualizar para 'Alugado'.`);
+                }
+            }
+
+
+            document.getElementById('form-contrato').reset();
+            cancelarEdicaoContrato();
+            saveAll(true, "Contrato de locação salvo!");
+        }
+
+
+        function editarContrato(id) {
+            activeConId = id;
+            const con = contratos.find(c => c.id === id);
+            if(!con) return;
+            renderImoveis();
+            document.getElementById('con-id').value = con.id;
+            document.getElementById('con-imovel').value = con.imovelId;
+            document.getElementById('con-status').value = con.status || 'Ativo';
+            document.getElementById('con-locatario').value = con.locatario;
+            document.getElementById('con-doc-tipo').value = con.docTipo || 'CPF';
+            document.getElementById('con-cpf').value = con.cpf;
+            document.getElementById('con-vencimento-dia').value = con.vencimentoDia || 15;
+            document.getElementById('con-whatsapp').value = con.whatsapp || '';
+            document.getElementById('con-email').value = con.email || '';
+            document.getElementById('con-inicio').value = con.inicio;
+            document.getElementById('con-fim').value = con.fim;
+            document.getElementById('con-valor').value = con.valor;
+            document.getElementById('con-valor-anterior').value = con.valorAnterior || 0;
+            document.getElementById('con-desconto').value = con.desconto || 0;
+            document.getElementById('con-reajuste-aplicado').value = con.reajusteAplicado || 0;
+            document.getElementById('con-reajuste').value = con.reajuste;
+            document.getElementById('con-iptu').value = con.iptu || 0;
+            document.getElementById('form-contrato-titulo').innerText = "Renovar / Editar Contrato 📝";
+            document.getElementById('btn-cancelar-edit-con').classList.remove('hidden');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+
+
+        function cancelarEdicaoContrato() {
+            activeConId = null;
+            document.getElementById('con-id').value = '';
+            document.getElementById('form-contrato-titulo').innerText = "Novo Contrato de Locação";
+            document.getElementById('btn-cancelar-edit-con').classList.add('hidden');
+            renderImoveis();
+        }
+
+
+        function renderContratos() {
+            const container = document.getElementById('lista-contratos');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const ativos = contratos.filter(c => c.status === 'Ativo').length;
+            document.getElementById('contratos-ativos-contador').innerText = ativos;
+            document.getElementById('contratos-totais-contador').innerText = contratos.length;
+
+
+            contratos.forEach(con => {
+                const imo = imoveis.find(i => i.id === con.imovelId);
+                const descDesconto = con.desconto > 0 ? ` | Desconto: R$ ${con.desconto}` : '';
+                const descIptu = con.iptu > 0 ? ` | IPTU Contratual: R$ ${con.iptu}` : '';
+                container.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex justify-between font-bold text-sm text-slate-900">
+                            <span>👤 ${con.locatario} (${con.docTipo || 'CPF'})</span>
+                            <span class="${con.status === 'Ativo'?'text-green-700':'text-red-600'}">R$ ${con.valor}/mês [${con.status || 'Ativo'}]</span>
+                        </div>
+                        <p class="text-2xs text-gray-500 mt-1">📍 Empreendimento: ${imo ? imo.empreendimento : '-'} | Dia Vencimento: ${con.vencimentoDia || 15}</p>
+                        <p class="text-2xs text-gray-600 font-semibold">Vigência: ${con.inicio} até ${con.fim}${descDesconto}${descIptu}</p>
+                        <button onclick="editarContrato('${con.id}')" class="mt-2 text-2xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-1 rounded font-bold">Reajustar / Renovar</button>
+                    </div>
+                `;
+            });
+        }
+
+
+        function gerarMensalidades() {
+            const selectRef = document.getElementById('men-referencia');
+            const ref = selectRef.value;
+            
+            if(!contratos || contratos.length === 0) {
+                alert("⚠️ Não há contratos cadastrados.");
+                return;
+            }
+
+
+            const [mesRef, anoRef] = ref.split('/').map(Number);
+            const dataPrimeiroDiaCompetencia = new Date(anoRef, mesRef - 1, 1);
+            const dataUltimoDiaCompetencia = new Date(anoRef, mesRef, 0);
+            const diasTotaisMes = dataUltimoDiaCompetencia.getDate();
+
+
+            contratos.forEach(con => {
+                if (con.status === 'Suspenso' || con.status === 'Finalizado') {
+                    return;
+                }
+
+
+                const dataInicioCon = new Date(con.inicio + "T00:00:00");
+                const dataFimCon = new Date(con.fim + "T00:00:00");
+
+
+                if (dataInicioCon > dataUltimoDiaCompetencia || dataFimCon < dataPrimeiroDiaCompetencia) {
+                    return;
+                }
+
+
+                const inicioReal = dataInicioCon > dataPrimeiroDiaCompetencia ? dataInicioCon : dataPrimeiroDiaCompetencia;
+                const fimReal = dataFimCon < dataUltimoDiaCompetencia ? dataFimCon : dataUltimoDiaCompetencia;
+                
+                const diffTime = Math.abs(fimReal - inicioReal);
+                const diasAtivosNoMes = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+
+                let valorEfetivo = con.valor - (con.desconto || 0);
+
+
+                if (diasAtivosNoMes < diasTotaisMes) {
+                    valorEfetivo = (valorEfetivo / 30) * Math.min(diasAtivosNoMes, 30);
+                    valorEfetivo = parseFloat(valorEfetivo.toFixed(2));
+                }
+
+
+                const diaPadrao = con.vencimentoDia || 15;
+                const diaPgoString = diaPadrao < 10 ? '0' + diaPadrao : diaPadrao;
+                const dataDePagamentoGerada = `${diaPgoString}/${mesRef < 10 ? '0'+mesRef : mesRef}/${anoRef}`;
+
+
+                const existe = mensalidades.some(m => m.contratoId === con.id && m.referencia === ref);
+                if(!existe) {
+                    mensalidades.push({
+                        id: 'men_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                        contratoId: con.id,
+                        referencia: ref,
+                        status: 'Pendente',
+                        banco: '-',
+                        dataPgto: dataDePagamentoGerada, 
+                        observacao: '',
+                        valorConfirmado: valorEfetivo
+                    });
+                }
+            });
+
+
+            const idxAtual = arrayCompetencias.indexOf(ref);
+            if(idxAtual !== -1 && idxAtual + 1 < arrayCompetencias.length) {
+                selectRef.value = arrayCompetencias[idxAtual + 1];
+            }
+
+
+            saveAll(true, `Mensalidades geradas para ${ref}`);
+        }
+
+
+        function liquidarMensalidade(menId) {
+            const banco = document.getElementById(`banco-${menId}`).value;
+            const dataManual = document.getElementById(`data-${menId}`).value;
+            const valorManual = parseFloat(document.getElementById(`valor-${menId}`).value);
+            const obsManual = document.getElementById(`obs-${menId}`).value.trim();
+
+
+            if(!dataManual || isNaN(valorManual)) return alert("Preencha data e valor.");
+
+
+            const idx = mensalidades.findIndex(m => m.id === menId);
+            if(idx !== -1) {
+                mensalidades[idx].status = 'Pago';
+                mensalidades[idx].banco = banco;
+                mensalidades[idx].dataPgto = dataManual.split('-').reverse().join('/'); 
+                mensalidades[idx].valorConfirmado = valorManual;
+                mensalidades[idx].observacao = obsManual;
+                saveAll();
+            }
+        }
+
+
+        function estornarMensalidade(menId) {
+            if(!confirm("Confirmar estorno do caixa?")) return;
+            const idx = mensalidades.findIndex(m => m.id === menId);
+            if(idx !== -1) {
+                mensalidades[idx].status = 'Pendente';
+                mensalidades[idx].banco = '-';
+                const con = contratos.find(c => c.id === mensalidades[idx].contratoId);
+                const partesRef = mensalidades[idx].referencia.split('/');
+                const diaVenc = con ? (con.vencimentoDia || 15) : 15;
+                const diaPgoString = diaVenc < 10 ? '0' + diaVenc : diaVenc;
+                mensalidades[idx].dataPgto = `${diaPgoString}/${partesRef[0]}/${partesRef[1]}`;
+                saveAll();
+            }
+        }
+
+
+        function renderMensalidades() {
+            const container = document.getElementById('lista-mensalidades');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            let totalAReceber = 0;
+            let totalRecebido = 0;
+
+
+            mensalidades.forEach(men => {
+                const con = contratos.find(c => c.id === men.contratoId);
+                if(!con) return;
+                
+                const partesRef = men.referencia.split('/');
+                const diaVenc = con.vencimentoDia || 15;
+                const dataPadraoVenc = `${partesRef[1]}-${partesRef[0]}-${diaVenc < 10 ? '0'+diaVenc : diaVenc}`;
+
+
+                if(men.status === 'Pendente') {
+                    totalAReceber += men.valorConfirmado;
+                    container.innerHTML += `
+                        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-amber-500 space-y-2">
+                            <div class="flex justify-between items-start">
+                                <div><p class="text-xs font-bold text-slate-900">${con.locatario}</p><p class="text-3xs text-gray-500">Ref: ${men.referencia}</p></div>
+                                <span class="bg-amber-100 text-amber-800 text-3xs px-2 py-0.5 rounded font-black">Pendente</span>
+                            </div>
+                            <div class="grid grid-cols-2 gap-1 text-2xs">
+                                <div>
+                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Banco Destino</label>
+                                    <select id="banco-${men.id}" class="w-full border p-1 rounded bg-gray-50"><option value="Itaú">Itaú</option><option value="Bradesco">Bradesco</option><option value="Nubank">Nubank</option></select>
+                                </div>
+                                <div>
+                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Dia Recebimento</label>
+                                    <input type="date" id="data-${men.id}" value="${dataPadraoVenc}" class="w-full border p-0.5 rounded bg-gray-50 text-center">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-1 text-2xs">
+                                <div>
+                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Valor Efetivo (R$)</label>
+                                    <input type="number" id="valor-${men.id}" value="${men.valorConfirmado}" class="w-full border p-1 rounded bg-gray-50 font-bold text-blue-900">
+                                </div>
+                                <div>
+                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Observações Internas</label>
+                                    <input type="text" id="obs-${men.id}" placeholder="Ex: Desconto" class="w-full border p-1 rounded bg-gray-50">
+                                </div>
+                            </div>
+                            <button onclick="liquidarMensalidade('${men.id}')" class="w-full bg-emerald-600 text-white text-2xs py-1.5 rounded font-bold shadow ${isOffline ? 'opacity-50 pointer-events-none' : ''}">Dar Baixa</button>
+                        </div>`;
+                } else {
+                    totalRecebido += men.valorConfirmado;
+                    const log = men.envioLog ? `<p class="text-4xs text-blue-950 font-semibold">📬 Log: Notificado via ${men.envioLog.canal} (${men.envioLog.data})</p>` : `<p class="text-4xs text-gray-400">⚠️ Envio pendente</p>`;
+                    const txtObs = men.observacao ? `<p class="text-4xs text-amber-800 italic bg-amber-50 p-1 rounded mt-1">📝 Obs: ${men.observacao}</p>` : '';
+                    container.innerHTML += `
+                        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-green-500">
+                            <div class="flex justify-between items-center">
+                                <div>
+                                    <p class="text-xs font-bold text-gray-900">${con.locatario}</p>
+                                    <p class="text-3xs text-gray-500">Ref: ${men.referencia} | R$ ${men.valorConfirmado.toFixed(2)} (${men.banco} - ${men.dataPgto})</p>
+                                    ${log}
+                                    ${txtObs}
+                                </div>
+                                <div class="flex flex-col gap-1">
+                                    <button onclick="abrirModalOpcoesRecibo('${men.id}', '${con.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-3xs px-3 py-2 rounded font-bold shadow transition active:scale-95">📄 Recibo</button>
+                                    <button onclick="estornarMensalidade('${men.id}')" class="bg-red-50 text-red-600 border border-red-200 text-4xs px-2 py-0.5 rounded font-medium ${isOffline ? 'opacity-50 pointer-events-none' : ''}">Estornar</button>
+                                </div>
+                            </div>
+                        </div>`;
+                }
+            });
+
+
+            document.getElementById('totalizer-a-receber').innerText = "R$ " + totalAReceber.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+            document.getElementById('totalizer-recebido').innerText = "R$ " + totalRecebido.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        }
+
+
+        function abrirModalOpcoesRecibo(menId, conId) {
+            activeMenId = menId;
+            activeConId = conId;
+            const con = contratos.find(c => c.id === conId);
+            const men = mensalidades.find(m => m.id === menId);
+            if(!con || !men) return;
+
+
+            const imo = imoveis.find(i => i.id === con.imovelId);
+            const empName = imo ? imo.empreendimento : 'Patrimônio';
+
+
+            document.getElementById('modal-subtitulo-info').innerText = `${con.locatario} - Competência ${men.referencia} (${empName})`;
+            document.getElementById('modal-opcoes-recibo').classList.remove('hidden');
+
+
+            document.getElementById('pdf-locatario').innerText = con.locatario;
+            document.getElementById('pdf-cpf').innerText = con.cpf;
+            document.getElementById('pdf-valor').innerText = men.valorConfirmado.toLocaleString('pt-BR', {minimumFractionDigits:2});
+            document.getElementById('pdf-extenso').innerText = valorPorExtenso(men.valorConfirmado);
+            document.getElementById('pdf-endereco').innerText = imo ? `${imo.enderecoRua || ''}, ${imo.enderecoNum || ''} ${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}, ${imo.enderecoBairro || ''}, ${imo.enderecoCidade || ''}` : '';
+            document.getElementById('pdf-mes').innerText = men.referencia;
+            document.getElementById('pdf-data').innerText = men.dataPgto;
+
+
+            if (men.observacao && men.observacao.trim() !== '') {
+                document.getElementById('pdf-obs-texto').innerHTML = ` Vale notar que ${men.observacao}.`;
+            } else {
+                document.getElementById('pdf-obs-texto').innerHTML = '';
+            }
+
+
+            document.getElementById('pdf-data-emissao').innerText = new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'long', year: 'numeric' });
+        }
+
+
+        function fecharModalOpcoes() {
+            document.getElementById('modal-opcoes-recibo').classList.add('hidden');
+        }
+
+
+        function dispararAcaoDoMenu(opcao) {
+            fecharModalOpcoes();
+            if(opcao === 'visualizar') {
+                document.getElementById('pdf-wrapper').classList.remove('hidden');
+            } else if(opcao === 'pdf') {
+                baixarArquivoPdfLocal();
+            } else if(opcao === 'zap') {
+                ejecutarCanalComunicação('zap');
+            } else if(opcao === 'email') {
+                ejecutarCanalComunicação('email');
+            }
+        }
+
+
+        function fecharPreviewPdfOnly() {
+            document.getElementById('pdf-wrapper').classList.add('hidden');
+        }
+
+
+        function gerarNomeArquivoPadronizado() {
+            const con = contratos.find(c => c.id === activeConId);
+            const men = mensalidades.find(m => m.id === activeMenId);
+            if(!con || !men) return 'Recibo.pdf';
+
+
+            const imo = imoveis.find(i => i.id === con.imovelId);
+            const emp = imo ? imo.empreendimento : 'RU';
+            const end = imo ? (imo.enderecoRua || '') : '';
+
+
+            const iniciaisEmp = emp.split(' ').map(palavra => palavra[0]).join('').toUpperCase().substring(0, 3);
+            const numerosEnd = end.replace(/\D/g, ''); 
+            const localizador = numerosEnd.length > 0 ? numerosEnd.substring(0, 6) : end.substring(0, 3).replace(/\s/g, '').toUpperCase();
+            const compLimpa = men.referencia.replace('/', '').substring(0,2) + men.referencia.substring(5);
+
+
+            let nomeFinal = `R_${iniciaisEmp}_${localizador}_${compLimpa}.pdf`;
+            if(nomeFinal.length > 20) {
+                const excesso = nomeFinal.length - 20;
+                nomeFinal = `R_${iniciaisEmp}_${localizador.substring(0, localizador.length - excesso)}_${compLimpa}.pdf`;
+            }
+            return nomeFinal;
+        }
+
+
+        function baixarArquivoPdfLocal() {
+            const element = document.getElementById('pdf-template');
+            const wrapper = document.getElementById('pdf-wrapper');
+            const nomeDoArquivo = gerarNomeArquivoPadronizado();
+
+
+            const estavaEscondido = wrapper.classList.contains('hidden');
+            if (estavaEscondido) wrapper.classList.remove('hidden');
+
+
+            html2canvas(element, { scale: 2.5, useCORS: true, scrollY: 0, backgroundColor: '#ffffff' })
+                .then((canvas) => {
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+
+
+                    const margin = 5;
+                    const pageWidth = pdf.internal.pageSize.getWidth() - margin * 2;
+                    const pageHeight = pdf.internal.pageSize.getHeight() - margin * 2;
+                    const imgWidth = pageWidth;
+                    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                    const imgData = canvas.toDataURL('image/jpeg', 0.98);
+
+
+                    let heightLeft = imgHeight;
+                    let position = margin;
+
+
+                    pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+
+
+                    while (heightLeft > 0) {
+                        position = heightLeft - imgHeight - margin;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'JPEG', margin, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+
+
+                    pdf.save(nomeDoArquivo);
+                    if (estavaEscondido) wrapper.classList.add('hidden');
+                }).catch((err) => {
+                    if (estavaEscondido) wrapper.classList.add('hidden');
+                    console.error('Erro ao gerar PDF:', err);
+                });
+        }
+
+
+        function baixarRelatorioPdfLocal() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+            
+            const margin = 12;
+            let currentY = 15;
+
+
+            pdf.setFont("Helvetica", "bold");
+            pdf.setFontSize(14);
+            pdf.setTextColor(26, 54, 93);
+            pdf.text("RUMO - RELATÓRIO DEMONSTRATIVO DE RECEBIMENTOS", margin, currentY);
+            
+            pdf.setFont("Helvetica", "normal");
+            pdf.setFontSize(10);
+            pdf.setTextColor(113, 128, 150);
+            pdf.text("CNPJ: 18.661.505/0001-62 | Belo Horizonte / MG", margin, currentY + 6);
+            pdf.text(`Filtro Período: ${new Date().toLocaleString('pt-BR')}`, margin, currentY + 11);
+            pdf.line(margin, currentY + 13, pdf.internal.pageSize.getWidth() - margin, currentY + 13);
+            
+            currentY += 22;
+
+
+            let fatTotal = 0;
+            let potTotal = 0;
+
+
+            pdf.setFont("Helvetica", "bold");
+            pdf.setFontSize(12); 
+            pdf.setTextColor(26, 54, 93);
+            pdf.text("Detalhamento Analítico:", margin, currentY);
+            currentY += 8;
+
+
+            mensalidades.forEach(men => {
+                const con = contratos.find(c => c.id === men.contratoId);
+                if(!con) return;
+                const imo = imoveis.find(i => i.id === con.imovelId);
+                
+                potTotal += men.valorConfirmado;
+                if(men.status === 'Pago') fatTotal += men.valorConfirmado;
+
+
+                if (currentY > 260) {
+                    pdf.addPage();
+                    currentY = 15;
+                }
+
+
+                pdf.setFont("Helvetica", "bold");
+                pdf.setFontSize(12); 
+                pdf.setTextColor(45, 55, 72);
+                pdf.text(`• ${con.locatario} (${men.referencia})`, margin, currentY);
+                
+                pdf.setFont("Helvetica", "normal");
+                pdf.setFontSize(11); 
+                pdf.text("Imóvel: " + (imo ? imo.empreendimento : "") + " | Status: " + men.status, margin + 3, currentY + 5);
+                pdf.text(`Devido: R$ ${men.valorConfirmado.toFixed(2)} | Recebido: R$ ${(men.status === 'Pago' ? men.valorConfirmado : 0).toFixed(2)}`, margin + 3, currentY + 10);
+                
+                currentY += 16;
+            });
+
+
+            currentY += 5;
+            pdf.line(margin, currentY, pdf.internal.pageSize.getWidth() - margin, currentY);
+            currentY += 8;
+
+
+            pdf.setFont("Helvetica", "bold");
+            pdf.setFontSize(12);
+            pdf.setTextColor(26, 54, 93);
+            pdf.text("RESUMO CONSOLIDADO:", margin, currentY);
+            currentY += 7;
+            
+            pdf.setFont("Helvetica", "bold");
+            pdf.setFontSize(12);
+            pdf.setTextColor(45, 55, 72);
+            pdf.text(`VALOR TOTAL DEVIDO NO PERÍODO:`, margin, currentY);
+            pdf.text(`R$ ${potTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 140, currentY);
+            currentY += 6;
+
+
+            pdf.setTextColor(47, 133, 90);
+            pdf.text(`VALOR TOTAL EFETIVAMENTE RECEBIDO:`, margin, currentY);
+            pdf.text(`R$ ${fatTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 140, currentY);
+            currentY += 6;
+
+
+            pdf.setTextColor(197, 48, 48);
+            pdf.text(`SALDO EM INADIMPLÊNCIA:`, margin, currentY);
+            pdf.text(`R$ ${(potTotal - fatTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 140, currentY);
+
+
+            pdf.save(`Demonstrativo_Analitico_Rumo_${Date.now()}.pdf`);
+        }
+
+
+        function exportarRelatorioSocioPDF() {
+            const { jsPDF } = window.jspdf;
+            const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+            
+            const socioSelecionado = document.getElementById('socio-filtro-nome').value;
+            if (socioSelecionado === "todos") {
+                alert("⚠️ Selecione um sócio específico para gerar o extrato.");
+                return;
+            }
+
+
+            const margin = 12;
+            let currentY = 15;
+
+
+            pdf.setFont("Helvetica", "bold");
+            pdf.setFontSize(14);
+            pdf.setTextColor(26, 54, 93);
+            pdf.text(`DEMONSTRATIVO DE SÓCIO: ${socioSelecionado.toUpperCase()}`, margin, currentY);
+            
+            pdf.setFont("Helvetica", "normal");
+            pdf.setFontSize(10);
+            pdf.setTextColor(113, 128, 150);
+            pdf.text(`Administradora: RUMO Gestão Patrimonial`, margin, currentY + 6);
+            pdf.text(`Extração: ${new Date().toLocaleString('pt-BR')}`, margin, currentY + 11);
+            pdf.line(margin, currentY + 13, pdf.internal.pageSize.getWidth() - margin, currentY + 13);
+            
+            currentY += 22;
+
+
+            let cotaLucrosTotal = 0;
+            let repassesEfetuados = 0;
+
+
+            pdf.setFont("Helvetica", "bold");
+            pdf.setFontSize(12);
+            pdf.setTextColor(26, 54, 93);
+            pdf.text("Créditos de Distribuição de Lucros:", margin, currentY);
+            currentY += 8;
+
+
+            mensalidades.filter(m => m.status === 'Pago').forEach(men => {
+                const con = contratos.find(c => c.id === men.contratoId);
+                if(!con) return;
+                const imo = imoveis.find(i => i.id === con.imovelId);
+                if(!imo || !imo.divisao) return;
+                
+                const pctSocio = imo.divisao[socioSelecionado] || 0;
+                if(pctSocio > 0) {
+                    const cotaParte = men.valorConfirmado * (pctSocio / 100);
+                    cotaLucrosTotal += cotaParte;
+
+
+                    if (currentY > 260) {
+                        pdf.addPage();
+                        currentY = 15;
+                    }
+
+
+                    pdf.setFont("Helvetica", "bold");
+                    pdf.setFontSize(12); 
+                    pdf.setTextColor(45, 55, 72);
+                    pdf.text(`• ${con.locatario} (${men.referencia})`, margin, currentY);
+                    
+                    pdf.setFont("Helvetica", "normal");
+                    pdf.setFontSize(11);
+                    pdf.text(`Cota: ${pctSocio}% | Empreendimento: ${imo.empreendimento}`, margin + 3, currentY + 5);
+                    pdf.text(`Valor Cheio: R$ ${men.valorConfirmado.toFixed(2)} | Sua Cota: R$ ${cotaParte.toFixed(2)}`, margin + 3, currentY + 10);
+                    currentY += 16;
+                }
+            });
+
+
+            currentY += 5;
+            pdf.setFont("Helvetica", "bold");
+            pdf.setFontSize(12);
+            pdf.setTextColor(26, 54, 93);
+            pdf.text("Repasses Efetuados:", margin, currentY);
+            currentY += 8;
+
+
+            repasses.filter(r => r.socio === socioSelecionado).forEach(rep => {
+                repassesEfetuados += rep.valor;
+
+
+                if (currentY > 260) {
+                    pdf.addPage();
+                    currentY = 15;
+                }
+
+
+                pdf.setFont("Helvetica", "normal");
+                pdf.setFontSize(12); 
+                pdf.setTextColor(197, 48, 48);
+                pdf.text(`- Repasse bancário Ref ${rep.mes} - Pago em ${rep.dataReal || rep.mes}`, margin, currentY);
+                pdf.text(`Valor: R$ ${rep.valor.toFixed(2)}`, margin + 3, currentY + 5);
+                currentY += 11;
+            });
+
+
+            currentY += 5;
+            pdf.line(margin, currentY, pdf.internal.pageSize.getWidth() - margin, currentY);
+            currentY += 8;
+
+
+            pdf.setFont("Helvetica", "bold");
+            pdf.setFontSize(12);
+            pdf.setTextColor(26, 54, 93);
+            pdf.text("PRESTAÇÃO DE CONTAS FINAL:", margin, currentY);
+            currentY += 7;
+
+
+            pdf.setFont("Helvetica", "bold");
+            pdf.setFontSize(12);
+            pdf.setTextColor(45, 55, 72);
+            pdf.text(`TOTAL DE DIREITOS ADQUIRIDOS:`, margin, currentY);
+            pdf.text(`R$ ${cotaLucrosTotal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 140, currentY);
+            currentY += 6;
+
+
+            pdf.setTextColor(197, 48, 48);
+            pdf.text(`TOTAL DE REPASSES RECEBIDOS:`, margin, currentY);
+            pdf.text(`R$ ${repassesEfetuados.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 140, currentY);
+            currentY += 6;
+
+
+            const saldoFinal = cotaLucrosTotal - repassesEfetuados;
+            pdf.setTextColor(saldoFinal > 0 ? 197 : 47, saldoFinal > 0 ? 48 : 133, saldoFinal > 0 ? 48 : 90);
+            pdf.text(`SALDO A REPASSAR:`, margin, currentY);
+            pdf.text(`R$ ${saldoFinal.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 140, currentY);
+
+
+            pdf.save(`Demonstrativo_Socio_${socioSelecionado}_${Date.now()}.pdf`);
+        }
+
+
+        function ejecutarCanalComunicação(canal) {
+            const con = contratos.find(c => c.id === activeConId);
+            const men = mensalidades.find(m => m.id === activeMenId);
+            if(!con || !men) return;
+
+
+            if(canal === 'zap' && (!con.whatsapp || con.whatsapp.length < 5)) return alert("⚠️ WhatsApp inválido.");
+            if(canal === 'email' && (!con.email || con.email.length < 5)) return alert("⚠️ E-mail inválido.");
+
+
+            const menIdx = mensalidades.findIndex(m => m.id === men.id);
+            mensalidades[menIdx].envioLog = {
+                canal: canal === 'zap' ? 'WhatsApp' : 'E-mail',
+                destino: canal === 'zap' ? con.whatsapp : con.email,
+                data: new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+            };
+            saveAll();
+
+
+            const imo = imoveis.find(i => i.id === con.imovelId);
+            const empNome = imo ? imo.empreendimento : 'Patrimônio';
+
+
+            if(canal === 'zap') {
+                const textoMensagem = `Olá *${con.locatario}*,\n\nConfirmamos o pagamento do aluguel referente à competência *${men.referencia}* [${empNome}].\n\nValor: *R$ ${men.valorConfirmado.toLocaleString('pt-BR', {minimumFractionDigits:2})}*\nBanco: *${men.banco}*\nData: *${men.dataPgto}*.\n\n_Estou te encaminhando o PDF em anexo logo abaixo._`;
+                window.open(`https://api.whatsapp.com/send?phone=55${con.whatsapp}&text=${encodeURIComponent(textoMensagem)}`, '_blank');
+            } else {
+                const assunto = `Recibo de Aluguel - Competência ${men.referencia}`;
+                const corpoEmail = `Prezado(a) ${con.locatario},\n\nConfirmamos o recebimento e a baixa do faturamento de aluguel da competência ${men.referencia}.\n\nDetalhes:\n- Empreendimento: ${empNome}\n- Valor Pago: R$ ${men.valorConfirmado.toLocaleString('pt-BR', {minimumFractionDigits:2})}\n- Banco: ${men.banco}\n- Data: ${men.dataPgto}\n\nO PDF completo com o termo de quitação está sendo enviado em anexo nesta mensagem.`;
+                window.location.href = `mailto:${con.email}?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(corpoEmail)}`;
+            }
+        }
+
+
+        function renderInadimplencia() {
+            const container = document.getElementById('lista-inadimplencia');
+            if(!container) return;
+            container.innerHTML = '';
+            
+            const tipoAgrupamento = document.getElementById('inad-tipo-agrupamento').value;
+            const fMes = document.getElementById('inad-filtro-mes').value || 'todos';
+            const fAlvo = document.getElementById('inad-filtro-alvo').value || 'todos';
+
+
+            let totalInad = 0;
+            let totalLancadoGeral = 0;
+            let itensPendentes = [];
+
+
+            mensalidades.forEach(men => {
+                const con = contratos.find(c => c.id === men.contratoId);
+                if(!con) return;
+                
+                totalLancadoGeral += men.valorConfirmado;
+                
+                if(fMes !== 'todos' && men.referencia !== fMes) return;
+                if(fAlvo !== 'todos' && con.id !== fAlvo) return;
+
+
+                if(men.status === 'Pendente') {
+                    totalInad += men.valorConfirmado;
+                    const imo = imoveis.find(i => i.id === con.imovelId);
+                    itensPendentes.push({ men, con, imo });
+                }
+            });
+
+
+            document.getElementById('inad-total-geral').innerText = "R$ " + totalInad.toLocaleString('pt-BR', {minimumFractionDigits:2});
+            const taxa = totalLancadoGeral > 0 ? ((totalInad / totalLancadoGeral) * 100).toFixed(1) : 0;
+            document.getElementById('inad-taxa').innerText = taxa + "%";
+
+
+            if(itensPendentes.length === 0) {
+                container.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">Nenhum débito em aberto localizado.</p>`;
+                return;
+            }
+
+
+            let groups = {};
+            itensPendentes.forEach(item => {
+                let chaveGrupo = '';
+                if(tipoAgrupamento === 'competencia') chaveGrupo = `Competência: ${item.men.referencia}`;
+                else if(tipoAgrupamento === 'locatario') chaveGrupo = `Inquilino: ${item.con.locatario}`;
+                else if(tipoAgrupamento === 'imovel') chaveGrupo = `Imóvel: ${item.imo ? item.imo.empreendimento : 'Não Vinculado'}`;
+
+
+                if(!groups[chaveGrupo]) groups[chaveGrupo] = [];
+                groups[chaveGrupo].push(item);
+            });
+
+
+            for(let nomeGrupo in groups) {
+                let subItensHtml = '';
+                let totalGrupo = 0;
+                let listaCobrancaAgrupada = [];
+                let locatarioCelular = "";
+
+
+                groups[nomeGrupo].forEach(item => {
+                    totalGrupo += item.men.valorConfirmado;
+                    listaCobrancaAgrupada.push(`- Competência ${item.men.referencia}: R$ ${item.men.valorConfirmado.toLocaleString('pt-BR')}`);
+                    locatarioCelular = item.con.whatsapp;
+
+
+                    subItensHtml += `
+                        <div class="p-2 bg-gray-50 rounded-lg border border-gray-100 text-2xs space-y-1">
+                            <div class="flex justify-between font-bold">
+                                <span class="text-slate-700">${item.con.locatario} (${item.men.referencia})</span>
+                                <span class="text-red-700">R$ ${item.men.valorConfirmado.toLocaleString('pt-BR')}</span>
+                            </div>
+                            <p class="text-gray-500 text-4xs">Endereço: ${item.imo ? item.imo.enderecoRua : '-'}</p>
+                        </div>
+                    `;
+                });
+
+
+                const descConsolidada = listaCobrancaAgrupada.join('\\n');
+                container.innerHTML += `
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-red-200">
+                        <div class="flex justify-between items-center bg-red-50 p-1.5 rounded mb-2">
+                            <h3 class="text-xs font-black text-red-900 uppercase tracking-wider">${nomeGrupo}</h3>
+                            <button onclick="dispararCobrancaWhatsAppDirect('${locatarioCelular}', '${nomeGrupo}', '${descConsolidada}', ${totalGrupo})" class="text-4xs bg-red-600 text-white px-2 py-1 rounded font-black shadow transition active:scale-90">📋 Cobrar Grupo</button>
+                        </div>
+                        <div class="space-y-1.5">${subItensHtml}</div>
+                    </div>`;
+            }
+        }
+
+
+        function dispararCobrancaWhatsAppDirect(celular, grupoTitle, itensText, valorTotal) {
+            if(!celular || celular.length < 5) {
+                alert("⚠️ Celular do locatário não cadastrado.");
+                return;
+            }
+            const formatText = itensText.replace(/\\n/g, '\n');
+            const txt = `⚠️ *RUMO NOTIFICAÇÃO DE CAIXA*\nRef: *${grupoTitle}*\n\nConstam em aberto os seguintes lançamentos pendentes:\n${formatText}\n\n*Total Consolidado: R$ ${valorTotal.toLocaleString('pt-BR')}*\n\nQualquer dúvida sobre a conciliação, estamos à disposição.`;
+            window.open(`https://api.whatsapp.com/send?phone=55${celular}&text=${encodeURIComponent(txt)}`, '_blank');
+        }
+
+
+        function registrarRepasse() {
+            const socio = document.getElementById('rep-socio').value;
+            const mes = document.getElementById('rep-mes').value;
+            const valor = parseFloat(document.getElementById('rep-valor').value);
+            const dataTransf = document.getElementById('rep-data-transferencia').value;
+
+
+            if(!mes || isNaN(valor) || !dataTransf) return alert("Preencha o valor e a data real.");
+            const dataFormatada = dataTransf.split('-').reverse().join('/');
+
+
+            repasses.push({ 
+                id: 'rep_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                socio, 
+                mes, 
+                valor,
+                dataReal: dataFormatada,
+                timestamp: Date.now()
+            });
+            
+            document.getElementById('rep-valor').value = '';
+            saveAll(true, "Repasse bancário registrado com sucesso!");
+        }
+
+
+        function renderSociosDistribricao() {
+            const container = document.getElementById('lista-socios-prestacao');
+            if(!container) return;
+            container.innerHTML = '';
+
+
+            const fSocio = document.getElementById('socio-filtro-nome').value;
+            const fMes = document.getElementById('socio-filtro-mes').value;
+            const fAno = document.getElementById('socio-filtro-ano').value;
+
+
+            let todosOsSociosHistorico = new Set(["Ruyter"]);
+            imoveis.forEach(imo => {
+                if(imo.divisao) Object.keys(imo.divisao).forEach(s => todosOsSociosHistorico.add(s));
+            });
+
+
+            todosOsSociosHistorico.forEach(socio => {
+                if(fSocio !== 'todos' && socio !== fSocio) return;
+
+
+                let extratoLinhas = [];
+                let totalEntradas = 0;
+                let totalSaidas = 0;
+
+
+                mensalidades.filter(m => m.status === 'Pago').forEach(men => {
+                    const partesRef = men.referencia.split('/'); 
+                    if(fMes !== 'todos' && men.referencia !== fMes) return;
+                    if(fAno !== 'todos' && partesRef[1] !== fAno) return;
+
+
+                    const con = contratos.find(c => c.id === men.contratoId);
+                    if(!con) return;
+                    const imo = imoveis.find(i => i.id === con.imovelId);
+                    if(!imo || !imo.divisao) return;
+                    
+                    const pctSocio = imo.divisao[socio] || 0;
+                    if(pctSocio > 0) {
+                        const cotaParte = men.valorConfirmado * (pctSocio / 100);
+                        totalEntradas += cotaParte;
+                        extratoLinhas.push({
+                            tipo: 'entrada',
+                            descricao: `Cota Aluguel - ${con.locatario} (${imo.empreendimento})`,
+                            referencia: men.referencia,
+                            dataVisual: men.dataPgto,
+                            valor: cotaParte,
+                            ordenador: partesRef[1] + partesRef[0] 
+                        });
+                    }
+                });
+
+
+                repasses.filter(r => r.socio === socio).forEach(rep => {
+                    const partesRef = rep.mes.split('/');
+                    if(fMes !== 'todos' && rep.mes !== fMes) return;
+                    if(fAno !== 'todos' && partesRef[1] !== fAno) return;
+
+
+                    totalSaidas += rep.valor;
+                    extratoLinhas.push({
+                        tipo: 'saida',
+                        descricao: `Transferência Bancária Efetuada`,
+                        referencia: rep.mes,
+                        dataVisual: rep.dataReal || rep.mes,
+                        valor: rep.valor,
+                        ordenador: partesRef[1] + partesRef[0]
+                    });
+                });
+
+
+                extratoLinhas.sort((a, b) => b.ordenador.localeCompare(a.ordenador));
+
+
+                let tabelaExtratoHtml = '';
+                extratoLinhas.forEach(linha => {
+                    if(linha.tipo === 'entrada') {
+                        tabelaExtratoHtml += `
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 text-3xs">
+                                <div>
+                                    <span class="text-green-600 font-bold font-mono">[CRÉDITO]</span>
+                                    <p class="text-slate-700 font-medium">${linha.descricao}</p>
+                                    <span class="text-gray-400">Ref: ${linha.referencia} | Data Caixa: ${linha.dataVisual}</span>
+                                </div>
+                                <span class="text-green-700 font-bold font-mono text-xs">+ R$ ${linha.valor.toFixed(2)}</span>
+                            </div>`;
+                    } else {
+                        tabelaExtratoHtml += `
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 text-3xs bg-red-50/30 px-1 rounded">
+                                <div>
+                                    <span class="text-red-600 font-bold font-mono">[DÉBITO]</span>
+                                    <p class="text-slate-700 font-medium">${linha.descricao}</p>
+                                    <span class="text-gray-400">Ref: ${linha.referencia} | Transf: ${linha.dataVisual}</span>
+                                </div>
+                                <span class="text-red-700 font-bold font-mono text-xs">- R$ ${linha.valor.toFixed(2)}</span>
+                            </div>`;
+                    }
+                });
+
+
+                const saldoPendente = totalEntradas - totalSaidas;
+
+
+                container.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex justify-between items-center border-b pb-2 mb-3">
+                            <h3 class="text-sm font-black text-slate-900">👤 Sócio: ${socio}</h3>
+                            <div class="text-right">
+                                <p class="text-4xs text-gray-400 uppercase font-bold">Saldo Pendente</p>
+                                <span class="text-xs font-black ${saldoPendente > 0 ? 'text-red-600' : 'text-blue-600'}">R$ ${saldoPendente.toFixed(2)}</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 mb-3 text-4xs bg-slate-50 p-2 rounded-lg font-mono">
+                            <span class="text-green-700 font-bold">Total Lucros: R$ ${totalEntradas.toFixed(2)}</span>
+                            <span class="text-red-700 font-bold text-right">Total Repassado: R$ ${totalSaidas.toFixed(2)}</span>
+                        </div>
+                        <div class="space-y-1 max-h-64 overflow-y-auto pr-1">${tabelaExtratoHtml || '<p class="text-3xs text-center text-gray-400 py-4">Sem movimentações.</p>'}</div>
+                    </div>`;
+            });
+        }
+
+
+        function renderVitrine() {
+            const container = document.getElementById('lista-vitrine');
+            if(!container) return;
+            container.innerHTML = '';
+
+
+            const fEmp = document.getElementById('vitrine-filtro-emp').value;
+            const fStat = document.getElementById('vitrine-filtro-status').value;
+
+
+            imoveis.forEach(imo => {
+                if(fEmp !== 'todos' && imo.empreendimento !== fEmp) return;
+                if(fStat !== 'todos' && imo.status !== fStat) return;
+
+
+                const fHtml = imo.fotos && imo.fotos.length > 0 ? `<img src="${imo.fotos[0]}" class="w-10 h-10 rounded object-cover border">` : '';
+
+
+                container.innerHTML += `
+                    <div class="bg-white p-3 rounded-xl border border-gray-200 flex gap-3 items-center">
+                        <input type="checkbox" data-id="${imo.id}" class="vitrine-checkbox w-4 h-4 text-blue-600 rounded">
+                        <div class="flex-1 min-w-0">
+                            <span class="text-4xs font-bold px-1.5 py-0.5 rounded ${imo.status==='Vago'?'bg-amber-100 text-amber-800':'bg-green-100 text-green-800'}">${imo.status}</span>
+                            <p class="text-xs font-bold mt-1 text-slate-900 truncate">${imo.empreendimento} - ${imo.tipo}</p>
+                            <p class="text-4xs text-gray-500 truncate">${imo.enderecoRua || ''}, ${imo.enderecoNum || ''}</p>
+                            <p class="text-3xs font-black text-blue-900 mt-1">Aluguel: R$ ${imo.valor.toLocaleString('pt-BR')}</p>
+                        </div>
+                        ${fHtml}
+                    </div>
+                `;
+            });
+        }
+
+
+        function gerarLinkVitrine() {
+            const checkboxes = document.querySelectorAll('.vitrine-checkbox:checked');
+            if (checkboxes.length === 0) {
+                alert("⚠️ Escolha ao menos um imóvel.");
+                return;
+            }
+
+
+            let idsSelecionados = [];
+            checkboxes.forEach(cb => idsSelecionados.push(cb.getAttribute('data-id')));
+
+
+            const localUrl = window.location.href.split('?')[0];
+            const linkFinal = `${localUrl}?viewShowcase=true&assets=${idsSelecionados.join(',')}`;
+
+
+            navigator.clipboard.writeText(linkFinal).then(() => {
+                alert(`🔗 Link copiado com sucesso! Envie para seu cliente externo:\n👉 ${linkFinal}`);
+            }).catch(err => {
+                console.error("Erro ao copiar link:", err);
+            });
+        }
+
+
+        function verificarFiltroVitrineExterna() {
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('viewShowcase') === 'true') {
+                const assets = urlParams.get('assets');
+                if (assets) {
+                    const listIds = assets.split(',');
+                    
+                    document.body.innerHTML = `
+                        <div class="max-w-md mx-auto p-4 space-y-6 bg-slate-900 min-h-screen text-white">
+                            <div class="text-center py-4 border-b border-slate-800">
+                                <h1 class="text-2xl font-black text-blue-400">RUMO</h1>
+                                <p class="text-3xs text-gray-400 uppercase tracking-widest mt-1">Vitrine de Imóveis Selecionados</p>
+                            </div>
+                            <div id="external-showcase-container" class="space-y-4"></div>
+                        </div>
+                    `;
+                    
+                    const listContainer = document.getElementById('external-showcase-container');
+                    listIds.forEach(id => {
+                        const imo = imoveis.find(i => i.id === id);
+                        if (imo) {
+                            let slideFotos = '';
+                            if (imo.fotos && imo.fotos.length > 0) {
+                                slideFotos = '<div class="flex gap-2 overflow-x-auto py-2">';
+                                imo.fotos.forEach(foto => {
+                                    slideFotos += `<img src="${foto}" class="w-48 h-32 object-cover rounded-xl border border-slate-700 flex-none">`;
+                                });
+                                slideFotos += '</div>';
+                            }
+                            
+                            listContainer.innerHTML += `
+                                <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
+                                    <span class="bg-blue-900 text-blue-100 text-4xs font-bold px-2 py-0.5 rounded">${imo.tipo}</span>
+                                    <h3 class="text-md font-bold mt-2">${imo.empreendimento}</h3>
+                                    <p class="text-xs text-slate-400">${imo.enderecoRua || ''}, ${imo.enderecoNum || ''} ${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}, ${imo.enderecoBairro || ''}, ${imo.enderecoCidade || ''}</p>
+                                    <p class="text-3xs text-slate-500 mt-1">Tamanho: ${imo.tamanho}m² | Suítes: ${imo.suites} | WC: ${imo.banheiros}</p>
+                                    ${slideFotos}
+                                    <div class="mt-3 pt-3 border-t border-slate-900 flex justify-between items-baseline">
+                                        <span class="text-3xs text-slate-400">Locação Integral</span>
+                                        <span class="text-lg font-black text-blue-400">R$ ${imo.valor.toLocaleString('pt-BR')}/mês</span>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                }
+            }
+        }
+
+
+        window.onload = function() {
+            verificarFiltroVitrineExterna();
+        };
+
+
+        function obterMesesFiltro(opcao) {
+            const d = new Date(2026, 6, 13);
+            if (opcao === 'ano-atual') return new Date(2026, 0, 1);
+            if (opcao === '1-mes') return new Date(d.getFullYear(), d.getMonth() - 1, 1);
+            if (opcao === '3-meses') return new Date(d.getFullYear(), d.getMonth() - 3, 1);
+            if (opcao === '12-meses') return new Date(d.getFullYear(), d.getMonth() - 12, 1);
+            return new Date(1970, 0, 1);
+        }
+
+
+        function renderRelatorios() {
+            const fImo = document.getElementById('filtro-imovel').value;
+            const fPer = document.getElementById('filtro-periodo').value;
+            const lim = obterMesesFiltro(fPer);
+
+
+            let imoveisFiltrados = imoveis;
+            if (fImo !== 'todos') imoveisFiltrados = imoveis.filter(i => i.id === fImo);
+
+
+            const total = imoveisFiltrados.length;
+            const alugados = imoveisFiltrados.filter(i => i.status === 'Alugado').length;
+            const taxa = total > 0 ? ((alugados / total) * 100).toFixed(1) : 0;
+
+
+            let fat = 0, pot = 0;
+            mensalidades.forEach(men => {
+                const con = contratos.find(c => c.id === men.contratoId);
+                if(!con || (fImo !== 'todos' && con.imovelId !== fImo)) return;
+                
+                const p = men.referencia.split('/');
+                const dMen = new Date(parseInt(p[1]), parseInt(p[0]) - 1, 1);
+                
+                if(dMen >= lim) {
+                    pot += men.valorConfirmado;
+                    if(men.status === 'Pago') fat += men.valorConfirmado;
+                }
+            });
+
+
+            document.getElementById('rel-taxa').innerText = taxa + '%';
+            document.getElementById('rel-faturamento').innerText = 'R$ ' + fat.toLocaleString('pt-BR', {minimumFractionDigits:2});
+            document.getElementById('rel-potencial').innerText = 'R$ ' + pot.toLocaleString('pt-BR', {minimumFractionDigits:2});
+            document.getElementById('rel-contagem').innerText = `Alugados: ${alugados} | Vagos: ${total - alugados}`;
+        }
+    </script>
+</body>
+</html>
