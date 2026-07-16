@@ -1,7 +1,7 @@
 <!-- 
 ==================================================================
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
-   VERSÃO: v4.4.1 (Correção: botão atualizar contrato, ordenação PDF sócios, renomeação de campos)
+   VERSÃO: v4.5.0 (Rateio proporcional, exclusões, filtros, energia Rumo, 2-linhas, revisão pendente)
    TOTAL DE LINHAS DE CÓDIGO: 1255 linhas
 ==================================================================
 -->
@@ -52,14 +52,14 @@
                 <div id="splash-error-detail" class="text-3xs text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
             </div>
             <div class="text-2xs text-slate-500 font-mono">
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v4.4.1</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v4.5.0</span>
             </div>
         </div>
     </div>
     <!-- ================= HEADER E NAVEGAÇÃO ================= -->
     <header id="main-header" class="hidden bg-slate-900 text-white sticky top-0 z-50 shadow-md">
         <div class="p-3 flex justify-between items-center bg-slate-955">
-            <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" ondblclick="ativarModoDesenvolvedor()">
+            <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" onclick="agendarCliqueLogo()" ondblclick="cancelarCliqueLogoEAbrirDev()">
                 <span class="text-lg font-black tracking-wider text-blue-400">RUMO 🏠</span>
                 <span id="header-offline-tag" class="hidden text-3xs bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
             </div>
@@ -91,8 +91,6 @@
                 </div>
                 <button onclick="abrirFormularioImovel()" class="offline-disable bg-blue-600 text-white font-black text-xl w-11 h-11 rounded-full shadow flex items-center justify-center active:scale-90 transition flex-none" title="Cadastrar novo imóvel">+</button>
             </div>
-            <h2 class="text-lg font-bold mb-3 text-blue-900">Lista Patrimonial</h2>
-            <div id="lista-imoveis" class="space-y-3 mb-6"></div>
 
             <div id="form-imovel-wrapper" class="hidden">
                 <div class="flex justify-between items-center mb-4">
@@ -166,6 +164,10 @@
                             <input type="number" id="imo-banheiros" value="0" class="w-full p-2 border rounded mt-1 text-sm">
                         </div>
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Descrição do Imóvel</label>
+                        <textarea id="imo-descricao" rows="2" class="w-full p-2 border rounded mt-1 text-sm" placeholder="Ex: 2 suítes, 1 vaga, área gourmet..."></textarea>
+                    </div>
                     <div class="grid grid-cols-3 gap-2">
                         <div>
                             <label class="block text-xs font-bold text-gray-600">Condomínio (R$)</label>
@@ -213,16 +215,21 @@
                         </div>
                         <div id="proprietarios-divisao" class="space-y-2 text-xs"></div>
                     </div>
-                    <!-- Gestão de Múltiplas Fotos (Até 5) -->
+                    <!-- Gestão de Múltiplas Fotos (Até 10) -->
                     <div class="bg-slate-50 p-3 rounded-xl border">
-                        <label class="block text-xs font-bold text-gray-600 mb-1">Mídias e Fotos do Imóvel (Até 5)</label>
-                        <input type="file" id="imo-file-picker" accept="image/*" multiple class="hidden" onchange="processarMultiplasFotos(this)">
-                        <button type="button" onclick="document.getElementById('imo-file-picker').click()" class="w-full bg-slate-800 text-white font-bold text-2xs py-2 px-4 rounded-lg border shadow-sm">📸 Escolher Fotos do Celular</button>
-                        <div id="form-images-preview-container" class="grid grid-cols-5 gap-2 mt-2"></div>
+                        <div class="flex items-center justify-between">
+                            <label class="block text-xs font-bold text-gray-600">Fotos do Imóvel (até 10)</label>
+                            <input type="file" id="imo-file-picker" accept="image/*" multiple class="hidden" onchange="processarMultiplasFotos(this)">
+                            <button type="button" onclick="document.getElementById('imo-file-picker').click()" title="Anexar fotos" class="w-9 h-9 flex-none flex items-center justify-center bg-slate-800 text-white rounded-full shadow-sm text-base">📎</button>
+                        </div>
+                        <div id="form-images-preview-container" class="grid grid-cols-5 gap-2 mt-2" style="grid-auto-rows: auto;"></div>
                     </div>
                     <button type="submit" id="btn-salvar-imo" class="w-full bg-blue-600 text-white p-2.5 rounded-lg font-bold text-sm shadow">Salvar Imóvel</button>
                 </form>
             </div>
+
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Lista Patrimonial</h2>
+            <div id="lista-imoveis" class="space-y-3 mb-6"></div>
         </section>
         <!-- ================= ABA: CONTRATOS ================= -->
         <section id="tab-contratos" class="tab-content">
@@ -232,8 +239,6 @@
                 </div>
                 <button onclick="abrirFormularioContrato()" class="offline-disable bg-green-600 text-white font-black text-xl w-11 h-11 rounded-full shadow flex items-center justify-center active:scale-90 transition flex-none" title="Cadastrar novo contrato">+</button>
             </div>
-            <h2 class="text-lg font-bold mb-3 text-blue-900">Contratos de Locação Ativos</h2>
-            <div id="lista-contratos" class="space-y-3 mb-6"></div>
 
             <div id="form-contrato-wrapper" class="hidden">
                 <div class="flex justify-between items-center mb-4">
@@ -364,19 +369,29 @@
                     </div>
                 </div>
                 <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                    <label class="block text-xs font-bold text-gray-600 mb-1">Documentos do Contrato (até 5)</label>
-                    <input type="file" id="con-documentos-input" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="processarMultiplosDocumentos(this)" class="w-full text-2xs">
+                    <div class="flex items-center justify-between">
+                        <label class="block text-xs font-bold text-gray-600">Documentos do Contrato (até 5)</label>
+                        <input type="file" id="con-documentos-input" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="processarMultiplosDocumentos(this)" class="hidden">
+                        <button type="button" onclick="document.getElementById('con-documentos-input').click()" title="Anexar documentos" class="w-9 h-9 flex-none flex items-center justify-center bg-slate-800 text-white rounded-full shadow-sm text-base">📎</button>
+                    </div>
                     <div id="con-documentos-preview" class="mt-2 space-y-1 text-3xs"></div>
                 </div>
                 <button type="submit" id="btn-salvar-con" class="w-full bg-green-600 text-white p-2.5 rounded-lg font-bold text-sm shadow">Firmar / Atualizar Contrato</button>
                 </form>
             </div>
+
+            <p id="banner-revisao-contratos" class="hidden bg-red-50 border border-red-200 text-red-700 text-2xs font-bold p-2 rounded-lg mb-3"></p>
+            <h2 class="text-lg font-bold mb-3 text-blue-900">Contratos de Locação Ativos</h2>
+            <div id="lista-contratos" class="space-y-3 mb-6"></div>
         </section>
         <!-- ================= ABA: MENSALIDADES ================= -->
         <section id="tab-mensal" class="tab-content">
-            <h2 class="text-lg font-bold mb-3 text-blue-900">Faturamento Mensal</h2>
-            
-            <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3 offline-disable">
+            <div class="flex items-center gap-3 mb-4">
+                <h2 class="text-lg font-bold text-blue-900 flex-1">Faturamento Mensal</h2>
+                <button onclick="alternarPainelGerarMes()" class="offline-disable bg-purple-600 text-white font-black text-xl w-11 h-11 rounded-full shadow flex items-center justify-center active:scale-90 transition flex-none" title="Gerar recebimento do mês">+</button>
+            </div>
+
+            <div id="painel-gerar-mes" class="hidden bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3 offline-disable">
                 <div>
                     <label class="block text-xs font-bold text-gray-600">Mês de Competência</label>
                     <div class="flex gap-2 items-center mt-1">
@@ -385,6 +400,31 @@
                     </div>
                 </div>
             </div>
+
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200">
+                <span class="text-3xs font-bold uppercase text-slate-500 block mb-2">Filtrar Fila de Recebimentos</span>
+                <div class="grid grid-cols-3 gap-2">
+                    <div>
+                        <label class="block text-4xs font-bold text-gray-500">Competência</label>
+                        <select id="men-filtro-competencia" onchange="renderMensalidades()" class="w-full p-1.5 border rounded text-2xs bg-gray-50">
+                            <option value="todos">Todas</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-4xs font-bold text-gray-500">Locatário</label>
+                        <select id="men-filtro-locatario" onchange="renderMensalidades()" class="w-full p-1.5 border rounded text-2xs bg-gray-50">
+                            <option value="todos">Todos</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-4xs font-bold text-gray-500">Imóvel</label>
+                        <select id="men-filtro-imovel" onchange="renderMensalidades()" class="w-full p-1.5 border rounded text-2xs bg-gray-50">
+                            <option value="todos">Todos</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <div class="grid grid-cols-2 gap-2 mb-4">
                 <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
                     <span class="text-3xs font-bold uppercase text-blue-600">Total a Receber</span>
@@ -432,6 +472,7 @@
                     <p class="text-xl font-black text-amber-700 mt-1" id="inad-taxa">0%</p>
                 </div>
             </div>
+            <p id="inad-energia-recebida" class="hidden bg-yellow-50 border border-yellow-200 text-yellow-800 text-2xs font-bold p-2 rounded-lg mb-4"></p>
             <div id="lista-inadimplencia" class="space-y-3"></div>
         </section>
         <!-- ================= ABA: VITRINE (SHOWCASE) ================= -->
@@ -695,6 +736,19 @@
             container.scrollTop = container.scrollHeight;
             logScreen(`[DEV][${origin}] ${message}`);
         }
+        let timerCliqueLogo = null;
+        function agendarCliqueLogo() {
+            if (timerCliqueLogo) clearTimeout(timerCliqueLogo);
+            timerCliqueLogo = setTimeout(() => {
+                switchTab('tab-imoveis');
+                window.scrollTo({top: 0, behavior: 'smooth'});
+                timerCliqueLogo = null;
+            }, 250);
+        }
+        function cancelarCliqueLogoEAbrirDev() {
+            if (timerCliqueLogo) { clearTimeout(timerCliqueLogo); timerCliqueLogo = null; }
+            ativarModoDesenvolvedor();
+        }
         function ativarModoDesenvolvedor() {
             isDevModeActive = true;
             document.getElementById('btn-tab-developer').classList.remove('hidden');
@@ -827,6 +881,7 @@
                     codigoIPTU: raw.codigoIPTU || raw.codigo_iptu || '',
                     manutencaoNome: raw.manutencaoNome || raw.manutencao_nome || '',
                     manutencaoZap: raw.manutencaoZap || raw.manutencao_zap || '',
+                    descricao: raw.descricao || raw.Descricao || '',
                     energiaRumo: raw.energiaRumo || raw.energia_rumo || 'Não',
                     valor: parseFloat(raw.valor || raw.Valor || raw.aluguel_alvo || 0) || 0,
                     fotos: fotosTratadas,
@@ -881,6 +936,7 @@
                 dataPgto: raw.dataPgto || raw.data_pagamento || '',
                 observacao: raw.observacao || raw.Observacao || '',
                 valorConfirmado: parseFloat(raw.valorConfirmado || raw.valor_pago || raw.valor || 0) || 0,
+                valorEnergia: parseFloat(raw.valorEnergia || raw.valor_energia || 0) || 0,
                 envioLog: raw.envioLog || null
             };
         }
@@ -896,6 +952,12 @@
             if(typeof ref === 'string' && ref.includes('T')) {
                 const partes = ref.split('T')[0].split('-');
                 return `${partes[1]}/${partes[0]}`;
+            }
+            // Formato "yyyy-MM-dd" sem hora (é o que o Code.gs devolve quando o
+            // Google Sheets converteu "07/2026" em data automaticamente).
+            if (typeof ref === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(ref)) {
+                const [ano, mes] = ref.split('-');
+                return `${mes}/${ano}`;
             }
             return ref;
         }
@@ -1058,9 +1120,9 @@
             fotosCarregadasBase64 = [];
             const previewContainer = document.getElementById('form-images-preview-container');
             previewContainer.innerHTML = '<p class="text-4xs text-slate-400 col-span-5">🔄 Processando imagens...</p>';
-            const count = Math.min(files.length, 5);
-            if (files.length > 5) {
-                alert("⚠️ Máximo de 5 fotos por imóvel. Apenas as 5 primeiras selecionadas serão usadas.");
+            const count = Math.min(files.length, 10);
+            if (files.length > 10) {
+                alert("⚠️ Máximo de 10 fotos por imóvel. Apenas as 10 primeiras selecionadas serão usadas.");
             }
             try {
                 const promessas = [];
@@ -1070,10 +1132,13 @@
                 const resultados = await Promise.all(promessas);
                 fotosCarregadasBase64 = resultados;
                 previewContainer.innerHTML = '';
-                resultados.forEach(base64Data => {
+                // Referenciamos a variável global fotosCarregadasBase64 diretamente no
+                // onclick (sem JSON.stringify) — embutir o array inteiro em base64 no
+                // atributo HTML de cada miniatura sobrecarregava o DOM e travava o clique.
+                resultados.forEach((base64Data, idxFoto) => {
                     previewContainer.innerHTML += `
                         <div class="relative">
-                            <img src="${base64Data}" class="w-10 h-10 object-cover rounded border">
+                            <img src="${base64Data}" onclick="abrirLightboxGeral(fotosCarregadasBase64, ${idxFoto})" class="w-10 h-10 object-cover rounded border cursor-pointer active:scale-90 transition">
                         </div>
                     `;
                 });
@@ -1140,7 +1205,9 @@
                     imoveis = rawImoveis.map(normalizarImovel).filter(Boolean);
                     contratos = rawContratos.map(normalizarContrato).filter(Boolean);
                     mensalidades = rawMensalidades.map(normalizarMensalidade).filter(Boolean);
-                    repasses = rawRepasses || [];
+                    repasses = (rawRepasses || []).map(function(r) {
+                        return Object.assign({}, r, { mes: normalizarCompetencia(r.mes) });
+                    });
                     logScreen(`Normalizados com sucesso: ${imoveis.length} imóveis, ${contratos.length} contratos.`);
                     localStorage.setItem('rumo_imoveis', JSON.stringify(imoveis));
                     localStorage.setItem('rumo_contratos', JSON.stringify(contratos));
@@ -1595,6 +1662,7 @@
                 codigoIPTU: document.getElementById('imo-iptu-codigo').value.trim(),
                 manutencaoNome: document.getElementById('imo-manutencao-nome').value.trim(),
                 manutencaoZap: document.getElementById('imo-manutencao-zap').value.trim().replace(/\D/g, ''),
+                descricao: document.getElementById('imo-descricao').value.trim(),
                 energiaRumo: document.getElementById('imo-energia-rumo').value,
                 valor: parseFloat(document.getElementById('imo-valor').value) || 0,
                 fotos: fotosCarregadasBase64.length > 0 ? fotosCarregadasBase64 : (id ? (imoveis.find(i => i.id === id).fotos || []) : []),
@@ -1639,6 +1707,7 @@
             document.getElementById('imo-iptu-codigo').value = imo.codigoIPTU || '';
             document.getElementById('imo-manutencao-nome').value = imo.manutencaoNome || '';
             document.getElementById('imo-manutencao-zap').value = imo.manutencaoZap || '';
+            document.getElementById('imo-descricao').value = imo.descricao || '';
             document.getElementById('imo-energia-rumo').value = imo.energiaRumo || 'Não';
             document.getElementById('imo-valor').value = imo.valor;
             
@@ -1683,6 +1752,52 @@
             const txt = `Olá${nomeManutencao ? ' ' + nomeManutencao : ''}, aqui é da RUMO. Precisamos de manutenção no imóvel *${empreendimento}* (${endereco}). Pode nos ajudar?`;
             window.open(`https://api.whatsapp.com/send?phone=55${zap}&text=${encodeURIComponent(txt)}`, '_blank');
         }
+        let lightboxGeralFotos = [];
+        let lightboxGeralIndex = 0;
+        function abrirLightboxImovelSalvo(imovelId, indiceInicial) {
+            const imo = imoveis.find(i => i.id === imovelId);
+            if (!imo || !imo.fotos) return;
+            abrirLightboxGeral(imo.fotos, indiceInicial);
+        }
+        function abrirLightboxGeral(fotos, indiceInicial) {
+            lightboxGeralFotos = fotos;
+            lightboxGeralIndex = indiceInicial;
+            document.getElementById('lightbox-geral-img').src = lightboxGeralFotos[lightboxGeralIndex];
+            document.getElementById('lightbox-geral-contador').innerText = `${lightboxGeralIndex + 1} / ${lightboxGeralFotos.length}`;
+            document.getElementById('lightbox-geral').classList.remove('hidden');
+        }
+        function fecharLightboxGeral() {
+            document.getElementById('lightbox-geral').classList.add('hidden');
+        }
+        function navegarLightboxGeral(direcao) {
+            lightboxGeralIndex = (lightboxGeralIndex + direcao + lightboxGeralFotos.length) % lightboxGeralFotos.length;
+            document.getElementById('lightbox-geral-img').src = lightboxGeralFotos[lightboxGeralIndex];
+            document.getElementById('lightbox-geral-contador').innerText = `${lightboxGeralIndex + 1} / ${lightboxGeralFotos.length}`;
+        }
+        function excluirImovel(id) {
+            const imo = imoveis.find(i => i.id === id);
+            if (!imo) return;
+            const temContrato = contratos.some(c => c.imovelId === id);
+            if (temContrato) {
+                alert("⚠️ Não é possível excluir este imóvel: existe pelo menos 1 contrato vinculado a ele. Exclua ou desvincule o(s) contrato(s) primeiro.");
+                return;
+            }
+            if (!confirm(`Confirma a exclusão do imóvel "${imo.empreendimento} - ${imo.enderecoRua}, ${imo.enderecoNum}"? Esta ação não pode ser desfeita.`)) return;
+            imoveis = imoveis.filter(i => i.id !== id);
+            saveAll(true, "Imóvel excluído com sucesso.");
+        }
+        function excluirContrato(id) {
+            const con = contratos.find(c => c.id === id);
+            if (!con) return;
+            const temMensalidade = mensalidades.some(m => m.contratoId === id);
+            if (temMensalidade) {
+                alert("⚠️ Não é possível excluir este contrato: existem lançamentos mensais vinculados a ele. Apague os lançamentos mensais primeiro (na aba Mensal, apenas os não recebidos podem ser apagados).");
+                return;
+            }
+            if (!confirm(`Confirma a exclusão do contrato de "${con.locatario}"? Esta ação não pode ser desfeita.`)) return;
+            contratos = contratos.filter(c => c.id !== id);
+            saveAll(true, "Contrato excluído com sucesso.");
+        }
         function renderImoveis() {
             const container = document.getElementById('lista-imoveis');
             if(!container) return;
@@ -1708,30 +1823,32 @@
                     let ftHtml = '';
                     if(imo.fotos && Array.isArray(imo.fotos) && imo.fotos.length > 0) {
                         ftHtml = '<div class="mt-2 flex gap-1 overflow-x-auto py-1">';
-                        imo.fotos.forEach(foto => {
+                        imo.fotos.forEach((foto, idxFoto) => {
                             if(foto && typeof foto === 'string' && foto.length > 5) {
-                                ftHtml += `<img src="${foto}" class="w-8 h-8 rounded object-cover border shadow-sm flex-none">`;
+                                ftHtml += `<img src="${foto}" onclick="abrirLightboxImovelSalvo('${imo.id}', ${idxFoto})" class="w-8 h-8 rounded object-cover border shadow-sm flex-none cursor-pointer active:scale-90 transition">`;
                             }
                         });
                         ftHtml += '</div>';
                     }
                     const endExibivel = `${imo.enderecoRua || ''}, ${imo.enderecoNum || ''} ${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}, ${imo.enderecoBairro || ''}, ${imo.enderecoCidade || ''}`;
-                    const badgeEnergia = imo.energiaRumo === 'Sim' ? `<span class="text-4xs font-bold px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800 ml-1">⚡ Energia Rumo</span>` : '';
-                    const btnManutencao = imo.manutencaoZap ? `<button onclick="acionarManutencaoWhatsApp('${imo.manutencaoZap}', '${(imo.manutencaoNome || '').replace(/'/g, "")}', '${(imo.empreendimento || '').replace(/'/g, "")}', '${endExibivel.replace(/'/g, "")}')" class="text-2xs bg-green-50 text-green-700 font-bold px-2 py-1 rounded border border-green-200">🔧 Chamar Manutenção</button>` : '';
+                    const badgeEnergia = imo.energiaRumo === 'Sim' ? `<span class="text-4xs font-bold px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800 ml-1">⚡</span>` : '';
+                    const btnManutencao = imo.manutencaoZap ? `<button onclick="acionarManutencaoWhatsApp('${imo.manutencaoZap}', '${(imo.manutencaoNome || '').replace(/'/g, "")}', '${(imo.empreendimento || '').replace(/'/g, "")}', '${endExibivel.replace(/'/g, "")}')" title="Chamar Manutenção" class="w-7 h-7 flex items-center justify-center bg-green-50 text-green-700 rounded-full border border-green-200 text-xs">🔧</button>` : '';
+                    const linha2 = `${endExibivel}${imo.descricao ? ' — ' + imo.descricao : ''}`;
                     container.innerHTML += `
-                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                            <div class="flex justify-between items-start">
-                                <span class="text-2xs font-bold px-2 py-0.5 rounded ${imo.status==='Vago'?'bg-amber-100 text-amber-800':'bg-green-100 text-green-800'}">${imo.status} | ${imo.tipo}</span>
-                                <span class="text-sm font-black text-slate-900">R$ ${imo.valor}</span>
+                        <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
+                            <div class="flex justify-between items-start gap-2">
+                                <p class="text-xs font-bold text-blue-900 truncate min-w-0">
+                                    <span class="text-3xs font-bold px-1.5 py-0.5 rounded ${imo.status==='Vago'?'bg-amber-100 text-amber-800':'bg-green-100 text-green-800'}">${imo.status}</span>
+                                    ${imo.empreendimento || 'Canaã'} · ${imo.tipo}${badgeEnergia}
+                                </p>
+                                <span class="text-sm font-black text-slate-900 flex-none">R$ ${imo.valor}</span>
                             </div>
-                            <p class="text-xs font-bold mt-1 text-blue-900 uppercase tracking-wide">🏢 ${imo.empreendimento || 'Canaã'} ${badgeEnergia}</p>
-                            <p class="text-2xs font-medium text-slate-700">${endExibivel}</p>
-                            <p class="text-2xs text-gray-500 mt-1">Tamanho: ${imo.tamanho}m² | Suítes: ${imo.suites} | WC: ${imo.banheiros} | Cond: R$ ${imo.condominio} | IPTU: R$ ${imo.iptu}${imo.codigoIPTU ? ' (Cód: ' + imo.codigoIPTU + ')' : ''}</p>
-                            <p class="text-2xs text-blue-955 font-semibold mt-1 bg-blue-50/50 p-1 rounded">👥 ${divSoc}</p>
+                            <p class="text-2xs text-slate-600 truncate mt-1">${linha2}</p>
                             ${ftHtml}
-                            <div class="mt-3 flex gap-2 flex-wrap">
-                                <button onclick="copyResumo('${endExibivel}', '${imo.tipo}', ${imo.valor}, ${imo.suites}, ${imo.condominio})" class="text-2xs bg-slate-100 text-slate-700 font-bold px-2 py-1 rounded border">📋 Copiar Zap</button>
-                                <button onclick="editarImovel('${imo.id}')" class="text-2xs bg-blue-50 text-blue-700 font-bold px-2 py-1 rounded border border-blue-200">📝 Editar</button>
+                            <div class="mt-2 flex gap-1.5 flex-wrap items-center">
+                                <button onclick="editarImovel('${imo.id}')" title="Editar" class="w-7 h-7 flex items-center justify-center bg-blue-50 text-blue-700 rounded-full border border-blue-200 text-xs">📝</button>
+                                <button onclick="excluirImovel('${imo.id}')" title="Excluir" class="w-7 h-7 flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-xs">🗑️</button>
+                                <button onclick="copyResumo('${endExibivel}', '${imo.tipo}', ${imo.valor}, ${imo.suites}, ${imo.condominio})" title="Copiar resumo para WhatsApp" class="w-7 h-7 flex items-center justify-center bg-slate-100 text-slate-700 rounded-full border text-xs">📋</button>
                                 ${btnManutencao}
                             </div>
                         </div>
@@ -1980,6 +2097,17 @@
             document.getElementById('form-contrato-wrapper').classList.add('hidden');
             renderImoveis();
         }
+        function contratoPrecisaRevisao(con) {
+            const historico = con.historico || [];
+            const dozeMesesAtras = new Date();
+            dozeMesesAtras.setMonth(dozeMesesAtras.getMonth() - 12);
+            if (historico.length === 0) return true;
+            const ultimaData = historico.reduce((maisRecente, h) => {
+                const d = new Date(h.data);
+                return (!isNaN(d) && d > maisRecente) ? d : maisRecente;
+            }, new Date(0));
+            return ultimaData < dozeMesesAtras;
+        }
         function renderContratos() {
             const container = document.getElementById('lista-contratos');
             if(!container) return;
@@ -1988,21 +2116,30 @@
             const ativos = contratos.filter(c => c.status === 'Ativo').length;
             document.getElementById('contratos-ativos-contador').innerText = ativos;
             document.getElementById('contratos-totais-contador').innerText = contratos.length;
+
+            const pendentesRevisao = contratos.filter(contratoPrecisaRevisao).length;
+            const bannerRevisao = document.getElementById('banner-revisao-contratos');
+            if (bannerRevisao) {
+                bannerRevisao.classList.toggle('hidden', pendentesRevisao === 0);
+                bannerRevisao.innerText = `⚠️ Há ${pendentesRevisao} contrato(s) pendente(s) de revisão/reajuste (sem alteração registrada há mais de 12 meses).`;
+            }
+
             contratos.forEach(con => {
                 const imo = imoveis.find(i => i.id === con.imovelId);
-                const descDesconto = con.desconto > 0 ? ` | Desconto: R$ ${con.desconto}` : '';
-                const descIptu = con.iptu > 0 ? ` | IPTU Contratual: R$ ${con.iptu}` : '';
+                const precisaRevisao = contratoPrecisaRevisao(con);
+                const alertaTriangulo = precisaRevisao ? `<span title="Sem revisão há mais de 12 meses" class="text-red-600">🔺</span>` : '';
+                const linha2 = `${imo ? imo.empreendimento : '-'} · Vig: ${con.inicio} a ${con.fim} · Venc. dia ${con.vencimentoDia || 15}${con.formaPagamento ? ' · ' + con.formaPagamento : ''}`;
                 container.innerHTML += `
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
-                        <div class="flex justify-between font-bold text-sm text-slate-900">
-                            <span>👤 ${con.locatario} (${con.docTipo || 'CPF'})</span>
-                            <span class="${con.status === 'Ativo'?'text-green-700':'text-red-600'}">R$ ${con.valor}/mês [${con.status || 'Ativo'}]</span>
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
+                        <div class="flex justify-between items-start gap-2">
+                            <p class="text-xs font-bold text-slate-900 truncate min-w-0">${alertaTriangulo} 👤 ${con.locatario}</p>
+                            <span class="text-sm font-black flex-none ${con.status === 'Ativo'?'text-green-700':'text-red-600'}">R$ ${con.valor}</span>
                         </div>
-                        <p class="text-2xs text-gray-500 mt-1">📍 Empreendimento: ${imo ? imo.empreendimento : '-'} | Dia Vencimento: ${con.vencimentoDia || 15}</p>
-                        <p class="text-2xs text-gray-600 font-semibold">Vigência: ${con.inicio} até ${con.fim}${descDesconto}${descIptu}</p>
-                        <div class="flex gap-2 mt-2">
-                            <button onclick="editarContrato('${con.id}')" class="text-2xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-1 rounded font-bold">Reajustar / Renovar</button>
-                            <button onclick="verHistoricoContrato('${con.id}')" class="text-2xs bg-slate-50 text-slate-700 border border-slate-300 px-2 py-1 rounded font-bold">🕒 Histórico (${(con.historico || []).length})</button>
+                        <p class="text-2xs text-gray-500 truncate mt-1">${linha2}</p>
+                        <div class="flex gap-1.5 mt-2 flex-wrap items-center">
+                            <button onclick="editarContrato('${con.id}')" title="Reajustar / Renovar" class="w-7 h-7 flex items-center justify-center bg-blue-50 text-blue-700 rounded-full border border-blue-200 text-xs">📝</button>
+                            <button onclick="verHistoricoContrato('${con.id}')" title="Histórico" class="text-3xs bg-slate-50 text-slate-700 border border-slate-300 px-2 py-1 rounded-full font-bold">🕒 ${(con.historico || []).length}</button>
+                            <button onclick="excluirContrato('${con.id}')" title="Excluir" class="w-7 h-7 flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-xs">🗑️</button>
                         </div>
                     </div>
                 `;
@@ -2050,6 +2187,48 @@
                 </div>
             `;
         }
+        // Reconstrói a linha do tempo de valores de um contrato a partir do seu
+        // histórico (campo "Valor do aluguel"), permitindo saber qual era o valor
+        // vigente em qualquer dia específico — essencial para o rateio proporcional
+        // quando o valor muda no meio de uma competência.
+        function construirLinhaDoTempoValor(contrato) {
+            const historico = (contrato.historico || []).slice().sort((a, b) => new Date(a.vigenteDesde || a.data) - new Date(b.vigenteDesde || b.data));
+            const mudancasValor = [];
+            historico.forEach(h => {
+                (h.alteracoes || []).forEach(a => {
+                    if (a.campo === 'Valor do aluguel') {
+                        const valorPara = parseFloat(a.para);
+                        if (!isNaN(valorPara)) {
+                            mudancasValor.push({ desde: h.vigenteDesde || contrato.inicio, valor: valorPara, valorAnterior: parseFloat(a.de) });
+                        }
+                    }
+                });
+            });
+
+            if (mudancasValor.length === 0) {
+                // Nunca houve alteração de valor registrada no histórico: usa o valor
+                // atual do contrato durante toda a vigência (comportamento anterior,
+                // mantido para contratos sem histórico detalhado).
+                return [{ desde: contrato.inicio, valor: contrato.valor }];
+            }
+
+            const linha = [];
+            const primeira = mudancasValor[0];
+            if (contrato.inicio && new Date(contrato.inicio) < new Date(primeira.desde) && !isNaN(primeira.valorAnterior)) {
+                linha.push({ desde: contrato.inicio, valor: primeira.valorAnterior });
+            }
+            mudancasValor.forEach(m => linha.push({ desde: m.desde, valor: m.valor }));
+            return linha;
+        }
+        // Retorna o valor vigente numa data específica, de acordo com a linha do tempo.
+        function valorVigenteEm(linhaDoTempo, dataAlvo) {
+            let valor = linhaDoTempo[0].valor;
+            for (const seg of linhaDoTempo) {
+                if (new Date(seg.desde + "T00:00:00") <= dataAlvo) valor = seg.valor;
+                else break;
+            }
+            return valor;
+        }
         function gerarMensalidades() {
             const selectRef = document.getElementById('men-referencia');
             const ref = selectRef.value;
@@ -2073,17 +2252,31 @@
                 }
                 const inicioReal = dataInicioCon > dataPrimeiroDiaCompetencia ? dataInicioCon : dataPrimeiroDiaCompetencia;
                 const fimReal = dataFimCon < dataUltimoDiaCompetencia ? dataFimCon : dataUltimoDiaCompetencia;
-                
-                const diffTime = Math.abs(fimReal - inicioReal);
-                const diasAtivosNoMes = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
-                let valorEfetivo = con.valor - (con.desconto || 0);
-                if (diasAtivosNoMes < diasTotaisMes) {
-                    valorEfetivo = (valorEfetivo / 30) * Math.min(diasAtivosNoMes, 30);
-                    valorEfetivo = parseFloat(valorEfetivo.toFixed(2));
+
+                // Rateio dia a dia: para cada dia ativo da competência, soma a fração
+                // (valor vigente naquele dia / dias do mês). Isso cobre tanto meses
+                // parciais (contrato começou/terminou no meio do mês) quanto mudanças
+                // de valor no meio do mês (reajustes, suspensões), sem gerar cobranças
+                // duplicadas — sempre 1 lançamento por contrato+competência.
+                const linhaDoTempo = construirLinhaDoTempoValor(con);
+                let somaProporcional = 0;
+                let diasAtivosNoMes = 0;
+                let cursor = new Date(inicioReal);
+                while (cursor <= fimReal) {
+                    const valorDoDia = valorVigenteEm(linhaDoTempo, cursor);
+                    somaProporcional += valorDoDia / diasTotaisMes;
+                    diasAtivosNoMes++;
+                    cursor.setDate(cursor.getDate() + 1);
                 }
+                let valorEfetivo = parseFloat((somaProporcional - (con.desconto || 0)).toFixed(2));
+                if (valorEfetivo < 0) valorEfetivo = 0;
+
                 const diaPadrao = con.vencimentoDia || 15;
                 const diaPgoString = diaPadrao < 10 ? '0' + diaPadrao : diaPadrao;
                 const dataDePagamentoGerada = `${diaPgoString}/${mesRef < 10 ? '0'+mesRef : mesRef}/${anoRef}`;
+                // Trava anti-duplicidade: nunca gera 2 lançamentos para o mesmo
+                // contrato na mesma competência, não importa quantas vezes o botão
+                // "Gerar Recebimento" seja clicado para o mesmo mês.
                 const existe = mensalidades.some(m => m.contratoId === con.id && m.referencia === ref);
                 if(!existe) {
                     mensalidades.push({
@@ -2109,6 +2302,8 @@
             const dataManual = document.getElementById(`data-${menId}`).value;
             const valorManual = parseFloat(document.getElementById(`valor-${menId}`).value);
             const obsManual = document.getElementById(`obs-${menId}`).value.trim();
+            const campoEnergia = document.getElementById(`energia-${menId}`);
+            const valorEnergiaManual = campoEnergia ? (parseFloat(campoEnergia.value) || 0) : 0;
             if(!dataManual || isNaN(valorManual)) return alert("Preencha data e valor.");
             const idx = mensalidades.findIndex(m => m.id === menId);
             if(idx !== -1) {
@@ -2117,6 +2312,7 @@
                 mensalidades[idx].dataPgto = dataManual.split('-').reverse().join('/'); 
                 mensalidades[idx].valorConfirmado = valorManual;
                 mensalidades[idx].observacao = obsManual;
+                mensalidades[idx].valorEnergia = valorEnergiaManual;
                 saveAll();
             }
         }
@@ -2137,14 +2333,75 @@
                 saveAll();
             }
         }
+        function alternarPainelGerarMes() {
+            document.getElementById('painel-gerar-mes').classList.toggle('hidden');
+        }
+        function excluirLancamentoMensal(menId) {
+            const men = mensalidades.find(m => m.id === menId);
+            if (!men) return;
+            if (men.status !== 'Pendente') {
+                alert("⚠️ Só é possível excluir lançamentos ainda não recebidos. Este já foi baixado — use 'Estornar' se precisar reverter.");
+                return;
+            }
+            if (!confirm("Confirma a exclusão deste lançamento mensal pendente?")) return;
+            mensalidades = mensalidades.filter(m => m.id !== menId);
+            saveAll(true, "Lançamento excluído.");
+        }
+        function popularFiltrosMensal() {
+            const selComp = document.getElementById('men-filtro-competencia');
+            const selLoc = document.getElementById('men-filtro-locatario');
+            const selImo = document.getElementById('men-filtro-imovel');
+            if (!selComp || !selLoc || !selImo) return;
+
+            const valComp = selComp.value || 'todos';
+            const valLoc = selLoc.value || 'todos';
+            const valImo = selImo.value || 'todos';
+
+            const competencias = [...new Set(mensalidades.map(m => m.referencia))].sort((a, b) => {
+                const [ma, aa] = a.split('/'); const [mb, ab] = b.split('/');
+                return (aa + ma).localeCompare(ab + mb);
+            });
+            selComp.innerHTML = '<option value="todos">Todas</option>' + competencias.map(c => `<option value="${c}">${c}</option>`).join('');
+
+            const locatarios = [...new Set(contratos.map(c => c.locatario))].sort();
+            selLoc.innerHTML = '<option value="todos">Todos</option>' + locatarios.map(l => `<option value="${l}">${l}</option>`).join('');
+
+            selImo.innerHTML = '<option value="todos">Todos</option>' + imoveis.map(i => `<option value="${i.id}">${i.empreendimento} - ${i.enderecoRua}</option>`).join('');
+
+            // Restaura a seleção anterior (o padrão inicial já é "todos" via option acima).
+            selComp.value = competencias.includes(valComp) ? valComp : 'todos';
+            selLoc.value = locatarios.includes(valLoc) ? valLoc : 'todos';
+            selImo.value = imoveis.some(i => i.id === valImo) ? valImo : 'todos';
+        }
         function renderMensalidades() {
             const container = document.getElementById('lista-mensalidades');
             if(!container) return;
             container.innerHTML = '';
+
+            popularFiltrosMensal();
+            const fComp = document.getElementById('men-filtro-competencia')?.value || 'todos';
+            const fLoc = document.getElementById('men-filtro-locatario')?.value || 'todos';
+            const fImo = document.getElementById('men-filtro-imovel')?.value || 'todos';
             
             let totalAReceber = 0;
             let totalRecebido = 0;
-            mensalidades.forEach(men => {
+            // Agrupa sempre em ordem crescente de competência, e aplica os filtros
+            // selecionados (padrão: todos os meses/locatários/imóveis).
+            const mensalidadesOrdenadas = mensalidades
+                .filter(men => {
+                    if (fComp !== 'todos' && men.referencia !== fComp) return false;
+                    const con = contratos.find(c => c.id === men.contratoId);
+                    if (!con) return false;
+                    if (fLoc !== 'todos' && con.locatario !== fLoc) return false;
+                    if (fImo !== 'todos' && con.imovelId !== fImo) return false;
+                    return true;
+                })
+                .sort((a, b) => {
+                    const [ma, aa] = (a.referencia || '01/1970').split('/');
+                    const [mb, ab] = (b.referencia || '01/1970').split('/');
+                    return (aa + ma).localeCompare(ab + mb);
+                });
+            mensalidadesOrdenadas.forEach(men => {
                 const con = contratos.find(c => c.id === men.contratoId);
                 if(!con) return;
                 
@@ -2157,12 +2414,15 @@
                         <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-amber-500 space-y-2">
                             <div class="flex justify-between items-start">
                                 <div><p class="text-xs font-bold text-slate-900">${con.locatario}</p><p class="text-3xs text-gray-500">Ref: ${men.referencia}</p></div>
-                                <span class="bg-amber-100 text-amber-800 text-3xs px-2 py-0.5 rounded font-black">Pendente</span>
+                                <div class="flex items-center gap-1">
+                                    <span class="bg-amber-100 text-amber-800 text-3xs px-2 py-0.5 rounded font-black">Pendente</span>
+                                    <button onclick="excluirLancamentoMensal('${men.id}')" title="Excluir lançamento" class="w-6 h-6 flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-3xs">🗑️</button>
+                                </div>
                             </div>
                             <div class="grid grid-cols-2 gap-1 text-2xs">
                                 <div>
-                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Banco Destino</label>
-                                    <select id="banco-${men.id}" class="w-full border p-1 rounded bg-gray-50"><option value="Itaú">Itaú</option><option value="Bradesco">Bradesco</option><option value="Nubank">Nubank</option></select>
+                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Forma de Recebimento</label>
+                                    <select id="banco-${men.id}" class="w-full border p-1 rounded bg-gray-50"><option value="PIX">PIX</option><option value="Boleto">Boleto</option><option value="Depósito">Depósito</option></select>
                                 </div>
                                 <div>
                                     <label class="block text-4xs font-bold text-gray-400 uppercase">Dia Recebimento</label>
@@ -2179,12 +2439,18 @@
                                     <input type="text" id="obs-${men.id}" placeholder="Ex: Desconto" class="w-full border p-1 rounded bg-gray-50">
                                 </div>
                             </div>
+                            ${imoveis.find(i => i.id === con.imovelId)?.energiaRumo === 'Sim' ? `
+                            <div>
+                                <label class="block text-4xs font-bold text-yellow-700 uppercase">⚡ Valor Energia (R$) — controle interno, não entra no recibo</label>
+                                <input type="number" id="energia-${men.id}" value="0" class="w-full border border-yellow-300 p-1 rounded bg-yellow-50 font-bold text-yellow-800 text-2xs">
+                            </div>` : ''}
                             <button onclick="liquidarMensalidade('${men.id}')" class="w-full bg-emerald-600 text-white text-2xs py-1.5 rounded font-bold shadow ${isOffline ? 'opacity-50 pointer-events-none' : ''}">Dar Baixa</button>
                         </div>`;
                 } else {
                     totalRecebido += men.valorConfirmado;
                     const log = men.envioLog ? `<p class="text-4xs text-blue-955 font-semibold">📬 Log: Notificado via ${men.envioLog.canal} (${men.envioLog.data})</p>` : `<p class="text-4xs text-gray-400">⚠️ Envio pendente</p>`;
                     const txtObs = men.observacao ? `<p class="text-4xs text-amber-800 italic bg-amber-50 p-1 rounded mt-1">📝 Obs: ${men.observacao}</p>` : '';
+                    const txtEnergia = men.valorEnergia > 0 ? `<p class="text-4xs text-yellow-700 font-semibold">⚡ Energia (controle interno, fora do recibo): R$ ${men.valorEnergia.toFixed(2)}</p>` : '';
                     container.innerHTML += `
                         <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-green-500">
                             <div class="flex justify-between items-center">
@@ -2193,6 +2459,7 @@
                                     <p class="text-3xs text-gray-500">Ref: ${men.referencia} | R$ ${men.valorConfirmado.toFixed(2)} (${men.banco} - ${formatarDataBR(men.dataPgto)})</p>
                                     ${log}
                                     ${txtObs}
+                                    ${txtEnergia}
                                 </div>
                                 <div class="flex flex-col gap-1">
                                     <button onclick="abrirModalOpcoesRecibo('${men.id}', '${con.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-3xs px-3 py-2 rounded font-bold shadow transition active:scale-95">📄 Recibo</button>
@@ -2522,6 +2789,7 @@
             const fAlvo = document.getElementById('inad-filtro-alvo').value || 'todos';
             let totalInad = 0;
             let totalLancadoGeral = 0;
+            let totalEnergiaRecebida = 0;
             let itensPendentes = [];
             mensalidades.forEach(men => {
                 const con = contratos.find(c => c.id === men.contratoId);
@@ -2535,15 +2803,36 @@
                     totalInad += men.valorConfirmado;
                     const imo = imoveis.find(i => i.id === con.imovelId);
                     itensPendentes.push({ men, con, imo });
+                } else if (men.valorEnergia > 0) {
+                    // Energia é controle interno, à parte do aluguel — nunca soma nos
+                    // indicadores de inadimplência/ocupação, apenas informativo aqui.
+                    totalEnergiaRecebida += men.valorEnergia;
                 }
             });
             document.getElementById('inad-total-geral').innerText = "R$ " + totalInad.toLocaleString('pt-BR', {minimumFractionDigits:2});
             const taxa = totalLancadoGeral > 0 ? ((totalInad / totalLancadoGeral) * 100).toFixed(1) : 0;
             document.getElementById('inad-taxa').innerText = taxa + "%";
+            const energiaBox = document.getElementById('inad-energia-recebida');
+            if (energiaBox) {
+                if (totalEnergiaRecebida > 0) {
+                    energiaBox.classList.remove('hidden');
+                    energiaBox.innerText = `⚡ Energia recebida no período (controle interno, à parte do aluguel): R$ ${totalEnergiaRecebida.toLocaleString('pt-BR', {minimumFractionDigits:2})}`;
+                } else {
+                    energiaBox.classList.add('hidden');
+                }
+            }
             if(itensPendentes.length === 0) {
                 container.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">Nenhum débito em aberto localizado.</p>`;
                 return;
             }
+            // Ordena por competência crescente antes de agrupar, para que a ordem
+            // dentro de cada grupo (e a ordem dos próprios grupos, quando agrupado
+            // por competência) siga sempre do mês mais antigo para o mais recente.
+            itensPendentes.sort((a, b) => {
+                const [ma, aa] = a.men.referencia.split('/');
+                const [mb, ab] = b.men.referencia.split('/');
+                return (aa + ma).localeCompare(ab + mb);
+            });
             let groups = {};
             itensPendentes.forEach(item => {
                 let chaveGrupo = '';
@@ -2771,29 +3060,14 @@
         }
         async function verificarFiltroVitrineExterna() {
             const urlParams = new URLSearchParams(window.location.search);
-            let listIds = null;
+            const temAssetsAntigo = urlParams.get('viewShowcase') === 'true' && urlParams.get('assets');
+            const temTokenCurto = !!urlParams.get('v');
 
-            if (urlParams.get('viewShowcase') === 'true' && urlParams.get('assets')) {
-                // Formato antigo (link com IDs expostos) — mantido por compatibilidade
-                // com links já enviados antes da mudança para o link curto mascarado.
-                listIds = urlParams.get('assets').split(',');
-            } else if (urlParams.get('v')) {
-                // Link curto mascarado: resolve o token no backend antes de continuar.
-                try {
-                    const resToken = await fetch(`${GOOGLE_API_URL}?token=${encodeURIComponent(urlParams.get('v'))}`);
-                    const dataToken = await resToken.json();
-                    if (dataToken.status === "sucesso" && dataToken.ids) {
-                        listIds = dataToken.ids.split(',');
-                    }
-                } catch(e) {
-                    console.error("Falha ao resolver link curto:", e.message);
-                }
-            }
+            if (!temAssetsAntigo && !temTokenCurto) return; // não é um link de vitrine, segue fluxo normal do sistema
 
-            if (!listIds) return;
-
-            registrarAcesso("vitrine", "Visitante", window.location.href);
-
+            // Mostra imediatamente uma tela de carregamento dedicada da vitrine —
+            // nunca deixa o visitante público ver a tela de login do sistema
+            // principal, nem por um instante, enquanto o token é resolvido.
             document.body.innerHTML = `
                 <div class="max-w-md mx-auto p-4 space-y-6 bg-slate-900 min-h-screen text-white">
                     <div class="text-center py-4 border-b border-slate-800">
@@ -2801,7 +3075,7 @@
                         <p class="text-3xs text-gray-400 uppercase tracking-widest mt-1">Vitrine de Imóveis Selecionados</p>
                     </div>
                     <div id="external-showcase-container" class="space-y-4">
-                        <p class="text-xs text-center text-slate-400 py-12 animate-pulse">🔄 Sincronizando portfólio digital da nuvem...</p>
+                        <p class="text-xs text-center text-slate-400 py-12 animate-pulse">🔄 Carregando vitrine...</p>
                     </div>
                 </div>
                 <div id="lightbox-vitrine" class="hidden fixed inset-0 bg-black/95 z-50 flex items-center justify-center p-4">
@@ -2812,6 +3086,36 @@
                     <p id="lightbox-vitrine-contador" class="absolute bottom-4 text-white text-xs"></p>
                 </div>
             `;
+
+            let listIds = null;
+
+            if (temAssetsAntigo) {
+                // Formato antigo (link com IDs expostos) — mantido por compatibilidade
+                // com links já enviados antes da mudança para o link curto mascarado.
+                listIds = urlParams.get('assets').split(',');
+            } else if (temTokenCurto) {
+                // Link curto mascarado: resolve o token no backend antes de continuar.
+                try {
+                    const resToken = await fetch(`${GOOGLE_API_URL}?token=${encodeURIComponent(urlParams.get('v'))}`);
+                    const dataToken = await resToken.json();
+                    if (dataToken.status === "sucesso" && dataToken.ids) {
+                        listIds = dataToken.ids.split(',');
+                    } else {
+                        document.getElementById('external-showcase-container').innerHTML =
+                            `<p class="text-xs text-center text-red-400 py-12">⚠️ Link inválido ou expirado.<br>${dataToken.mensagem || ''}</p>`;
+                        return;
+                    }
+                } catch(e) {
+                    document.getElementById('external-showcase-container').innerHTML =
+                        `<p class="text-xs text-center text-red-400 py-12">⚠️ Falha ao carregar a vitrine. Verifique sua internet e recarregue a página.</p>`;
+                    console.error("Falha ao resolver link curto:", e.message);
+                    return;
+                }
+            }
+
+            if (!listIds) return;
+
+            registrarAcesso("vitrine", "Visitante", window.location.href);
 
             // Executa busca síncrona aos dados de produção em segundo plano se o cache local do cliente estiver vazio
             try {
@@ -2834,10 +3138,9 @@
                     exibidos++;
                     let slideFotos = '';
                     if (imo.fotos && imo.fotos.length > 0) {
-                        const fotosJson = JSON.stringify(imo.fotos).replace(/"/g, '&quot;');
                         slideFotos = '<div class="flex gap-2 overflow-x-auto py-2">';
                         imo.fotos.forEach((foto, idx) => {
-                            slideFotos += `<img src="${foto}" onclick='abrirLightboxVitrine(${fotosJson}, ${idx})' class="w-48 h-32 object-cover rounded-xl border border-slate-700 flex-none cursor-pointer active:scale-95 transition">`;
+                            slideFotos += `<img src="${foto}" onclick="abrirLightboxVitrineImovel('${imo.id}', ${idx})" class="w-48 h-32 object-cover rounded-xl border border-slate-700 flex-none cursor-pointer active:scale-95 transition">`;
                         });
                         slideFotos += '</div>';
                     }
@@ -2851,6 +3154,8 @@
                             <h3 class="text-md font-bold mt-2">${imo.empreendimento}</h3>
                             <p class="text-xs text-slate-400">📍 ${imo.enderecoRua || ''}, ${imo.enderecoNum || ''}${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}, ${imo.enderecoBairro || ''}, ${imo.enderecoCidade || ''}</p>
                             <p class="text-3xs text-slate-500 mt-1">Tamanho: ${imo.tamanho}m² | Suítes: ${imo.suites} | WC: ${imo.banheiros}</p>
+                            <p class="text-3xs text-slate-500">Condomínio: R$ ${imo.condominio} | IPTU: R$ ${imo.iptu}</p>
+                            ${imo.descricao ? `<p class="text-3xs text-slate-300 mt-2 italic">${imo.descricao}</p>` : ''}
                             ${badgeEnergia}
                             ${slideFotos}
                             <div class="mt-3 pt-3 border-t border-slate-900 flex justify-between items-baseline">
@@ -2867,6 +3172,11 @@
         }
         let lightboxVitrineFotos = [];
         let lightboxVitrineIndex = 0;
+        function abrirLightboxVitrineImovel(imovelId, indiceInicial) {
+            const imo = imoveis.find(i => i.id === imovelId);
+            if (!imo || !imo.fotos) return;
+            abrirLightboxVitrine(imo.fotos, indiceInicial);
+        }
         function abrirLightboxVitrine(fotos, indiceInicial) {
             lightboxVitrineFotos = fotos;
             lightboxVitrineIndex = indiceInicial;
@@ -2922,6 +3232,12 @@
             document.getElementById('rel-potencial').innerText = 'R$ ' + pot.toLocaleString('pt-BR', {minimumFractionDigits:2});
             document.getElementById('rel-contagem').innerText = `Alugados: ${alugados} | Vagos: ${total - alugados}`;
         }
-    </script>
+    </script>    <div id="lightbox-geral" class="hidden fixed inset-0 bg-black/95 z-[300] flex items-center justify-center p-4">
+        <button onclick="fecharLightboxGeral()" class="absolute top-4 right-4 text-white text-2xl font-bold">✕</button>
+        <button onclick="navegarLightboxGeral(-1)" class="absolute left-2 text-white text-3xl font-bold px-2">‹</button>
+        <img id="lightbox-geral-img" class="max-h-[85vh] max-w-full rounded-lg object-contain">
+        <button onclick="navegarLightboxGeral(1)" class="absolute right-2 text-white text-3xl font-bold px-2">›</button>
+        <p id="lightbox-geral-contador" class="absolute bottom-4 text-white text-xs"></p>
+    </div>
 </body>
 </html>
