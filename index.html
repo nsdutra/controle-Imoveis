@@ -1,8 +1,8 @@
 <!-- 
 ==================================================================
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
-   VERSÃO: v4.2.1 (Histórico Contratual + Diagnóstico de Fotos)
-   TOTAL DE LINHAS DE CÓDIGO: 1255 linhas
+   VERSÃO: v4.3.0 (Histórico Contratual + Diagnóstico de Fotos)
+   TOTAL DE LINHAS DE CÓDIGO: 2555 linhas
 ==================================================================
 -->
 <!DOCTYPE html>
@@ -32,9 +32,18 @@
             font-weight: 400;
             line-height: 1;
         }
+        .spinner { border: 6px solid #f3f3f3; border-top: 6px solid #3498db; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
 <body class="bg-gray-100 font-sans text-gray-800 pb-16">
+
+    <!-- OVERLAY DE CARREGAMENTO (NOVO) -->
+    <div id="loading-overlay" class="hidden fixed inset-0 bg-slate-900/80 z-[9999] flex flex-col items-center justify-center text-white">
+        <div class="spinner mb-4"></div>
+        <h3 id="loading-text" class="font-bold tracking-wide">Aguarde, processando...</h3>
+    </div>
+
     <!-- ================= TELA DE ABERTURA (SPLASH) ================= -->
     <div id="splash-screen" class="fixed inset-0 bg-slate-900 z-55 flex flex-col items-center justify-center text-white p-6 transition-opacity duration-500">
         <div class="w-full max-w-sm text-center space-y-6 flex flex-col justify-between h-full py-8">
@@ -45,14 +54,18 @@
                     <h1 class="text-4xl font-black tracking-widest text-blue-400">RUMO</h1>
                     <p class="text-gray-400 text-sm mt-2 font-medium uppercase tracking-wider">Gestão Patrimonial Inteligente</p>
                 </div>
-                <button id="btn-entrar" onclick="entrarNoSistema()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition transform active:scale-95 flex justify-center items-center gap-2">
-                    <span>Acessar Sistema</span>
-                </button>
+                <!-- NOVO INPUT DE LOGIN -->
+                <div>
+                    <input type="email" id="login-email" placeholder="Digite seu e-mail" class="w-full p-3 rounded-xl bg-slate-800 text-white font-bold mb-3 text-center border border-slate-600 focus:border-blue-400 outline-none" required>
+                    <button id="btn-entrar" onclick="entrarNoSistema()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition transform active:scale-95 flex justify-center items-center gap-2">
+                        <span>Acessar Sistema</span>
+                    </button>
+                </div>
                 <div id="splash-status" class="text-2xs text-amber-400 font-semibold px-4 break-words"></div>
                 <div id="splash-error-detail" class="text-3xs text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
             </div>
             <div class="text-2xs text-slate-500 font-mono">
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v4.2.1</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v4.3.0</span>
             </div>
         </div>
     </div>
@@ -128,6 +141,11 @@
                             <option value="Vaga Garagem">Vaga Garagem</option>
                         </select>
                     </div>
+                </div>
+                <!-- NOVOS CAMPOS FASE 2 -->
+                <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100">
+                    <div><label class="block text-xs font-bold text-gray-600">Código IPTU</label><input type="text" id="imo-codigo-iptu" class="w-full p-2 border rounded mt-1 text-sm"></div>
+                    <div><label class="block text-xs font-bold text-gray-600">Energia Rumo</label><select id="imo-energia-rumo" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50"><option value="Não">Não</option><option value="Sim">Sim</option></select></div>
                 </div>
                 <!-- Desmembramento do Endereço -->
                 <div class="grid grid-cols-3 gap-2">
@@ -253,6 +271,20 @@
                         <input type="number" id="con-vencimento-dia" required min="1" max="31" class="w-full p-2 border rounded mt-1 text-sm">
                     </div>
                 </div>
+                <!-- NOVOS CAMPOS FASE 2: Contrato -->
+                <div class="grid grid-cols-2 gap-2 mt-2 pt-2 border-t border-slate-100">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Contato Nome (Resp)</label>
+                        <input type="text" id="con-contato-nome" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Forma Pagamento</label>
+                        <select id="con-forma-pagamento" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="PIX">PIX</option>
+                            <option value="Boleto">Boleto</option>
+                        </select>
+                    </div>
+                </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-xs font-bold text-gray-600">WhatsApp</label>
@@ -304,6 +336,13 @@
                         </select>
                     </div>
                 </div>
+                
+                <!-- UPLOAD DE ANEXOS FASE 1 -->
+                <div class="bg-slate-50 p-3 rounded-xl border mt-3">
+                    <label class="block text-xs font-bold text-gray-600 mb-1">Anexos (PDF/Fotos - Máx 5)</label>
+                    <input type="file" id="con-anexos" accept=".pdf, image/*" multiple class="w-full text-xs text-slate-600">
+                </div>
+
                 <button type="submit" id="btn-salvar-con" class="w-full bg-green-600 text-white p-2.5 rounded-lg font-bold text-sm shadow">Firmar / Atualizar Contrato</button>
             </form>
             <h2 class="text-lg font-bold mb-3 text-blue-900">Contratos de Locação Ativos</h2>
@@ -586,10 +625,32 @@
                 arrayCompetencias.push(`${mStr}/${ano}`);
             }
         }
+        
+        // --- FUNÇÕES DE LOADING E UPLOAD (FASE 1) ---
+        function mostrarLoading(msg) { 
+            document.getElementById('loading-text').innerText = msg; 
+            document.getElementById('loading-overlay').classList.remove('hidden'); 
+        }
+        function ocultarLoading() { document.getElementById('loading-overlay').classList.add('hidden'); }
+
+        async function coletarDocumentosBase64(inputId) {
+            const el = document.getElementById(inputId);
+            if (!el || !el.files || el.files.length === 0) return [];
+            const promises = [];
+            for (let i = 0; i < el.files.length; i++) {
+                promises.push(new Promise((resolve) => {
+                    const r = new FileReader();
+                    r.onload = e => resolve(e.target.result);
+                    r.readAsDataURL(el.files[i]);
+                }));
+            }
+            return await Promise.all(promises);
+        }
+
         // --- SISTEMA DE LOGS DO DESENVOLVEDOR ---
-        const MAX_LOG_ENTRIES = 200; // limite de entradas mantidas em tela/memória por log
-        let devLogEntries = [];      // buffer do log detalhado (Central Dev)
-        let screenLogEntries = [];   // buffer do console de diagnóstico
+        const MAX_LOG_ENTRIES = 200; 
+        let devLogEntries = [];      
+        let screenLogEntries = [];   
         function devLog(origin, message, objectPayload = null) {
             const container = document.getElementById('dev-detailed-log-box');
             if(!container) return;
@@ -613,8 +674,6 @@
                 </div>
             `;
             devLogEntries.push(entryHtml);
-            // Limpeza automática: mantém somente as últimas MAX_LOG_ENTRIES entradas,
-            // evitando que o log cresça indefinidamente e comprometa a performance/memória.
             if (devLogEntries.length > MAX_LOG_ENTRIES) {
                 devLogEntries = devLogEntries.slice(devLogEntries.length - MAX_LOG_ENTRIES);
             }
@@ -754,7 +813,9 @@
                     valor: parseFloat(raw.valor || raw.Valor || raw.aluguel_alvo || 0) || 0,
                     fotos: fotosTratadas,
                     divisao: divisaoTratada,
-                    status: raw.status || raw.Status || 'Vago'
+                    status: raw.status || raw.Status || 'Vago',
+                    codigoIptu: raw.codigoIptu || raw.codigo_iptu || '',
+                    energiaRumo: raw.energiaRumo || raw.energia_rumo || 'Não'
                 };
             } catch (err) {
                 logScreen(`Falha de normalização no imóvel: ${err.message}`, true);
@@ -780,7 +841,10 @@
                 reajusteAplicado: parseFloat(raw.reajusteAplicado || raw.reajuste_aplicado || 0) || 0,
                 reajuste: raw.reajuste || 'IPCA',
                 iptu: parseFloat(raw.iptu || raw.IPTU || raw.iptu_contrato || 0) || 0,
-                historico: raw.historico || []
+                historico: raw.historico || [],
+                contatoNome: raw.contatoNome || raw.contato_nome || '',
+                formaPagamento: raw.formaPagamento || raw.forma_pagamento || 'PIX',
+                anexos: raw.anexos || []
             };
         }
         function normalizarMensalidade(raw) {
@@ -911,11 +975,6 @@
         function limparDocumentoAoMudarTipo() {
             document.getElementById('con-cpf').value = '';
         }
-        // Redimensiona e comprime a imagem antes de gerar o base64.
-        // Fotos de celular sem tratamento chegam a 3-8 MB (300 mil+ caracteres em base64),
-        // o que estoura tanto o payload de rede quanto o limite de 50.000 caracteres por
-        // célula do Google Sheets. Aqui limitamos a maior dimensão a 1024px e comprimimos
-        // como JPEG qualidade 0.6, o que normalmente resulta em 40-120 KB por foto.
         function comprimirImagem(file, maxDimensao = 1024, qualidade = 0.6) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
@@ -1107,9 +1166,7 @@
             document.getElementById('main-header').classList.add('hidden');
             document.getElementById('main-content').classList.add('hidden');
         }
-        // Registro de rotas que falharam ao gravar na nuvem, para permitir reenvio manual.
-        // Mantemos os últimos dados de cada rota aqui até a gravação ser confirmada com sucesso.
-        let pendenciasSync = {}; // { imoveis: [...], contratos: [...], mensalidades: [...], repasses: [...] }
+        let pendenciasSync = {}; 
         async function enviarDadosParaGoogleSheets(rota, dadosArray) {
             if (isOffline) {
                 devLog("ERRO_GRAVACAO_NUVEM", `Tentativa de gravar '${rota}' bloqueada: sistema está em modo offline (sem sincronização inicial confirmada).`);
@@ -1117,12 +1174,6 @@
             }
             try {
                 devLog("ENVIO_NUVEM", `Tentando transmitir canal '${rota}' para URL externa. Total de registros: ${dadosArray.length}`, dadosArray);
-                // IMPORTANTE: usamos 'text/plain;charset=utf-8' propositalmente (NÃO 'application/json').
-                // O Google Apps Script Web App não responde a requisições de pre-flight (OPTIONS) do CORS.
-                // Se o Content-Type for 'application/json', o navegador exige esse pre-flight antes do POST
-                // e a chamada é bloqueada com erro "Failed to fetch" antes mesmo de sair do dispositivo.
-                // Usando 'text/plain', a requisição é tratada como "simples" e não dispara pre-flight.
-                // O Apps Script (doPost) deve continuar fazendo JSON.parse(e.postData.contents) normalmente.
                 const response = await fetch(GOOGLE_API_URL, {
                     method: "POST",
                     headers: { "Content-Type": "text/plain;charset=utf-8" },
@@ -1131,26 +1182,16 @@
                 if (!response.ok) {
                     throw new Error(`Servidor respondeu com status HTTP ${response.status}`);
                 }
-                // CRÍTICO: o Google Apps Script Web App SEMPRE responde HTTP 200,
-                // mesmo quando o script falha internamente (aba não encontrada,
-                // pasta do Drive inacessível, erro de sintaxe, etc). O erro real
-                // vem embrulhado dentro do corpo JSON como {status:"erro", mensagem:...}.
-                // Por isso é indispensável ler e validar o corpo da resposta — checar
-                // apenas o status HTTP (response.ok) NÃO é suficiente e mascara falhas.
                 let corpo;
                 try {
                     corpo = await response.json();
                 } catch (parseErr) {
-                    throw new Error(`Resposta do servidor não é um JSON válido (provável página de erro/login do Google em vez do Apps Script): ${parseErr.message}`);
+                    throw new Error(`Resposta do servidor não é um JSON válido: ${parseErr.message}`);
                 }
                 if (!corpo || corpo.status !== "sucesso") {
                     throw new Error((corpo && corpo.mensagem) ? corpo.mensagem : "O servidor retornou uma resposta sem confirmação de sucesso.");
                 }
                 devLog("ENVIO_NUVEM", `Gravação de '${rota}' confirmada com sucesso. Registros gravados: ${corpo.registros ?? '?'}`);
-
-                // Mesmo com sucesso geral, o Code.gs pode reportar avisos específicos
-                // (ex: uma foto que falhou ao subir pro Drive). Antes esses casos eram
-                // descartados silenciosamente; agora aparecem para o usuário.
                 if (corpo.avisos && corpo.avisos.length > 0) {
                     devLog("AVISO_FOTOS", `Rota '${rota}' salva, mas com ${corpo.avisos.length} aviso(s).`, corpo.avisos);
                     alert(`⚠️ '${rota}' foi salvo, mas houve problema com ${corpo.avisos.length} foto(s):\n\n` + corpo.avisos.join('\n'));
@@ -1165,10 +1206,8 @@
             }
         }
         async function saveAll(enviarParaNuvem = true, mensagemSucesso = null) {
-            // A cópia local é apenas uma cópia de segurança temporária para permitir a
-            // visualização em caso de perda de conexão — ela NÃO é a fonte oficial dos dados.
-            // A fonte oficial é sempre a planilha (nuvem). Por isso todo salvamento aguarda
-            // a confirmação real do servidor antes de avisar o usuário que "deu certo".
+            mostrarLoading("Sincronizando com a Nuvem...");
+            
             localStorage.setItem('rumo_imoveis', JSON.stringify(imoveis));
             localStorage.setItem('rumo_contratos', JSON.stringify(contratos));
             localStorage.setItem('rumo_mensalidades', JSON.stringify(mensalidades));
@@ -1183,8 +1222,13 @@
             renderVitrine();
             atualizarListaSelecaoSociosRepasse();
             atualizarDropdownFiltrosDinamicos();
-            if (!enviarParaNuvem) return;
+            
+            if (!enviarParaNuvem) {
+                ocultarLoading();
+                return;
+            }
             if (isOffline) {
+                ocultarLoading();
                 alert("⚠️ Você está no modo offline (sem conexão confirmada com a nuvem). Este registro NÃO foi salvo na planilha. Verifique sua internet e tente sincronizar novamente antes de continuar editando.");
                 return;
             }
@@ -1198,9 +1242,11 @@
             const falhas = resultados.filter(r => !r.ok).map(r => nomesAmigaveis[r.rota] || r.rota);
             if (falhas.length > 0) {
                 mostrarBannerPendencia();
+                ocultarLoading();
                 alert(`⚠️ Falha ao salvar na nuvem: ${falhas.join(', ')}.\n\nSeu registro NÃO foi confirmado na planilha (outros usuários não vão vê-lo). Verifique sua internet e toque em "Reenviar Agora" na faixa vermelha no topo assim que possível.`);
             } else {
                 esconderBannerPendencia();
+                ocultarLoading();
                 if (mensagemSucesso) alert(mensagemSucesso);
             }
         }
@@ -1372,6 +1418,9 @@
             const ruaSalva = document.getElementById('imo-endereco-rua').value;
             const bairroSalvo = document.getElementById('imo-endereco-bairro').value;
             const cidadeSalva = document.getElementById('imo-endereco-cidade').value;
+            const codigoIptu = document.getElementById('imo-codigo-iptu').value;
+            const energiaRumo = document.getElementById('imo-energia-rumo').value;
+
             const dados = {
                 id: id || 'imo_' + Date.now(),
                 empreendimento: empreendimentoSalvo,
@@ -1389,7 +1438,9 @@
                 valor: parseFloat(document.getElementById('imo-valor').value) || 0,
                 fotos: fotosCarregadasBase64.length > 0 ? fotosCarregadasBase64 : (id ? (imoveis.find(i => i.id === id).fotos || []) : []),
                 divisao: divisao,
-                status: id ? imoveis.find(i => i.id === id).status : 'Vago'
+                status: id ? imoveis.find(i => i.id === id).status : 'Vago',
+                codigoIptu: codigoIptu,
+                energiaRumo: energiaRumo
             };
             devLog("FORM_IMOVEL", `Tentativa de gravação do imóvel. ID: ${dados.id}`, dados);
             if(id) {
@@ -1427,6 +1478,8 @@
             document.getElementById('imo-condominio').value = imo.condominio || 0;
             document.getElementById('imo-iptu').value = imo.iptu || 0;
             document.getElementById('imo-valor').value = imo.valor;
+            document.getElementById('imo-codigo-iptu').value = imo.codigoIptu || '';
+            document.getElementById('imo-energia-rumo').value = imo.energiaRumo || 'Não';
             
             const previewContainer = document.getElementById('form-images-preview-container');
             previewContainer.innerHTML = '';
@@ -1529,107 +1582,118 @@
             navigator.clipboard.writeText(txt);
             alert("Resumo de locação copiado!");
         }
-        function saveContrato(e) {
+        async function saveContrato(e) {
             e.preventDefault();
-            const id = document.getElementById('con-id').value;
-            const imoId = document.getElementById('con-imovel').value;
-            const docTipo = document.getElementById('con-doc-tipo').value;
-            const docVal = document.getElementById('con-cpf').value.trim();
-            const valorNovo = parseFloat(document.getElementById('con-valor').value);
-            const dataFim = document.getElementById('con-fim').value;
-            devLog("FORM_CONTRATO", `Iniciando rotina de submissão. ID: ${id || 'NOVO'}, Imovel ID: ${imoId}`);
-            if(!imoId) return alert("⚠️ Selecione um imóvel.");
-            if(docTipo === 'CPF' && !validarCPF(docVal)) {
-                return alert("⚠️ O CPF informado não é válido.");
-            }
-            if(docTipo === 'CNPJ' && !validarCNPJ(docVal)) {
-                return alert("⚠️ O CNPJ informado não é válido.");
-            }
-            let contratoDados = {
-                id: id || 'con_' + Date.now(),
-                imovelId: imoId,
-                status: document.getElementById('con-status').value,
-                locatario: document.getElementById('con-locatario').value,
-                docTipo: docTipo,
-                cpf: docVal,
-                vencimentoDia: parseInt(document.getElementById('con-vencimento-dia').value),
-                whatsapp: document.getElementById('con-whatsapp').value.trim(),
-                email: document.getElementById('con-email').value.trim(),
-                inicio: document.getElementById('con-inicio').value,
-                fim: dataFim,
-                valor: valorNovo,
-                valorAnterior: parseFloat(document.getElementById('con-valor-anterior').value) || 0,
-                desconto: parseFloat(document.getElementById('con-desconto').value) || 0,
-                reajusteAplicado: parseFloat(document.getElementById('con-reajuste-aplicado').value) || 0,
-                reajuste: document.getElementById('con-reajuste').value,
-                iptu: parseFloat(document.getElementById('con-iptu').value) || 0,
-                historico: []
-            };
-            devLog("FORM_CONTRATO", "Payload do Contrato Estruturado:", contratoDados);
-            if(id) {
-                const idx = contratos.findIndex(c => c.id === id);
-                if(idx !== -1) {
-                    const anterior = contratos[idx];
-                    const historicoExistente = anterior.historico || [];
-                    const agora = new Date().toISOString();
+            mostrarLoading("Processando anexos e salvando contrato...");
+            try {
+                const id = document.getElementById('con-id').value;
+                const imoId = document.getElementById('con-imovel').value;
+                const docTipo = document.getElementById('con-doc-tipo').value;
+                const docVal = document.getElementById('con-cpf').value.trim();
+                const valorNovo = parseFloat(document.getElementById('con-valor').value);
+                const dataFim = document.getElementById('con-fim').value;
+                const contatoNome = document.getElementById('con-contato-nome').value;
+                const formaPagamento = document.getElementById('con-forma-pagamento').value;
+                const anexos = await coletarDocumentosBase64('con-anexos');
 
-                    // Compara os campos relevantes do contrato anterior com os novos valores
-                    // e registra cada alteração detectada no histórico. Sem isso, o histórico
-                    // fica permanentemente vazio (bug anterior: o array era apenas copiado,
-                    // nunca alimentado).
-                    const camposMonitorados = [
-                        { campo: 'valor', rotulo: 'Valor do aluguel' },
-                        { campo: 'status', rotulo: 'Status do contrato' },
-                        { campo: 'vencimentoDia', rotulo: 'Dia de vencimento' },
-                        { campo: 'fim', rotulo: 'Data de término' },
-                        { campo: 'desconto', rotulo: 'Desconto' },
-                        { campo: 'reajusteAplicado', rotulo: 'Reajuste aplicado' },
-                        { campo: 'iptu', rotulo: 'IPTU contratual' },
-                        { campo: 'locatario', rotulo: 'Locatário' }
-                    ];
-                    const novasEntradas = [];
-                    camposMonitorados.forEach(({ campo, rotulo }) => {
-                        const valorAntigo = anterior[campo];
-                        const valorNovo = contratoDados[campo];
-                        if (String(valorAntigo ?? '') !== String(valorNovo ?? '')) {
-                            novasEntradas.push({
-                                data: agora,
-                                campo: rotulo,
-                                de: valorAntigo ?? '-',
-                                para: valorNovo ?? '-'
-                            });
+                devLog("FORM_CONTRATO", `Iniciando rotina de submissão. ID: ${id || 'NOVO'}, Imovel ID: ${imoId}`);
+                if(!imoId) { ocultarLoading(); return alert("⚠️ Selecione um imóvel."); }
+                if(docTipo === 'CPF' && !validarCPF(docVal)) {
+                    ocultarLoading(); return alert("⚠️ O CPF informado não é válido.");
+                }
+                if(docTipo === 'CNPJ' && !validarCNPJ(docVal)) {
+                    ocultarLoading(); return alert("⚠️ O CNPJ informado não é válido.");
+                }
+                let contratoDados = {
+                    id: id || 'con_' + Date.now(),
+                    imovelId: imoId,
+                    status: document.getElementById('con-status').value,
+                    locatario: document.getElementById('con-locatario').value,
+                    docTipo: docTipo,
+                    cpf: docVal,
+                    vencimentoDia: parseInt(document.getElementById('con-vencimento-dia').value),
+                    whatsapp: document.getElementById('con-whatsapp').value.trim(),
+                    email: document.getElementById('con-email').value.trim(),
+                    inicio: document.getElementById('con-inicio').value,
+                    fim: dataFim,
+                    valor: valorNovo,
+                    valorAnterior: parseFloat(document.getElementById('con-valor-anterior').value) || 0,
+                    desconto: parseFloat(document.getElementById('con-desconto').value) || 0,
+                    reajusteAplicado: parseFloat(document.getElementById('con-reajuste-aplicado').value) || 0,
+                    reajuste: document.getElementById('con-reajuste').value,
+                    iptu: parseFloat(document.getElementById('con-iptu').value) || 0,
+                    historico: [],
+                    contatoNome: contatoNome,
+                    formaPagamento: formaPagamento,
+                    anexos: anexos
+                };
+                devLog("FORM_CONTRATO", "Payload do Contrato Estruturado:", contratoDados);
+                if(id) {
+                    const idx = contratos.findIndex(c => c.id === id);
+                    if(idx !== -1) {
+                        const anterior = contratos[idx];
+                        const historicoExistente = anterior.historico || [];
+                        const agora = new Date().toISOString();
+                        const camposMonitorados = [
+                            { campo: 'valor', rotulo: 'Valor do aluguel' },
+                            { campo: 'status', rotulo: 'Status do contrato' },
+                            { campo: 'vencimentoDia', rotulo: 'Dia de vencimento' },
+                            { campo: 'fim', rotulo: 'Data de término' },
+                            { campo: 'desconto', rotulo: 'Desconto' },
+                            { campo: 'reajusteAplicado', rotulo: 'Reajuste aplicado' },
+                            { campo: 'iptu', rotulo: 'IPTU contratual' },
+                            { campo: 'locatario', rotulo: 'Locatário' }
+                        ];
+                        const novasEntradas = [];
+                        camposMonitorados.forEach(({ campo, rotulo }) => {
+                            const valorAntigo = anterior[campo];
+                            const valorNovo = contratoDados[campo];
+                            if (String(valorAntigo ?? '') !== String(valorNovo ?? '')) {
+                                novasEntradas.push({
+                                    data: agora,
+                                    campo: rotulo,
+                                    de: valorAntigo ?? '-',
+                                    para: valorNovo ?? '-'
+                                });
+                            }
+                        });
+                        contratoDados.historico = novasEntradas.length > 0
+                            ? [...historicoExistente, ...novasEntradas]
+                            : historicoExistente;
+                        
+                        // Preservar anexos anteriores se nenhum novo foi enviado
+                        if (anexos.length === 0 && anterior.anexos) {
+                            contratoDados.anexos = anterior.anexos;
                         }
-                    });
 
-                    contratoDados.historico = novasEntradas.length > 0
-                        ? [...historicoExistente, ...novasEntradas]
-                        : historicoExistente;
-
-                    contratos[idx] = contratoDados;
-                    devLog("FORM_CONTRATO", `Contrato existente ID: ${id} modificado no index: ${idx}. ${novasEntradas.length} alteração(ões) registrada(s) no histórico.`);
-                }
-            } else {
-                contratoDados.historico = [{
-                    data: new Date().toISOString(),
-                    campo: 'Contrato criado',
-                    de: '-',
-                    para: `${contratoDados.locatario} — R$ ${contratoDados.valor}/mês`
-                }];
-                contratos.push(contratoDados);
-                devLog("FORM_CONTRATO", "Novo contrato adicionado ao banco local.");
-                
-                // Marca o status do imóvel vinculado como "Alugado"
-                const imIdx = imoveis.findIndex(i => i.id === imoId);
-                if(imIdx !== -1) {
-                    imoveis[imIdx].status = 'Alugado';
-                    devLog("FORM_CONTRATO", `Imóvel ID: ${imoId} localizado e atualizado para status 'Alugado'`);
+                        contratos[idx] = contratoDados;
+                        devLog("FORM_CONTRATO", `Contrato existente ID: ${id} modificado no index: ${idx}. ${novasEntradas.length} alteração(ões) registrada(s) no histórico.`);
+                    }
                 } else {
-                    devLog("FORM_CONTRATO_AVISO", `Imóvel com ID: ${imoId} não foi localizado na memória para atualizar para 'Alugado'.`);
+                    contratoDados.historico = [{
+                        data: new Date().toISOString(),
+                        campo: 'Contrato criado',
+                        de: '-',
+                        para: `${contratoDados.locatario} — R$ ${contratoDados.valor}/mês`
+                    }];
+                    contratos.push(contratoDados);
+                    devLog("FORM_CONTRATO", "Novo contrato adicionado ao banco local.");
+                    
+                    const imIdx = imoveis.findIndex(i => i.id === imoId);
+                    if(imIdx !== -1) {
+                        imoveis[imIdx].status = 'Alugado';
+                        devLog("FORM_CONTRATO", `Imóvel ID: ${imoId} localizado e atualizado para status 'Alugado'`);
+                    } else {
+                        devLog("FORM_CONTRATO_AVISO", `Imóvel com ID: ${imoId} não foi localizado na memória para atualizar para 'Alugado'.`);
+                    }
                 }
+                document.getElementById('form-contrato').reset();
+                cancelarEdicaoContrato();
+                await saveAll(true, "Contrato de locação salvo!");
+            } catch (err) {
+                ocultarLoading();
+                alert("Erro ao salvar contrato: " + err.message);
             }
-            document.getElementById('form-contrato').reset();
-            cancelarEdicaoContrato();
-            saveAll(true, "Contrato de locação salvo!");
         }
         function editarContrato(id) {
             activeConId = id;
@@ -1650,9 +1714,12 @@
             document.getElementById('con-valor').value = con.valor;
             document.getElementById('con-valor-anterior').value = con.valorAnterior || 0;
             document.getElementById('con-desconto').value = con.desconto || 0;
-            document.getElementById('con-reajuste-aplicado').value = con.reajuste-aplicado || 0;
+            document.getElementById('con-reajuste-aplicado').value = con.reajusteAplicado || 0;
             document.getElementById('con-reajuste').value = con.reajuste;
             document.getElementById('con-iptu').value = con.iptu || 0;
+            document.getElementById('con-contato-nome').value = con.contatoNome || '';
+            document.getElementById('con-forma-pagamento').value = con.formaPagamento || 'PIX';
+            
             document.getElementById('form-contrato-titulo').innerText = "Renovar / Editar Contrato 📝";
             document.getElementById('btn-cancelar-edit-con').classList.remove('hidden');
             window.scrollTo({top: 0, behavior: 'smooth'});
@@ -2429,7 +2496,6 @@
                         </div>
                     `;
                     
-                    // Executa busca síncrona aos dados de produção em segundo plano se o cache local do cliente estiver vazio
                     try {
                         const response = await fetch(GOOGLE_API_URL);
                         const resData = await response.json();
