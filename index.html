@@ -1,7 +1,7 @@
 <!-- 
 ==================================================================
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
-   VERSÃO: v4.8.0 (Conciliação de extrato bancário: importar, casar recebimentos, lançar repasses)
+   VERSÃO: v4.9.0 (Formulário de contrato reformulado, documentos categorizados, vitrine fiel, relatórios agrupados)
    TOTAL DE LINHAS DE CÓDIGO: 1255 linhas
 ==================================================================
 -->
@@ -53,7 +53,7 @@
                 <div id="splash-error-detail" class="text-[11px] text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
             </div>
             <div class="text-[13px] text-slate-500 font-mono">
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v4.8.0</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v4.9.0</span>
             </div>
         </div>
     </div>
@@ -252,7 +252,7 @@
                 
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-xs font-bold text-gray-600">Vincular Imóvel</label>
+                        <label class="block text-xs font-bold text-gray-600">Imóvel</label>
                         <select id="con-imovel" required onchange="sugerirDescontoEnergia()" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
                             <option value="">-- Escolha o Imóvel --</option>
                         </select>
@@ -272,32 +272,24 @@
                         <input type="text" id="con-locatario" required class="w-full p-2 border rounded mt-1 text-sm">
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-600">Tipo de Documento</label>
-                        <select id="con-doc-tipo" onchange="limparDocumentoAoMudarTipo()" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
-                            <option value="CPF">CPF (Padrão)</option>
-                            <option value="CNPJ">CNPJ</option>
-                        </select>
+                        <label class="block text-xs font-bold text-gray-600">Documento (CPF ou CNPJ)</label>
+                        <input type="text" id="con-cpf" required oninput="formatarMascaraDocumento()" placeholder="Só digitar os números" class="w-full p-2 border rounded mt-1 text-sm">
+                        <p id="con-doc-indicador" class="text-[11px] mt-0.5 h-3"></p>
                     </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-xs font-bold text-gray-600">Documento (Apenas Números)</label>
-                        <input type="text" id="con-cpf" required class="w-full p-2 border rounded mt-1 text-sm">
+                        <label class="block text-xs font-bold text-gray-600">Pessoa de Contato</label>
+                        <input type="text" id="con-contato-nome" class="w-full p-2 border rounded mt-1 text-sm" placeholder="Nome de quem responde pelo contrato">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600">Dia Vencimento (1 a 31)</label>
-                        <input type="number" id="con-vencimento-dia" required min="1" max="31" class="w-full p-2 border rounded mt-1 text-sm">
-                    </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-xs font-bold text-gray-600">WhatsApp</label>
                         <input type="tel" id="con-whatsapp" class="w-full p-2 border rounded mt-1 text-sm" placeholder="11999999999">
                     </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600">E-mail</label>
-                        <input type="email" id="con-email" class="w-full p-2 border rounded mt-1 text-sm" placeholder="nome@email.com">
-                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Dia de Vencimento (1 a 31)</label>
+                    <input type="number" id="con-vencimento-dia" required min="1" max="31" class="w-full p-2 border rounded mt-1 text-sm">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -309,32 +301,24 @@
                         <input type="date" id="con-fim" required class="w-full p-2 border rounded mt-1 text-sm">
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-600">Valor Vigente</label>
-                        <input type="number" id="con-valor" required class="w-full p-1.5 border rounded mt-1 text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-600">Valor Anterior</label>
-                        <input type="number" id="con-valor-anterior" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-600">Desconto Vig.</label>
-                        <input type="number" id="con-desconto" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
-                    </div>
-                    <div>
-                        <label class="block text-[11px] font-bold text-gray-600">Contrato IPTU</label>
-                        <div class="flex items-center gap-1">
-                            <input type="number" id="con-iptu" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
-                            <button type="button" onclick="acionarZapIptu()" title="Enviar código do IPTU para o locatário" class="mt-1 text-xs bg-green-50 border border-green-200 rounded px-1.5 py-1.5">💬</button>
-                        </div>
-                    </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Valor Vigente (R$)</label>
+                    <input type="number" id="con-valor" required class="w-full p-2 border rounded mt-1 text-sm">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-xs font-bold text-gray-600">Pessoa de Contato</label>
-                        <input type="text" id="con-contato-nome" class="w-full p-2 border rounded mt-1 text-sm" placeholder="Nome de quem responde pelo contrato">
+                        <label class="block text-xs font-bold text-gray-600">IPTU do Imóvel</label>
+                        <p id="con-iptu-display" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50 text-gray-500">Selecione o imóvel</p>
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Condomínio a cargo do locatário?</label>
+                        <select id="con-condominio-locatario" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="Não">Não</option>
+                            <option value="Sim">Sim</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-xs font-bold text-gray-600">Forma de Pagamento</label>
                         <select id="con-forma-pagamento" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
@@ -343,40 +327,83 @@
                             <option value="Depósito">Depósito</option>
                         </select>
                     </div>
-                </div>
-                <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-xs font-bold text-gray-600">Reajuste Aplicado (%)</label>
-                        <input type="number" step="0.01" id="con-reajuste-aplicado" value="0" class="w-full p-2 border rounded mt-1 text-sm">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600">Reajuste Previsto</label>
+                        <label class="block text-xs font-bold text-gray-600">Índice de Reajuste</label>
                         <select id="con-reajuste" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
                             <option value="IPCA">IPCA</option>
                             <option value="IGP-M">IGP-M</option>
                         </select>
                     </div>
                 </div>
-                <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[11px] font-bold text-gray-600">Desconto Energia (%)</label>
+                    <input type="number" id="con-desconto-energia" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
+                    <p class="text-[11px] text-gray-400 mt-0.5">Sugerido automaticamente se o imóvel tem Energia Rumo.</p>
+                </div>
+
+                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
+                    <span class="block text-xs font-bold text-gray-600">Documentos do Contrato (até 5 por tipo)</span>
                     <div>
-                        <label class="block text-[11px] font-bold text-gray-600">Desconto Energia (%)</label>
-                        <input type="number" id="con-desconto-energia" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
-                        <p class="text-[11px] text-gray-400 mt-0.5">Sugerido automaticamente se o imóvel tem Energia Rumo.</p>
+                        <div class="flex items-center justify-between">
+                            <label class="text-[11px] font-bold text-gray-500">📄 Contrato</label>
+                            <input type="file" id="con-doc-input-Contrato" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="processarMultiplosDocumentos(this, 'Contrato')" class="hidden">
+                            <button type="button" onclick="document.getElementById('con-doc-input-Contrato').click()" title="Anexar" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+                        </div>
+                        <div id="con-doc-preview-Contrato" class="mt-1 space-y-1 text-[11px]"></div>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-gray-600">Alteração vigente a partir de</label>
-                        <input type="date" id="con-vigente-desde" class="w-full p-1.5 border rounded mt-1 text-xs">
-                        <p class="text-[11px] text-gray-400 mt-0.5">Usado para ratear mensalidades quando um valor muda no meio de uma competência.</p>
+                        <div class="flex items-center justify-between">
+                            <label class="text-[11px] font-bold text-gray-500">📋 Aditivo</label>
+                            <input type="file" id="con-doc-input-Aditivo" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="processarMultiplosDocumentos(this, 'Aditivo')" class="hidden">
+                            <button type="button" onclick="document.getElementById('con-doc-input-Aditivo').click()" title="Anexar" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+                        </div>
+                        <div id="con-doc-preview-Aditivo" class="mt-1 space-y-1 text-[11px]"></div>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-between">
+                            <label class="text-[11px] font-bold text-gray-500">📎 Outros</label>
+                            <input type="file" id="con-doc-input-Outros" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="processarMultiplosDocumentos(this, 'Outros')" class="hidden">
+                            <button type="button" onclick="document.getElementById('con-doc-input-Outros').click()" title="Anexar" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+                        </div>
+                        <div id="con-doc-preview-Outros" class="mt-1 space-y-1 text-[11px]"></div>
                     </div>
                 </div>
-                <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
-                    <div class="flex items-center justify-between">
-                        <label class="block text-xs font-bold text-gray-600">Documentos do Contrato (até 5)</label>
-                        <input type="file" id="con-documentos-input" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="processarMultiplosDocumentos(this)" class="hidden">
-                        <button type="button" onclick="document.getElementById('con-documentos-input').click()" title="Anexar documentos" class="w-9 h-9 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+
+                <button type="button" onclick="alternarSecaoAvancadaContrato()" class="w-full text-left text-xs font-bold text-slate-600 flex items-center justify-between bg-slate-100 p-2 rounded-lg">
+                    <span>🔧 Reajuste / Alteração de Contrato</span>
+                    <span id="seta-avancado-contrato">▼</span>
+                </button>
+                <div id="secao-avancada-contrato" class="hidden bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-600">Novo Valor (deixe em branco se não houve reajuste)</label>
+                            <input type="number" id="con-valor-anterior" value="" oninput="calcularReajustePorNovoValor()" placeholder="Digite só se for reajustar" class="w-full p-1.5 border rounded mt-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-600">% Reajuste</label>
+                            <input type="number" step="0.01" id="con-reajuste-aplicado" value="" oninput="calcularNovoValorPorReajuste()" placeholder="Ex: 5.5" class="w-full p-1.5 border rounded mt-1 text-xs">
+                        </div>
                     </div>
-                    <div id="con-documentos-preview" class="mt-2 space-y-1 text-[11px]"></div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-600">Desconto Vigente (R$)</label>
+                            <input type="number" id="con-desconto" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-600">Alteração vigente a partir de</label>
+                            <input type="date" id="con-vigente-desde" class="w-full p-1.5 border rounded mt-1 text-xs">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600">E-mail</label>
+                        <input type="email" id="con-email" class="w-full p-1.5 border rounded mt-1 text-xs" placeholder="nome@email.com">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-600">Descrição do Contrato</label>
+                        <textarea id="con-descricao" rows="2" class="w-full p-1.5 border rounded mt-1 text-xs" placeholder="Observações gerais sobre este contrato..."></textarea>
+                    </div>
                 </div>
+
                 <button type="submit" id="btn-salvar-con" class="w-full bg-green-600 text-white p-2.5 rounded-lg font-bold text-sm shadow">Firmar / Atualizar Contrato</button>
                 </form>
             </div>
@@ -552,6 +579,8 @@
                     </div>
                 </div>
             </div>
+            <h2 class="text-sm font-bold mt-4 mb-2 text-blue-900">Detalhamento Mês a Mês (crescente)</h2>
+            <div id="tabela-mensal-resultados" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto text-[11px]"></div>
             <button onclick="baixarRelatorioPdfLocal()" class="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow">
                 📊 Exportar Relatório Analítico PDF
             </button>
@@ -941,6 +970,8 @@
                     return [];
                 })(),
                 descontoEnergia: parseFloat(raw.descontoEnergia || raw.desconto_energia || 0) || 0,
+                condominioLocatario: raw.condominioLocatario || raw.condominio_locatario || 'Não',
+                descricao: raw.descricao || raw.Descricao || '',
                 historico: raw.historico || []
             };
         }
@@ -1094,6 +1125,64 @@
             resultado = soma % 11 < 2 ? 0 : 11 - (soma % 11);
             if (resultado != digitos.charAt(1)) return false;
             return true;
+        }
+        function tipoDocumentoDetectado() {
+            const digitos = document.getElementById('con-cpf').value.replace(/\D/g, '');
+            return digitos.length > 11 ? 'CNPJ' : 'CPF';
+        }
+        function formatarMascaraDocumento() {
+            const input = document.getElementById('con-cpf');
+            const digitos = input.value.replace(/\D/g, '').slice(0, 14);
+            let mascarado = digitos;
+            if (digitos.length <= 11) {
+                mascarado = digitos
+                    .replace(/(\d{3})(\d)/, '$1.$2')
+                    .replace(/(\d{3})(\d)/, '$1.$2')
+                    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            } else {
+                mascarado = digitos
+                    .replace(/(\d{2})(\d)/, '$1.$2')
+                    .replace(/(\d{3})(\d)/, '$1.$2')
+                    .replace(/(\d{3})(\d)/, '$1/$2')
+                    .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+            }
+            input.value = mascarado;
+
+            const indicador = document.getElementById('con-doc-indicador');
+            if (!indicador) return;
+            if (digitos.length === 11) {
+                const ok = validarCPF(digitos);
+                indicador.innerText = ok ? '✅ CPF válido' : '⚠️ CPF inválido';
+                indicador.className = 'text-[11px] mt-0.5 h-3 ' + (ok ? 'text-green-600 font-bold' : 'text-red-600 font-bold');
+            } else if (digitos.length === 14) {
+                const ok = validarCNPJ(digitos);
+                indicador.innerText = ok ? '✅ CNPJ válido' : '⚠️ CNPJ inválido';
+                indicador.className = 'text-[11px] mt-0.5 h-3 ' + (ok ? 'text-green-600 font-bold' : 'text-red-600 font-bold');
+            } else {
+                indicador.innerText = '';
+            }
+        }
+        function alternarSecaoAvancadaContrato() {
+            const secao = document.getElementById('secao-avancada-contrato');
+            const seta = document.getElementById('seta-avancado-contrato');
+            secao.classList.toggle('hidden');
+            seta.innerText = secao.classList.contains('hidden') ? '▼' : '▲';
+        }
+        function calcularReajustePorNovoValor() {
+            const valorAtual = parseFloat(document.getElementById('con-valor').value) || 0;
+            const novoValor = parseFloat(document.getElementById('con-valor-anterior').value);
+            const campoReajuste = document.getElementById('con-reajuste-aplicado');
+            if (!valorAtual || isNaN(novoValor)) { return; }
+            const pct = ((novoValor - valorAtual) / valorAtual) * 100;
+            campoReajuste.value = pct.toFixed(2);
+        }
+        function calcularNovoValorPorReajuste() {
+            const valorAtual = parseFloat(document.getElementById('con-valor').value) || 0;
+            const pct = parseFloat(document.getElementById('con-reajuste-aplicado').value);
+            const campoNovoValor = document.getElementById('con-valor-anterior');
+            if (!valorAtual || isNaN(pct)) { return; }
+            const novoValor = valorAtual * (1 + pct / 100);
+            campoNovoValor.value = novoValor.toFixed(2);
         }
         function limparDocumentoAoMudarTipo() {
             document.getElementById('con-cpf').value = '';
@@ -1887,6 +1976,7 @@
                     const endExibivel = `${imo.enderecoRua || ''}, ${imo.enderecoNum || ''} ${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}, ${imo.enderecoBairro || ''}, ${imo.enderecoCidade || ''}`;
                     const badgeEnergia = imo.energiaRumo === 'Sim' ? `<span class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800 ml-1">⚡</span>` : '';
                     const btnManutencao = imo.manutencaoZap ? `<button onclick="acionarManutencaoWhatsApp('${imo.manutencaoZap}', '${(imo.manutencaoNome || '').replace(/'/g, "")}', '${(imo.empreendimento || '').replace(/'/g, "")}', '${endExibivel.replace(/'/g, "")}')" title="Chamar Manutenção" class="w-7 h-7 flex items-center justify-center bg-green-50 text-green-700 rounded-full border border-green-200 text-xs">🔧</button>` : '';
+                    const btnZapIptu = imo.codigoIPTU ? `<button onclick="acionarZapIptuImovel('${imo.id}')" title="Enviar código do IPTU para o locatário" class="w-7 h-7 flex items-center justify-center bg-green-50 text-green-700 rounded-full border border-green-200 text-xs">💬</button>` : '';
                     const linha2 = `${endExibivel}${imo.descricao ? ' — ' + imo.descricao : ''}`;
                     container.innerHTML += `
                         <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
@@ -1904,6 +1994,7 @@
                                 <button onclick="excluirImovel('${imo.id}')" title="Excluir" class="w-7 h-7 flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-xs">🗑️</button>
                                 <button onclick="copyResumo('${endExibivel}', '${imo.tipo}', ${imo.valor}, ${imo.suites}, ${imo.condominio})" title="Copiar resumo para WhatsApp" class="w-7 h-7 flex items-center justify-center bg-slate-100 text-slate-700 rounded-full border text-xs">📋</button>
                                 ${btnManutencao}
+                                ${btnZapIptu}
                             </div>
                         </div>
                     `;
@@ -1934,6 +2025,10 @@
         function sugerirDescontoEnergia() {
             const imoId = document.getElementById('con-imovel').value;
             const imo = imoveis.find(i => i.id === imoId);
+            const displayIptu = document.getElementById('con-iptu-display');
+            if (displayIptu) {
+                displayIptu.innerText = imo ? `R$ ${imo.iptu || 0}${imo.codigoIPTU ? ' (Cód: ' + imo.codigoIPTU + ')' : ''}` : 'Selecione o imóvel';
+            }
             const inputDesconto = document.getElementById('con-desconto-energia');
             if (!inputDesconto) return;
             // Só sugere ao criar um contrato novo; não sobrescreve edição em andamento.
@@ -1941,40 +2036,37 @@
             if (emEdicao) return;
             inputDesconto.value = (imo && imo.energiaRumo === 'Sim') ? 10 : 0;
         }
-        function acionarZapIptu() {
-            const imoId = document.getElementById('con-imovel').value;
-            const imo = imoveis.find(i => i.id === imoId);
-            const whatsapp = document.getElementById('con-whatsapp').value.trim();
-            if (!whatsapp || whatsapp.length < 8) {
-                alert("⚠️ Cadastre o WhatsApp do locatário antes de enviar.");
-                return;
-            }
-            if (!imo) {
-                alert("⚠️ Selecione o imóvel do contrato primeiro.");
+        function acionarZapIptuImovel(imovelId) {
+            const imo = imoveis.find(i => i.id === imovelId);
+            if (!imo) return;
+            const contratoAtivo = contratos.find(c => c.imovelId === imovelId && c.status === 'Ativo');
+            if (!contratoAtivo || !contratoAtivo.whatsapp) {
+                alert("⚠️ Não há um contrato ativo com WhatsApp cadastrado para este imóvel.");
                 return;
             }
             const codigo = imo.codigoIPTU ? imo.codigoIPTU : '(código não cadastrado)';
             const txt = `Olá, aqui é da RUMO. Segue o código do IPTU do imóvel *${imo.empreendimento}* (${imo.enderecoRua}, ${imo.enderecoNum}) para consulta e pagamento: *${codigo}*.`;
-            window.open(`https://api.whatsapp.com/send?phone=55${whatsapp}&text=${encodeURIComponent(txt)}`, '_blank');
+            window.open(`https://api.whatsapp.com/send?phone=55${contratoAtivo.whatsapp}&text=${encodeURIComponent(txt)}`, '_blank');
         }
         let documentosCarregadosContrato = [];
-        function processarMultiplosDocumentos(inputElement) {
+        function processarMultiplosDocumentos(inputElement, tipo) {
             const files = inputElement.files;
             if (!files || files.length === 0) return;
 
-            const vagas = 5 - documentosCarregadosContrato.length;
+            const existentesDoTipo = documentosCarregadosContrato.filter(d => (d.tipo || 'Outros') === tipo).length;
+            const vagas = 5 - existentesDoTipo;
             if (vagas <= 0) {
-                alert("⚠️ Você já tem 5 documentos anexados (o máximo). Remova algum antes de adicionar novos.");
+                alert(`⚠️ Você já tem 5 documentos do tipo "${tipo}" (o máximo). Remova algum antes de adicionar novos.`);
                 inputElement.value = '';
                 return;
             }
             const count = Math.min(files.length, vagas);
             if (files.length > vagas) {
-                alert(`⚠️ Só há espaço para mais ${vagas} documento(s) (máximo de 5 no total). Os ${count} primeiro(s) selecionado(s) serão usados.`);
+                alert(`⚠️ Só há espaço para mais ${vagas} documento(s) do tipo "${tipo}" (máximo de 5). Os ${count} primeiro(s) selecionado(s) serão usados.`);
             }
 
-            const previewContainer = document.getElementById('con-documentos-preview');
-            previewContainer.innerHTML += '<p class="text-gray-400" id="msg-processando-docs">🔄 Processando documentos...</p>';
+            const previewContainer = document.getElementById(`con-doc-preview-${tipo}`);
+            previewContainer.innerHTML += `<p class="text-gray-400" id="msg-processando-docs-${tipo}">🔄 Processando...</p>`;
 
             let processados = 0;
             let falhas = 0;
@@ -1982,10 +2074,10 @@
                 const file = files[i];
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    documentosCarregadosContrato.push({ nome: file.name, base64: e.target.result });
+                    documentosCarregadosContrato.push({ id: 'doc_' + Date.now() + Math.random().toString(36).substr(2, 4), nome: file.name, base64: e.target.result, tipo: tipo });
                     processados++;
                     if (processados === count) {
-                        const msg = document.getElementById('msg-processando-docs');
+                        const msg = document.getElementById(`msg-processando-docs-${tipo}`);
                         if (msg) msg.remove();
                         renderPreviewDocumentosContrato();
                         if (falhas > 0) alert(`⚠️ ${falhas} documento(s) não puderam ser processados.`);
@@ -1996,7 +2088,7 @@
                     falhas++;
                     devLog("ERRO_DOCUMENTOS", `Falha ao ler o arquivo ${file.name}.`);
                     if (processados === count) {
-                        const msg = document.getElementById('msg-processando-docs');
+                        const msg = document.getElementById(`msg-processando-docs-${tipo}`);
                         if (msg) msg.remove();
                         renderPreviewDocumentosContrato();
                         alert(`⚠️ ${falhas} documento(s) não puderam ser processados.`);
@@ -2007,40 +2099,63 @@
             inputElement.value = ''; // permite escolher o mesmo arquivo de novo, se quiser
         }
         function renderPreviewDocumentosContrato() {
-            const previewContainer = document.getElementById('con-documentos-preview');
-            previewContainer.innerHTML = documentosCarregadosContrato.map((d, idx) => {
-                const nome = d.nome || (typeof d === 'string' ? 'Documento anexado' : 'Documento');
-                // Documentos ainda não salvos (base64) abrem numa nova aba a partir do
-                // próprio dado local; documentos já salvos (link do Drive) abrem pelo link.
-                const linkAbrir = typeof d === 'string' ? d : d.base64;
-                return `
-                    <div class="flex items-center justify-between bg-white border rounded px-2 py-1">
-                        <a href="${linkAbrir}" target="_blank" class="text-slate-700 underline truncate flex-1">📎 ${nome}</a>
-                        <button type="button" onclick="removerDocumentoContrato(${idx})" title="Remover" class="ml-2 text-red-600 font-bold text-[11px] flex-none">✕</button>
-                    </div>
-                `;
-            }).join('');
+            ['Contrato', 'Aditivo', 'Outros'].forEach(tipo => {
+                const previewContainer = document.getElementById(`con-doc-preview-${tipo}`);
+                if (!previewContainer) return;
+                const docsDoTipo = documentosCarregadosContrato.filter(d => (d.tipo || 'Outros') === tipo);
+                previewContainer.innerHTML = docsDoTipo.map(d => {
+                    const nome = d.nome || 'Documento';
+                    // Documentos ainda não salvos (base64) abrem numa nova aba a partir do
+                    // próprio dado local; documentos já salvos (link do Drive) abrem pelo link.
+                    const linkAbrir = d.base64 || d.url || (typeof d === 'string' ? d : '#');
+                    return `
+                        <div class="flex items-center justify-between bg-white border rounded px-2 py-1">
+                            <a href="${linkAbrir}" target="_blank" class="text-slate-700 underline truncate flex-1">📎 ${nome}</a>
+                            <button type="button" onclick="removerDocumentoContrato('${d.id}')" title="Remover" class="ml-2 text-red-600 font-bold text-[11px] flex-none">✕</button>
+                        </div>
+                    `;
+                }).join('');
+            });
         }
-        function removerDocumentoContrato(idx) {
-            documentosCarregadosContrato.splice(idx, 1);
+        function removerDocumentoContrato(docId) {
+            documentosCarregadosContrato = documentosCarregadosContrato.filter(d => d.id !== docId);
             renderPreviewDocumentosContrato();
         }
         function saveContrato(e) {
             e.preventDefault();
             const id = document.getElementById('con-id').value;
             const imoId = document.getElementById('con-imovel').value;
-            const docTipo = document.getElementById('con-doc-tipo').value;
+            const docTipo = tipoDocumentoDetectado();
             const docVal = document.getElementById('con-cpf').value.trim();
-            const valorNovo = parseFloat(document.getElementById('con-valor').value);
             const dataFim = document.getElementById('con-fim').value;
             devLog("FORM_CONTRATO", `Iniciando rotina de submissão. ID: ${id || 'NOVO'}, Imovel ID: ${imoId}`);
             if(!imoId) return alert("⚠️ Selecione um imóvel.");
             if(docTipo === 'CPF' && !validarCPF(docVal)) {
-                return alert("⚠️ O CPF informado não é válido.");
+                return alert("⚠️ O documento informado não é um CPF válido.");
             }
             if(docTipo === 'CNPJ' && !validarCNPJ(docVal)) {
-                return alert("⚠️ O CNPJ informado não é válido.");
+                return alert("⚠️ O documento informado não é um CNPJ válido.");
             }
+
+            // Lógica de "Novo Valor": o campo sempre abre em branco. Se o usuário
+            // digitou algo nele, o valor ATUAL do contrato (antes desta edição) vira
+            // valorAnterior, e o valor digitado passa a ser o novo valor vigente. Se
+            // o campo ficou em branco, o valor vigente não muda nesta edição.
+            const contratoExistente = id ? contratos.find(c => c.id === id) : null;
+            const novoValorDigitado = parseFloat(document.getElementById('con-valor-anterior').value);
+            let valorFinal, valorAnteriorFinal;
+            if (!isNaN(novoValorDigitado) && novoValorDigitado > 0) {
+                valorAnteriorFinal = contratoExistente ? contratoExistente.valor : 0;
+                valorFinal = novoValorDigitado;
+            } else if (contratoExistente) {
+                valorFinal = contratoExistente.valor;
+                valorAnteriorFinal = contratoExistente.valorAnterior || 0;
+            } else {
+                // Contrato novo: usa o valor digitado no campo "Valor Vigente".
+                valorFinal = parseFloat(document.getElementById('con-valor').value) || 0;
+                valorAnteriorFinal = 0;
+            }
+
             let contratoDados = {
                 id: id || 'con_' + Date.now(),
                 imovelId: imoId,
@@ -2053,12 +2168,13 @@
                 email: document.getElementById('con-email').value.trim(),
                 inicio: document.getElementById('con-inicio').value,
                 fim: dataFim,
-                valor: valorNovo,
-                valorAnterior: parseFloat(document.getElementById('con-valor-anterior').value) || 0,
+                valor: valorFinal,
+                valorAnterior: valorAnteriorFinal,
                 desconto: parseFloat(document.getElementById('con-desconto').value) || 0,
                 reajusteAplicado: parseFloat(document.getElementById('con-reajuste-aplicado').value) || 0,
                 reajuste: document.getElementById('con-reajuste').value,
-                iptu: parseFloat(document.getElementById('con-iptu').value) || 0,
+                condominioLocatario: document.getElementById('con-condominio-locatario').value,
+                descricao: document.getElementById('con-descricao').value.trim(),
                 contatoNome: document.getElementById('con-contato-nome').value.trim(),
                 formaPagamento: document.getElementById('con-forma-pagamento').value,
                 descontoEnergia: parseFloat(document.getElementById('con-desconto-energia').value) || 0,
@@ -2101,6 +2217,7 @@
                         { campo: 'contatoNome', rotulo: 'Pessoa de contato' },
                         { campo: 'formaPagamento', rotulo: 'Forma de pagamento' },
                         { campo: 'descontoEnergia', rotulo: 'Desconto de energia' },
+                        { campo: 'condominioLocatario', rotulo: 'Condomínio a cargo do locatário' },
                         { campo: 'descricao', rotulo: 'Descrição' }
                     ];
                     const alteracoes = [];
@@ -2152,25 +2269,32 @@
             document.getElementById('con-imovel').value = con.imovelId;
             document.getElementById('con-status').value = con.status || 'Ativo';
             document.getElementById('con-locatario').value = con.locatario;
-            document.getElementById('con-doc-tipo').value = con.docTipo || 'CPF';
             document.getElementById('con-cpf').value = con.cpf;
+            formatarMascaraDocumento();
             document.getElementById('con-vencimento-dia').value = con.vencimentoDia || 15;
             document.getElementById('con-whatsapp').value = con.whatsapp || '';
             document.getElementById('con-email').value = con.email || '';
             document.getElementById('con-inicio').value = con.inicio;
             document.getElementById('con-fim').value = con.fim;
             document.getElementById('con-valor').value = con.valor;
-            document.getElementById('con-valor-anterior').value = con.valorAnterior || 0;
+            // "Novo Valor" e "% Reajuste" sempre abrem em branco — só se preenche
+            // quando o usuário está de fato lançando um reajuste nesta edição.
+            document.getElementById('con-valor-anterior').value = '';
+            document.getElementById('con-reajuste-aplicado').value = '';
             document.getElementById('con-desconto').value = con.desconto || 0;
-            document.getElementById('con-reajuste-aplicado').value = con.reajusteAplicado || 0;
             document.getElementById('con-reajuste').value = con.reajuste;
-            document.getElementById('con-iptu').value = con.iptu || 0;
             document.getElementById('con-contato-nome').value = con.contatoNome || '';
             document.getElementById('con-forma-pagamento').value = con.formaPagamento || 'PIX';
             document.getElementById('con-desconto-energia').value = con.descontoEnergia || 0;
+            document.getElementById('con-condominio-locatario').value = con.condominioLocatario || 'Não';
+            document.getElementById('con-descricao').value = con.descricao || '';
             document.getElementById('con-vigente-desde').value = '';
+            sugerirDescontoEnergia(); // também atualiza o display do IPTU do imóvel
             documentosCarregadosContrato = con.anexos || [];
             renderPreviewDocumentosContrato();
+            // Seção avançada começa fechada — o usuário abre só se for reajustar.
+            document.getElementById('secao-avancada-contrato').classList.add('hidden');
+            document.getElementById('seta-avancado-contrato').innerText = '▼';
             document.getElementById('form-contrato-titulo').innerText = "Renovar / Editar Contrato 📝";
             document.getElementById('form-contrato-wrapper').classList.remove('hidden');
             window.scrollTo({top: 0, behavior: 'smooth'});
@@ -2182,6 +2306,14 @@
             documentosCarregadosContrato = [];
             const previewDocs = document.getElementById('con-documentos-preview');
             if (previewDocs) previewDocs.innerHTML = '';
+            const indicador = document.getElementById('con-doc-indicador');
+            if (indicador) indicador.innerText = '';
+            const secaoAvancada = document.getElementById('secao-avancada-contrato');
+            if (secaoAvancada) secaoAvancada.classList.add('hidden');
+            const seta = document.getElementById('seta-avancado-contrato');
+            if (seta) seta.innerText = '▼';
+            const displayIptu = document.getElementById('con-iptu-display');
+            if (displayIptu) displayIptu.innerText = 'Selecione o imóvel';
             document.getElementById('form-contrato-wrapper').classList.add('hidden');
             renderImoveis();
         }
@@ -2770,7 +2902,6 @@
         function renderMensalidades() {
             const container = document.getElementById('lista-mensalidades');
             if(!container) return;
-            container.innerHTML = '';
 
             popularFiltrosMensal();
             const fComp = document.getElementById('men-filtro-competencia')?.value || 'todos';
@@ -2779,90 +2910,122 @@
             
             let totalAReceber = 0;
             let totalRecebido = 0;
-            // Agrupa sempre em ordem crescente de competência, e aplica os filtros
-            // selecionados (padrão: todos os meses/locatários/imóveis).
-            const mensalidadesOrdenadas = mensalidades
-                .filter(men => {
-                    if (fComp !== 'todos' && men.referencia !== fComp) return false;
-                    const con = contratos.find(c => c.id === men.contratoId);
-                    if (!con) return false;
-                    if (fLoc !== 'todos' && con.locatario !== fLoc) return false;
-                    if (fImo !== 'todos' && con.imovelId !== fImo) return false;
-                    return true;
-                })
-                .sort((a, b) => {
-                    const [ma, aa] = (a.referencia || '01/1970').split('/');
-                    const [mb, ab] = (b.referencia || '01/1970').split('/');
-                    return (ab + mb).localeCompare(aa + ma); // decrescente: mais recente primeiro
-                });
-            mensalidadesOrdenadas.forEach(men => {
+            const filtradas = mensalidades.filter(men => {
+                if (fComp !== 'todos' && men.referencia !== fComp) return false;
                 const con = contratos.find(c => c.id === men.contratoId);
-                if(!con) return;
-                
-                const partesRef = men.referencia.split('/');
-                const diaVenc = con.vencimentoDia || 15;
-                const dataPadraoVenc = `${partesRef[1]}-${partesRef[0]}-${diaVenc < 10 ? '0'+diaVenc : diaVenc}`;
-                if(men.status === 'Pendente') {
-                    totalAReceber += men.valorConfirmado;
-                    container.innerHTML += `
-                        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-amber-500 space-y-2">
-                            <div class="flex justify-between items-start">
-                                <div><p class="text-xs font-bold text-slate-900">${con.locatario}</p><p class="text-[11px] text-gray-500">Ref: ${men.referencia}</p></div>
-                                <div class="flex items-center gap-1">
-                                    <span class="bg-amber-100 text-amber-800 text-[11px] px-2 py-0.5 rounded font-black">Pendente</span>
-                                    <button onclick="excluirLancamentoMensal('${men.id}')" title="Excluir lançamento" class="w-6 h-6 flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-[11px]">🗑️</button>
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-1 text-[13px]">
-                                <div>
-                                    <label class="block text-[11px] font-bold text-gray-500">Forma de Recebimento</label>
-                                    <select id="banco-${men.id}" class="w-full border p-1 rounded bg-gray-50"><option value="PIX">PIX</option><option value="Boleto">Boleto</option><option value="Depósito">Depósito</option></select>
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-bold text-gray-500">Dia Recebimento</label>
-                                    <input type="date" id="data-${men.id}" value="${dataPadraoVenc}" class="w-full border p-0.5 rounded bg-gray-50 text-center">
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-2 gap-1 text-[13px]">
-                                <div>
-                                    <label class="block text-[11px] font-bold text-gray-500">Valor Efetivo (R$)</label>
-                                    <input type="number" id="valor-${men.id}" value="${men.valorConfirmado}" class="w-full border p-1 rounded bg-gray-50 font-bold text-blue-900">
-                                </div>
-                                <div>
-                                    <label class="block text-[11px] font-bold text-gray-500">Observações Internas</label>
-                                    <input type="text" id="obs-${men.id}" placeholder="Ex: Desconto" class="w-full border p-1 rounded bg-gray-50">
-                                </div>
-                            </div>
-                            ${imoveis.find(i => i.id === con.imovelId)?.energiaRumo === 'Sim' ? `
-                            <div class="w-1/2">
-                                <label class="block text-[11px] font-bold text-yellow-700">⚡ Valor Energia (controle interno)</label>
-                                <input type="number" id="energia-${men.id}" value="0" class="w-full border border-yellow-300 p-1 rounded bg-yellow-50 font-bold text-yellow-800 text-[13px]">
-                            </div>` : ''}
-                            <button onclick="liquidarMensalidade('${men.id}')" class="w-full bg-emerald-600 text-white text-[13px] py-1.5 rounded font-bold shadow ${isOffline ? 'opacity-50 pointer-events-none' : ''}">Dar Baixa</button>
-                        </div>`;
-                } else {
-                    totalRecebido += men.valorConfirmado;
-                    const log = men.envioLog ? `<p class="text-[11px] text-blue-900 font-semibold">📬 Log: Notificado via ${men.envioLog.canal} (${men.envioLog.data})</p>` : `<p class="text-[11px] text-gray-400">⚠️ Envio pendente</p>`;
-                    const txtObs = men.observacao ? `<p class="text-[11px] text-amber-800 italic bg-amber-50 p-1 rounded mt-1">📝 Obs: ${men.observacao}</p>` : '';
-                    const txtEnergia = men.valorEnergia > 0 ? `<p class="text-[11px] text-yellow-700 font-semibold">⚡ Energia (controle interno, fora do recibo): R$ ${men.valorEnergia.toFixed(2)}</p>` : '';
-                    container.innerHTML += `
-                        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-green-500">
-                            <div class="flex justify-between items-center">
-                                <div>
-                                    <p class="text-xs font-bold text-gray-900">${con.locatario}</p>
-                                    <p class="text-[11px] text-gray-500">Ref: ${men.referencia} | R$ ${men.valorConfirmado.toFixed(2)} (${men.banco} - ${formatarDataBR(men.dataPgto)})</p>
-                                    ${log}
-                                    ${txtObs}
-                                    ${txtEnergia}
-                                </div>
-                                <div class="flex flex-col gap-1">
-                                    <button onclick="abrirModalOpcoesRecibo('${men.id}', '${con.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] px-3 py-2 rounded font-bold shadow transition active:scale-95">📄 Recibo</button>
-                                    <button onclick="estornarMensalidade('${men.id}')" class="bg-red-50 text-red-600 border border-red-200 text-[11px] px-2 py-0.5 rounded font-medium ${isOffline ? 'opacity-50 pointer-events-none' : ''}">Estornar</button>
-                                </div>
-                            </div>
-                        </div>`;
-                }
+                if (!con) return false;
+                if (fLoc !== 'todos' && con.locatario !== fLoc) return false;
+                if (fImo !== 'todos' && con.imovelId !== fImo) return false;
+                return true;
             });
+
+            // Agrupa por competência (Ref), sempre em ordem decrescente (mês mais
+            // recente primeiro) — cada grupo pode ser expandido/recolhido.
+            const grupos = {};
+            filtradas.forEach(men => {
+                if (!grupos[men.referencia]) grupos[men.referencia] = [];
+                grupos[men.referencia].push(men);
+            });
+            const competenciasOrdenadas = Object.keys(grupos).sort((a, b) => {
+                const [ma, aa] = a.split('/'), [mb, ab] = b.split('/');
+                return (ab + mb).localeCompare(aa + ma);
+            });
+
+            const hoje = new Date();
+            container.innerHTML = competenciasOrdenadas.map((ref, indiceGrupo) => {
+                const itensGrupo = grupos[ref];
+                let aReceberGrupo = 0, recebidoGrupo = 0, inadimplenteGrupo = 0;
+                let htmlItens = '';
+
+                itensGrupo.forEach(men => {
+                    const con = contratos.find(c => c.id === men.contratoId);
+                    if(!con) return;
+                    
+                    const partesRef = men.referencia.split('/');
+                    const diaVenc = con.vencimentoDia || 15;
+                    const dataPadraoVenc = `${partesRef[1]}-${partesRef[0]}-${diaVenc < 10 ? '0'+diaVenc : diaVenc}`;
+                    if(men.status === 'Pendente') {
+                        totalAReceber += men.valorConfirmado;
+                        const dataVenc = new Date(dataPadraoVenc + "T00:00:00");
+                        if (dataVenc < hoje) { inadimplenteGrupo += men.valorConfirmado; } else { aReceberGrupo += men.valorConfirmado; }
+                        htmlItens += `
+                            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-amber-500 space-y-2">
+                                <div class="flex justify-between items-start">
+                                    <div><p class="text-xs font-bold text-slate-900">${con.locatario}</p><p class="text-[11px] text-gray-500">Ref: ${men.referencia}</p></div>
+                                    <div class="flex items-center gap-1">
+                                        <span class="bg-amber-100 text-amber-800 text-[11px] px-2 py-0.5 rounded font-black">Pendente</span>
+                                        <button onclick="excluirLancamentoMensal('${men.id}')" title="Excluir lançamento" class="w-6 h-6 flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-[11px]">🗑️</button>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-1 text-[13px]">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-gray-500">Forma de Recebimento</label>
+                                        <select id="banco-${men.id}" class="w-full border p-1 rounded bg-gray-50"><option value="PIX">PIX</option><option value="Boleto">Boleto</option><option value="Depósito">Depósito</option></select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-gray-500">Dia Recebimento</label>
+                                        <input type="date" id="data-${men.id}" value="${dataPadraoVenc}" class="w-full border p-0.5 rounded bg-gray-50 text-center">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 gap-1 text-[13px]">
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-gray-500">Valor Efetivo (R$)</label>
+                                        <input type="number" id="valor-${men.id}" value="${men.valorConfirmado}" class="w-full border p-1 rounded bg-gray-50 font-bold text-blue-900">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-gray-500">Observações Internas</label>
+                                        <input type="text" id="obs-${men.id}" placeholder="Ex: Desconto" class="w-full border p-1 rounded bg-gray-50">
+                                    </div>
+                                </div>
+                                ${imoveis.find(i => i.id === con.imovelId)?.energiaRumo === 'Sim' ? `
+                                <div class="w-1/2">
+                                    <label class="block text-[11px] font-bold text-yellow-700">⚡ Valor Energia (controle interno)</label>
+                                    <input type="number" id="energia-${men.id}" value="0" class="w-full border border-yellow-300 p-1 rounded bg-yellow-50 font-bold text-yellow-800 text-[13px]">
+                                </div>` : ''}
+                                <button onclick="liquidarMensalidade('${men.id}')" class="w-full bg-emerald-600 text-white text-[13px] py-1.5 rounded font-bold shadow ${isOffline ? 'opacity-50 pointer-events-none' : ''}">Dar Baixa</button>
+                            </div>`;
+                    } else {
+                        totalRecebido += men.valorConfirmado;
+                        recebidoGrupo += men.valorConfirmado;
+                        const log = men.envioLog ? `<p class="text-[11px] text-blue-900 font-semibold">📬 Log: Notificado via ${men.envioLog.canal} (${men.envioLog.data})</p>` : `<p class="text-[11px] text-gray-400">⚠️ Envio pendente</p>`;
+                        const txtObs = men.observacao ? `<p class="text-[11px] text-amber-800 italic bg-amber-50 p-1 rounded mt-1">📝 Obs: ${men.observacao}</p>` : '';
+                        const txtEnergia = men.valorEnergia > 0 ? `<p class="text-[11px] text-yellow-700 font-semibold">⚡ Energia (controle interno, fora do recibo): R$ ${men.valorEnergia.toFixed(2)}</p>` : '';
+                        htmlItens += `
+                            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-green-500">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-xs font-bold text-gray-900">${con.locatario}</p>
+                                        <p class="text-[11px] text-gray-500">Ref: ${men.referencia} | R$ ${men.valorConfirmado.toFixed(2)} (${men.banco} - ${formatarDataBR(men.dataPgto)})</p>
+                                        ${log}
+                                        ${txtObs}
+                                        ${txtEnergia}
+                                    </div>
+                                    <div class="flex flex-col gap-1">
+                                        <button onclick="abrirModalOpcoesRecibo('${men.id}', '${con.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] px-3 py-2 rounded font-bold shadow transition active:scale-95">📄 Recibo</button>
+                                        <button onclick="estornarMensalidade('${men.id}')" class="bg-red-50 text-red-600 border border-red-200 text-[11px] px-2 py-0.5 rounded font-medium ${isOffline ? 'opacity-50 pointer-events-none' : ''}">Estornar</button>
+                                    </div>
+                                </div>
+                            </div>`;
+                    }
+                });
+
+                const grupoId = 'grupo-mensal-' + ref.replace('/', '-');
+                const abertoPorPadrao = indiceGrupo === 0; // só o mês mais recente começa aberto
+                return `
+                    <div class="mb-3">
+                        <button type="button" onclick="document.getElementById('${grupoId}').classList.toggle('hidden'); document.getElementById('${grupoId}-seta').innerText = document.getElementById('${grupoId}').classList.contains('hidden') ? '▼' : '▲';" class="w-full bg-blue-900 text-white p-3 rounded-xl flex justify-between items-center shadow">
+                            <span class="font-bold text-sm">📅 ${ref} <span id="${grupoId}-seta">${abertoPorPadrao ? '▲' : '▼'}</span></span>
+                            <span class="text-[11px] flex gap-1.5 flex-wrap justify-end">
+                                <span class="bg-blue-700 px-2 py-0.5 rounded">A receber: R$ ${aReceberGrupo.toFixed(2)}</span>
+                                ${inadimplenteGrupo > 0 ? `<span class="bg-red-600 px-2 py-0.5 rounded">Inadimplente: R$ ${inadimplenteGrupo.toFixed(2)}</span>` : ''}
+                                <span class="bg-green-700 px-2 py-0.5 rounded">Recebido: R$ ${recebidoGrupo.toFixed(2)}</span>
+                            </span>
+                        </button>
+                        <div id="${grupoId}" class="${abertoPorPadrao ? '' : 'hidden'} space-y-2 mt-2">${htmlItens}</div>
+                    </div>
+                `;
+            }).join('');
+
             document.getElementById('totalizer-a-receber').innerText = "R$ " + totalAReceber.toLocaleString('pt-BR', {minimumFractionDigits: 2});
             document.getElementById('totalizer-recebido').innerText = "R$ " + totalRecebido.toLocaleString('pt-BR', {minimumFractionDigits: 2});
         }
@@ -3348,7 +3511,12 @@
                 });
                 extratoLinhas.sort((a, b) => a.ordenador.localeCompare(b.ordenador));
                 let tabelaExtratoHtml = '';
+                let refAtualExtrato = null;
                 extratoLinhas.forEach(linha => {
+                    if (linha.referencia !== refAtualExtrato) {
+                        refAtualExtrato = linha.referencia;
+                        tabelaExtratoHtml += `<div class="bg-slate-100 text-slate-600 font-bold text-[11px] px-2 py-1 rounded mt-3 mb-1 uppercase tracking-wide">📅 Competência ${refAtualExtrato}</div>`;
+                    }
                     if(linha.tipo === 'entrada') {
                         tabelaExtratoHtml += `
                             <div class="flex justify-between items-center py-2 border-b border-gray-100 text-[11px]">
@@ -3398,17 +3566,37 @@
             imoveis.forEach(imo => {
                 if(fEmp !== 'todos' && imo.empreendimento !== fEmp) return;
                 if(fStat !== 'todos' && imo.status !== fStat) return;
-                const fHtml = imo.fotos && imo.fotos.length > 0 ? `<img src="${imo.fotos[0]}" class="w-10 h-10 rounded object-cover border">` : '';
+
+                // Espelha exatamente o que aparece no link público da vitrine — todas
+                // as fotos (não só a primeira) e os mesmos campos (até Energia Rumo).
+                // Código do IPTU e demais dados internos (manutenção, sócios) NUNCA
+                // aparecem aqui, igual no link público.
+                let fotosHtml = '';
+                if (imo.fotos && imo.fotos.length > 0) {
+                    fotosHtml = '<div class="flex gap-1.5 overflow-x-auto py-2">' +
+                        imo.fotos.map((foto, idx) => `<img src="${foto}" onclick="event.stopPropagation(); abrirLightboxImovelSalvo('${imo.id}', ${idx})" class="w-16 h-16 object-cover rounded-lg border flex-none cursor-pointer">`).join('') +
+                        '</div>';
+                }
+                const badgeEnergia = imo.energiaRumo === 'Sim'
+                    ? `<div class="mt-1 bg-yellow-50 border border-yellow-200 rounded px-2 py-1 text-[11px] text-yellow-800">⚡ Energia Rumo incluída</div>`
+                    : '';
+
                 container.innerHTML += `
-                    <div class="bg-white p-3 rounded-xl border border-gray-200 flex gap-3 items-center">
-                        <input type="checkbox" data-id="${imo.id}" class="vitrine-checkbox w-4 h-4 text-blue-600 rounded">
-                        <div class="flex-1 min-w-0">
-                            <span class="text-[11px] font-bold px-1.5 py-0.5 rounded ${imo.status==='Vago'?'bg-amber-100 text-amber-800':'bg-green-100 text-green-800'}">${imo.status}</span>
-                            <p class="text-xs font-bold mt-1 text-slate-900 truncate">${imo.empreendimento} - ${imo.tipo}</p>
-                            <p class="text-[11px] text-gray-500 truncate">${imo.enderecoRua || ''}, ${imo.enderecoNum || ''}</p>
-                            <p class="text-[11px] font-black text-blue-900 mt-1">Aluguel: R$ ${imo.valor.toLocaleString('pt-BR')}</p>
+                    <div class="bg-white p-3 rounded-xl border border-gray-200">
+                        <div class="flex gap-3 items-start">
+                            <input type="checkbox" data-id="${imo.id}" class="vitrine-checkbox w-4 h-4 text-blue-600 rounded mt-1">
+                            <div class="flex-1 min-w-0">
+                                <span class="text-[11px] font-bold px-1.5 py-0.5 rounded ${imo.status==='Vago'?'bg-amber-100 text-amber-800':'bg-green-100 text-green-800'}">${imo.status}</span>
+                                <p class="text-xs font-bold mt-1 text-slate-900">${imo.empreendimento} - ${imo.tipo}</p>
+                                <p class="text-[11px] text-gray-500">${imo.enderecoRua || ''}, ${imo.enderecoNum || ''}${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}, ${imo.enderecoBairro || ''}, ${imo.enderecoCidade || ''}</p>
+                                <p class="text-[11px] text-gray-500">Tamanho: ${imo.tamanho}m² | Suítes: ${imo.suites} | WC: ${imo.banheiros}</p>
+                                <p class="text-[11px] text-gray-500">Condomínio: R$ ${imo.condominio} | IPTU: R$ ${imo.iptu}</p>
+                                ${imo.descricao ? `<p class="text-[11px] text-gray-400 italic mt-0.5">${imo.descricao}</p>` : ''}
+                                ${badgeEnergia}
+                                <p class="text-[13px] font-black text-blue-900 mt-1">Aluguel: R$ ${imo.valor.toLocaleString('pt-BR')}</p>
+                            </div>
                         </div>
-                        ${fHtml}
+                        ${fotosHtml}
                     </div>
                 `;
             });
@@ -3608,6 +3796,7 @@
             const alugados = imoveisFiltrados.filter(i => i.status === 'Alugado').length;
             const taxa = total > 0 ? ((alugados / total) * 100).toFixed(1) : 0;
             let fat = 0, pot = 0;
+            const porMes = {}; // { "MM/AAAA": { potencial, arrecadado } }
             mensalidades.forEach(men => {
                 const con = contratos.find(c => c.id === men.contratoId);
                 if(!con || (fImo !== 'todos' && con.imovelId !== fImo)) return;
@@ -3618,12 +3807,52 @@
                 if(dMen >= lim) {
                     pot += men.valorConfirmado;
                     if(men.status === 'Pago') fat += men.valorConfirmado;
+
+                    if (!porMes[men.referencia]) porMes[men.referencia] = { potencial: 0, arrecadado: 0 };
+                    porMes[men.referencia].potencial += men.valorConfirmado;
+                    if (men.status === 'Pago') porMes[men.referencia].arrecadado += men.valorConfirmado;
                 }
             });
             document.getElementById('rel-taxa').innerText = taxa + '%';
             document.getElementById('rel-faturamento').innerText = 'R$ ' + fat.toLocaleString('pt-BR', {minimumFractionDigits:2});
             document.getElementById('rel-potencial').innerText = 'R$ ' + pot.toLocaleString('pt-BR', {minimumFractionDigits:2});
             document.getElementById('rel-contagem').innerText = `Alugados: ${alugados} | Vagos: ${total - alugados}`;
+
+            // Tabela mês a mês, sempre em ordem CRESCENTE de competência.
+            const mesesOrdenados = Object.keys(porMes).sort((a, b) => {
+                const [ma, aa] = a.split('/'), [mb, ab] = b.split('/');
+                return (aa + ma).localeCompare(ab + mb);
+            });
+            const tabelaContainer = document.getElementById('tabela-mensal-resultados');
+            if (tabelaContainer) {
+                if (mesesOrdenados.length === 0) {
+                    tabelaContainer.innerHTML = '<p class="text-center text-gray-400 p-4">Sem lançamentos no período selecionado.</p>';
+                } else {
+                    let linhasTabela = mesesOrdenados.map(ref => {
+                        const d = porMes[ref];
+                        const pctOcup = d.potencial > 0 ? ((d.arrecadado / d.potencial) * 100).toFixed(0) : 0;
+                        return `
+                            <tr class="border-t border-gray-100">
+                                <td class="p-2 font-bold text-slate-700">${ref}</td>
+                                <td class="p-2 text-right text-purple-700">R$ ${d.potencial.toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+                                <td class="p-2 text-right text-green-700">R$ ${d.arrecadado.toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+                                <td class="p-2 text-right font-bold ${pctOcup >= 90 ? 'text-green-700' : 'text-amber-700'}">${pctOcup}%</td>
+                            </tr>`;
+                    }).join('');
+                    tabelaContainer.innerHTML = `
+                        <table class="w-full">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-500 uppercase text-[11px]">
+                                    <th class="p-2 text-left">Competência</th>
+                                    <th class="p-2 text-right">Potencial</th>
+                                    <th class="p-2 text-right">Arrecadado</th>
+                                    <th class="p-2 text-right">% Recebido</th>
+                                </tr>
+                            </thead>
+                            <tbody>${linhasTabela}</tbody>
+                        </table>`;
+                }
+            }
         }
     </script>    <div id="lightbox-geral" class="hidden fixed inset-0 bg-black/95 z-[300] flex items-center justify-center p-4">
         <button onclick="fecharLightboxGeral()" class="absolute top-4 right-4 text-white text-2xl font-bold">✕</button>
