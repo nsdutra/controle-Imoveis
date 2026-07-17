@@ -1,8 +1,8 @@
 <!-- 
 ==================================================================
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
-   VERSÃO: v5.1.0 (Correções críticas: salvar contrato, botão +, conciliação por documento, labels)
-   TOTAL DE LINHAS DE CÓDIGO: 4364 linhas
+   VERSÃO: v5.3.1 (Correção crítica: identificação de sócio no repasse — sobrenome em comum)
+   TOTAL DE LINHAS DE CÓDIGO: 4512 linhas
 ==================================================================
 -->
 <!DOCTYPE html>
@@ -53,7 +53,7 @@
                 <div id="splash-error-detail" class="text-[11px] text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
             </div>
             <div class="text-[13px] text-slate-500 font-mono">
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v5.1.0</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v5.3.1</span>
             </div>
         </div>
     </div>
@@ -92,6 +92,22 @@
                     <p class="text-xs font-bold text-blue-900">Imóveis: <span id="imoveis-vagos-contador" class="text-sm font-black text-amber-700">0</span> vagos / <span id="imoveis-alugados-contador" class="text-sm font-black text-green-700">0</span> alugados / <span id="total-imoveis-contador" class="text-sm font-black">0</span> total</p>
                 </div>
                 <button onclick="abrirFormularioImovel()" class="offline-disable bg-blue-600 text-white font-black text-xl w-11 h-11 rounded-full shadow flex items-center justify-center active:scale-90 transition flex-none" title="Cadastrar novo imóvel">+</button>
+            </div>
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 grid grid-cols-2 gap-2 text-xs">
+                <div>
+                    <label class="font-bold text-gray-500 text-[11px] uppercase">Empreendimento</label>
+                    <select id="imoveis-filtro-emp" onchange="renderImoveis()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
+                        <option value="todos">Todos</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="font-bold text-gray-500 text-[11px] uppercase">Status</label>
+                    <select id="imoveis-filtro-status" onchange="renderImoveis()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
+                        <option value="todos">Todos</option>
+                        <option value="Vago">Apenas Vagos</option>
+                        <option value="Alugado">Apenas Alugados</option>
+                    </select>
+                </div>
             </div>
 
             <div id="form-imovel-wrapper" class="hidden">
@@ -261,6 +277,23 @@
                 </div>
                 <button onclick="abrirFormularioContrato()" class="offline-disable bg-green-600 text-white font-black text-xl w-11 h-11 rounded-full shadow flex items-center justify-center active:scale-90 transition flex-none" title="Cadastrar novo contrato">+</button>
             </div>
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 grid grid-cols-2 gap-2 text-xs">
+                <div>
+                    <label class="font-bold text-gray-500 text-[11px] uppercase">Empreendimento</label>
+                    <select id="contratos-filtro-emp" onchange="renderContratos()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
+                        <option value="todos">Todos</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="font-bold text-gray-500 text-[11px] uppercase">Status</label>
+                    <select id="contratos-filtro-status" onchange="renderContratos()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
+                        <option value="todos">Todos</option>
+                        <option value="Ativo">Ativo</option>
+                        <option value="Suspenso">Suspenso</option>
+                        <option value="Finalizado">Finalizado</option>
+                    </select>
+                </div>
+            </div>
 
             <div id="form-contrato-wrapper" class="hidden">
                 <div class="flex justify-between items-center mb-4">
@@ -312,9 +345,18 @@
                         <input type="email" id="con-email" class="w-full p-2 border rounded mt-1 text-sm" placeholder="nome@email.com">
                     </div>
                 </div>
-                <div>
-                    <label class="block text-xs font-bold text-gray-600">Dia de Vencimento (1 a 31)</label>
-                    <input type="number" id="con-vencimento-dia" required min="1" max="31" class="w-full p-2 border rounded mt-1 text-sm">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Dia de Vencimento (1 a 31)</label>
+                        <input type="number" id="con-vencimento-dia" required min="1" max="31" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Aluguel Antecipado?</label>
+                        <select id="con-antecipado" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
+                            <option value="Sim">Sim (paga na própria competência)</option>
+                            <option value="Não">Não (paga no mês seguinte)</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -489,16 +531,6 @@
                 </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 mb-4">
-                <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
-                    <span class="text-[11px] font-bold uppercase text-blue-600">Total a Receber</span>
-                    <p class="text-base font-black text-blue-900 mt-0.5" id="totalizer-a-receber">R$ 0,00</p>
-                </div>
-                <div class="bg-green-50 p-3 rounded-xl border border-green-200">
-                    <span class="text-[11px] font-bold uppercase text-green-600">Total Recebido</span>
-                    <p class="text-base font-black text-green-900 mt-0.5" id="totalizer-recebido">R$ 0,00</p>
-                </div>
-            </div>
             <h2 class="text-lg font-bold mb-2 text-blue-900">Fila de Recebimentos</h2>
             <div id="lista-mensalidades" class="space-y-3"></div>
         </section>
@@ -784,6 +816,7 @@
         let mensalidades = [];
         let repasses = [];
         let pendenciasExtrato = [];
+        let gruposMensalAbertos = null; // null = ainda não inicializado (abre só o mês mais recente)
         let administradoras = [];
         let extratoFingerprints = [];
         // Sócios conhecidos para identificar repasses (PIX enviado) no extrato bancário.
@@ -1021,6 +1054,7 @@
                 docTipo: raw.docTipo || raw.tipo_documento || 'CPF',
                 cpf: raw.cpf || raw.CPF || raw.cnpj || raw.CNPJ || raw.documento || '',
                 vencimentoDia: parseInt(raw.vencimentoDia || raw.dia_vencimento || raw.vencimento || 15),
+                alugelAntecipado: raw.alugelAntecipado || raw.aluguel_antecipado || 'Sim',
                 whatsapp: raw.whatsapp || raw.WhatsApp || raw.celular || '',
                 email: raw.email || raw.Email || '',
                 inicio: normalizarDataPlanilha(raw.inicio || raw.data_inicio),
@@ -1064,7 +1098,7 @@
                 id: raw.id || raw.ID || 'men_' + Date.now() + Math.random().toString(36).substr(2, 4),
                 contratoId: raw.contratoId || raw.contrato_id || raw.id_contrato || '',
                 referencia: normalizarCompetencia(raw.referencia),
-                status: raw.status || raw.Status || 'Pendente',
+                status: raw.status || raw.Status || 'Inadimplente',
                 banco: raw.banco || raw.Banco || '-',
                 dataPgto: raw.dataPgto || raw.data_pagamento || '',
                 observacao: raw.observacao || raw.Observacao || '',
@@ -2220,6 +2254,14 @@
             contratos = contratos.filter(c => c.id !== id);
             saveAll(true, "Contrato excluído com sucesso.");
         }
+        function popularFiltroSelect(selectId, valores) {
+            const select = document.getElementById(selectId);
+            if (!select) return;
+            const valorAtual = select.value || 'todos';
+            const unicos = [...new Set(valores.filter(Boolean))].sort();
+            select.innerHTML = '<option value="todos">Todos</option>' + unicos.map(v => `<option value="${v}">${v}</option>`).join('');
+            select.value = (valorAtual === 'todos' || unicos.includes(valorAtual)) ? valorAtual : 'todos';
+        }
         function renderImoveis() {
             const container = document.getElementById('lista-imoveis');
             if(!container) return;
@@ -2235,7 +2277,14 @@
             const selectFiltro = document.getElementById('filtro-imovel');
             const selFilVal = selectFiltro ? selectFiltro.value : 'todos';
             if(selectFiltro) selectFiltro.innerHTML = '<option value="todos">Todos os Imóveis</option>';
+
+            popularFiltroSelect('imoveis-filtro-emp', imoveis.map(i => i.empreendimento));
+            const fEmpImo = document.getElementById('imoveis-filtro-emp')?.value || 'todos';
+            const fStatusImo = document.getElementById('imoveis-filtro-status')?.value || 'todos';
+
             imoveis.forEach((imo, index) => {
+                const passaFiltroImovel = (fEmpImo === 'todos' || imo.empreendimento === fEmpImo) &&
+                                          (fStatusImo === 'todos' || imo.status === fStatusImo);
                 try {
                     let divSoc = '';
                     if (imo.divisao) {
@@ -2259,6 +2308,7 @@
                     const btnManutencao = imo.manutencaoZap ? `<button onclick="acionarManutencaoWhatsApp('${imo.manutencaoZap}', '${(imo.manutencaoNome || '').replace(/'/g, "")}', '${(imo.empreendimento || '').replace(/'/g, "")}', '${endExibivel.replace(/'/g, "")}')" title="Chamar Manutenção" class="w-7 h-7 flex items-center justify-center bg-green-50 text-green-700 rounded-full border border-green-200 text-xs">🔧</button>` : '';
                     const btnZapIptu = imo.codigoIPTU ? `<button onclick="acionarZapIptuImovel('${imo.id}')" title="Enviar código do IPTU para o locatário" class="w-7 h-7 flex items-center justify-center bg-green-50 text-green-700 rounded-full border border-green-200 text-xs">💬</button>` : '';
                     const linha2 = `${endExibivel}${imo.descricao ? ' — ' + imo.descricao : ''}`;
+                    if (passaFiltroImovel) {
                     container.innerHTML += `
                         <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
                             <div class="flex justify-between items-start gap-2">
@@ -2279,6 +2329,7 @@
                             </div>
                         </div>
                     `;
+                    }
                     
                     if(selectCon) {
                         selectCon.innerHTML += `<option value="${imo.id}">[${imo.empreendimento || 'Canaã'}] ${endExibivel.substring(0,25)}...</option>`;
@@ -2446,6 +2497,7 @@
                 docTipo: docTipo,
                 cpf: docVal,
                 vencimentoDia: parseInt(document.getElementById('con-vencimento-dia').value),
+                alugelAntecipado: document.getElementById('con-antecipado').value,
                 whatsapp: document.getElementById('con-whatsapp').value.trim(),
                 email: document.getElementById('con-email').value.trim(),
                 inicio: document.getElementById('con-inicio').value,
@@ -2560,6 +2612,7 @@
             document.getElementById('con-cpf').value = con.cpf;
             formatarMascaraDocumento();
             document.getElementById('con-vencimento-dia').value = con.vencimentoDia || 15;
+            document.getElementById('con-antecipado').value = con.alugelAntecipado || 'Sim';
             document.getElementById('con-whatsapp').value = con.whatsapp || '';
             document.getElementById('con-email').value = con.email || '';
             document.getElementById('con-inicio').value = con.inicio;
@@ -2673,7 +2726,18 @@
                 bannerRevisao.innerText = (pendentesRevisao + vencidos) > 0 ? "⚠️ Você tem alertas em contratos!" : '';
             }
 
-            contratos.forEach(con => {
+            popularFiltroSelect('contratos-filtro-emp', imoveis.map(i => i.empreendimento));
+            const fEmpCon = document.getElementById('contratos-filtro-emp')?.value || 'todos';
+            const fStatusCon = document.getElementById('contratos-filtro-status')?.value || 'todos';
+
+            contratos
+                .filter(con => {
+                    const imoDoContrato = imoveis.find(i => i.id === con.imovelId);
+                    if (fEmpCon !== 'todos' && (!imoDoContrato || imoDoContrato.empreendimento !== fEmpCon)) return false;
+                    if (fStatusCon !== 'todos' && con.status !== fStatusCon) return false;
+                    return true;
+                })
+                .forEach(con => {
                 const imo = imoveis.find(i => i.id === con.imovelId);
                 const temAlerta = contratoPrecisaRevisao(con) || contratoVencido(con);
                 const alertaTriangulo = temAlerta ? `<span title="Ver alertas deste contrato" onclick="verAlertasContrato('${con.id}')" class="text-red-600 cursor-pointer text-sm">🔺</span>` : '';
@@ -2829,9 +2893,22 @@
                     }
                 }
 
+                // Contratos sem receita nesta competência (ex: sede própria da Rumo,
+                // ou período de suspensão total) não geram lançamento nenhum.
+                if (valorEfetivo <= 0) return;
+
                 const diaPadrao = con.vencimentoDia || 15;
                 const diaPgoString = diaPadrao < 10 ? '0' + diaPadrao : diaPadrao;
-                const dataDePagamentoGerada = `${diaPgoString}/${mesRef < 10 ? '0'+mesRef : mesRef}/${anoRef}`;
+                // Aluguel "Antecipado": paga-se dentro da própria competência. Aluguel
+                // "em atraso" (não antecipado): paga-se no mês SEGUINTE à competência.
+                // Isso só afeta a data esperada de pagamento gerada aqui — a referência
+                // (competência) do lançamento continua sendo sempre a mesma (ref).
+                let mesPgto = mesRef, anoPgto = anoRef;
+                if (con.alugelAntecipado !== 'Sim') {
+                    mesPgto = mesRef + 1;
+                    if (mesPgto > 12) { mesPgto = 1; anoPgto = anoRef + 1; }
+                }
+                const dataDePagamentoGerada = `${diaPgoString}/${mesPgto < 10 ? '0'+mesPgto : mesPgto}/${anoPgto}`;
                 // Trava anti-duplicidade: nunca gera 2 lançamentos para o mesmo
                 // contrato na mesma competência, não importa quantas vezes o botão
                 // "Gerar Recebimento" seja clicado para o mesmo mês.
@@ -2841,7 +2918,7 @@
                         id: 'men_' + Date.now() + Math.random().toString(36).substr(2, 4),
                         contratoId: con.id,
                         referencia: ref,
-                        status: 'Pendente',
+                        status: 'Inadimplente',
                         banco: '-',
                         dataPgto: dataDePagamentoGerada, 
                         observacao: '',
@@ -2892,7 +2969,7 @@
             if(!confirm("Confirmar estorno do caixa?")) return;
             const idx = mensalidades.findIndex(m => m.id === menId);
             if(idx !== -1) {
-                mensalidades[idx].status = 'Pendente';
+                mensalidades[idx].status = 'Inadimplente';
                 mensalidades[idx].banco = '-';
                 const con = contratos.find(c => c.id === mensalidades[idx].contratoId);
                 const partesRef = mensalidades[idx].referencia.split('/');
@@ -2923,6 +3000,15 @@
             if (palavrasA.length === 0 || palavrasB.length === 0) return false;
             const comuns = palavrasA.filter(p => palavrasB.includes(p));
             return comuns.length >= 1 && (comuns.length / Math.min(palavrasA.length, palavrasB.length)) >= 0.5;
+        }
+        // Comparação EXATA (não por semelhança) para identificar sócios no extrato.
+        // Diferente de locatários (nomes de empresas variados), os 5 sócios
+        // conhecidos compartilham o mesmo sobrenome de família ("Maia Silva") —
+        // a comparação por semelhança de palavras (nomesParecem) reconhecia
+        // qualquer um deles como igual ao primeiro da lista (Renato), só pelo
+        // sobrenome em comum. Nomes de pessoa exigem correspondência exata.
+        function nomesIguaisSocio(a, b) {
+            return normalizarNomeParaComparacao(a) === normalizarNomeParaComparacao(b);
         }
         function converterDataExcelParaISO(valor) {
             // O SheetJS pode entregar a data como número serial do Excel, objeto Date,
@@ -3153,27 +3239,43 @@
             }
             inputElement.value = '';
         }
+        function mesAnteriorRef(ref) {
+            let [mes, ano] = ref.split('/').map(Number);
+            mes -= 1;
+            if (mes < 1) { mes = 12; ano -= 1; }
+            return `${mes < 10 ? '0'+mes : mes}/${ano}`;
+        }
         async function conciliarTransacoes(transacoes) {
-            const chavesJaImportadas = new Set(extratoFingerprints.map(f => f.chave));
+            // IMPORTANTE: os "fingerprints" continuam sendo registrados para fins de
+            // auditoria (histórico de tudo que já foi importado), mas NÃO bloqueiam
+            // mais uma nova tentativa de conciliação. Motivo: um item conciliado
+            // (automática ou manualmente) pode ser estornado depois — e se o mesmo
+            // extrato for reimportado, a conciliação precisa conseguir tentar de novo.
+            // A proteção real contra duplicidade está em outro lugar: mensalidades já
+            // com status 'Pago' nunca entram no pool de candidatas a conciliar, então
+            // um item já recebido nunca é alvo de uma nova conciliação.
+            const chavesJaPendentes = new Set(pendenciasExtrato.filter(p => p.status === 'Pendente').map(p => `${p.data}|${p.valor.toFixed(2)}|${p.razaoSocial.toUpperCase()}`));
             const novosFingerprints = [];
-            let qtdConciliados = 0, qtdRepasses = 0, qtdPendencias = 0, qtdIgnorados = 0, qtdJaImportados = 0;
+            let qtdConciliados = 0, qtdRepasses = 0, qtdPendencias = 0, qtdIgnorados = 0, qtdJaPendentes = 0;
 
             // CORREÇÃO: antes de tentar conciliar qualquer coisa, garante que as
             // mensalidades das competências realmente cobertas pelo extrato já
             // existem. Sem isso, um pagamento de abril podia acabar batendo (por
             // coincidência de valor) numa mensalidade de agosto que já existia,
-            // só porque a de abril ainda nem tinha sido gerada.
+            // só porque a de abril ainda nem tinha sido gerada. Gera tanto o mês da
+            // transação quanto o mês anterior, pois cobre tanto contratos com
+            // aluguel antecipado quanto em atraso.
             const competenciasDoExtrato = new Set();
             transacoes.forEach(t => {
                 const [ano, mes] = t.dataISO.split('-');
-                competenciasDoExtrato.add(`${mes}/${ano}`);
+                const ref = `${mes}/${ano}`;
+                competenciasDoExtrato.add(ref);
+                competenciasDoExtrato.add(mesAnteriorRef(ref));
             });
             competenciasDoExtrato.forEach(ref => gerarMensalidadesParaCompetencia(ref));
 
             transacoes.forEach(t => {
                 const chave = `${t.dataISO}|${t.valor.toFixed(2)}|${t.razaoSocial.toUpperCase()}`;
-                if (chavesJaImportadas.has(chave)) { qtdJaImportados++; return; }
-                chavesJaImportadas.add(chave);
                 novosFingerprints.push({ chave, data: t.dataISO, valor: t.valor, razaoSocial: t.razaoSocial, importadoEm: new Date().toISOString() });
 
                 const [ano, mes] = t.dataISO.split('-');
@@ -3184,7 +3286,7 @@
                     // ENTRADA — tenta conciliar com uma mensalidade pendente
                     if (t.descricao.includes('RENDIMENTO')) { qtdIgnorados++; return; }
 
-                    const nomeSocioEntrada = SOCIOS_CONHECIDOS.find(s => nomesParecem(s, t.razaoSocial));
+                    const nomeSocioEntrada = SOCIOS_CONHECIDOS.find(s => nomesIguaisSocio(s, t.razaoSocial));
                     if (nomeSocioEntrada) { qtdIgnorados++; return; } // entrada de sócio não é aluguel
 
                     // Ordem de tentativa para achar o contrato: 1º pelo nome do
@@ -3195,8 +3297,14 @@
                         contratoCandidato = contratos.find(c => (c.cpf || '').replace(/\D/g, '') === documentoLimpo);
                     }
 
+                    // Se o aluguel é "em atraso" (não antecipado), um pagamento feito no
+                    // mês X é referente à competência do mês ANTERIOR a X.
+                    const referenciaEsperada = (contratoCandidato && contratoCandidato.alugelAntecipado !== 'Sim')
+                        ? mesAnteriorRef(referenciaDoMes)
+                        : referenciaDoMes;
+
                     const pendentesDoContrato = contratoCandidato
-                        ? mensalidades.filter(m => m.contratoId === contratoCandidato.id && m.status === 'Pendente')
+                        ? mensalidades.filter(m => m.contratoId === contratoCandidato.id && m.status === 'Inadimplente')
                               .sort((a, b) => { const [ma,aa]=a.referencia.split('/'), [mb,ab]=b.referencia.split('/'); return (aa+ma).localeCompare(ab+mb); })
                         : [];
 
@@ -3208,7 +3316,7 @@
                     // Prioriza a mensalidade da MESMA competência do pagamento (evita
                     // cair num mês errado só porque o valor bateu por coincidência).
                     // Só cai para outra competência pendente se não achar na exata.
-                    const matchMesExato = pendentesDoContrato.find(m => m.referencia === referenciaDoMes && dentroTolerancia(m.valorConfirmado, t.valor));
+                    const matchMesExato = pendentesDoContrato.find(m => m.referencia === referenciaEsperada && dentroTolerancia(m.valorConfirmado, t.valor));
                     const matchUnico = matchMesExato || pendentesDoContrato.find(m => dentroTolerancia(m.valorConfirmado, t.valor));
                     if (matchUnico) {
                         const idx = mensalidades.findIndex(m => m.id === matchUnico.id);
@@ -3216,10 +3324,20 @@
                         mensalidades[idx].banco = 'PIX/TED (extrato)';
                         mensalidades[idx].dataPgto = dataBR;
                         mensalidades[idx].valorConfirmado = t.valor;
-                        mensalidades[idx].observacao = (mensalidades[idx].observacao || '') + ` [Conciliado automaticamente via extrato — pagador: ${t.razaoSocial}]`;
+                        // Sobrescreve a observação (não acumula) — evita texto duplicado
+                        // quando o mesmo item é conciliado, estornado e reconciliado.
+                        mensalidades[idx].observacao = `Conciliado automaticamente via extrato — pagador: ${t.razaoSocial}`;
                         qtdConciliados++;
+                        // Se havia uma pendência aberta para essa mesma linha do extrato
+                        // (de uma importação anterior que não achou o match), resolve ela.
+                        const pendenciaAntiga = pendenciasExtrato.find(p => p.status === 'Pendente' && `${p.data}|${p.valor.toFixed(2)}|${p.razaoSocial.toUpperCase()}` === chave);
+                        if (pendenciaAntiga) pendenciaAntiga.status = 'Resolvido';
                         return;
                     }
+
+                    // Já existe uma pendência EM ABERTO para essa exata linha do extrato
+                    // (mesma data+valor+pagador) — não cria outra igual.
+                    if (chavesJaPendentes.has(chave)) { qtdJaPendentes++; return; }
 
                     // Verifica se o valor bate com a soma de 2 mensalidades pendentes
                     // seguidas (ex: locatário pagou 2 meses de uma vez) — NÃO aplica
@@ -3230,7 +3348,7 @@
                             pendenciasExtrato.push({
                                 id: 'pex_' + Date.now() + Math.random().toString(36).substr(2, 4),
                                 data: t.dataISO, valor: t.valor, razaoSocial: t.razaoSocial, documento: t.documento,
-                                tipo: 'confirmacao_dupla', referenciaSugerida: referenciaDoMes, status: 'Pendente',
+                                tipo: 'confirmacao_dupla', referenciaSugerida: referenciaEsperada, status: 'Pendente',
                                 contratoIdSugerido: contratoCandidato.id,
                                 mensalidadeIdsSugeridas: [pendentesDoContrato[0].id, pendentesDoContrato[1].id]
                             });
@@ -3243,7 +3361,7 @@
                     pendenciasExtrato.push({
                         id: 'pex_' + Date.now() + Math.random().toString(36).substr(2, 4),
                         data: t.dataISO, valor: t.valor, razaoSocial: t.razaoSocial, documento: t.documento,
-                        tipo: 'nao_identificado', referenciaSugerida: referenciaDoMes, status: 'Pendente',
+                        tipo: 'nao_identificado', referenciaSugerida: referenciaEsperada, status: 'Pendente',
                         contratoIdSugerido: contratoCandidato ? contratoCandidato.id : null,
                         mensalidadeIdsSugeridas: []
                     });
@@ -3251,7 +3369,7 @@
 
                 } else {
                     // SAÍDA — só interessa se for repasse para um dos 4 sócios conhecidos.
-                    const nomeSocio = SOCIOS_CONHECIDOS.find(s => nomesParecem(s, t.razaoSocial));
+                    const nomeSocio = SOCIOS_CONHECIDOS.find(s => nomesIguaisSocio(s, t.razaoSocial));
                     if (nomeSocio) {
                         // Usa apenas o primeiro nome do sócio ao lançar o repasse
                         // (ex: "RUYTER CARLOS DA SILVA" -> "Ruyter"), consistente com
@@ -3281,7 +3399,7 @@
                 `💸 ${qtdRepasses} repasse(s) de sócio lançado(s)\n` +
                 `❓ ${qtdPendencias} item(ns) precisam da sua revisão (veja abaixo)\n` +
                 `🚫 ${qtdIgnorados} lançamento(s) descartado(s) (rendimentos, tarifas, pagamentos a terceiros)\n` +
-                (qtdJaImportados > 0 ? `⏭️ ${qtdJaImportados} já haviam sido importados antes (ignorados)` : '')
+                (qtdJaPendentes > 0 ? `⏭️ ${qtdJaPendentes} já tinham uma pendência em aberto igual (não duplicados)` : '')
             );
         }
         function renderPendenciasExtrato() {
@@ -3303,9 +3421,11 @@
                             </div>
                         </div>`;
                 }
-                const opcoesMensalidades = mensalidades.filter(m => m.status === 'Pendente').map(m => {
+                const opcoesMensalidades = mensalidades.filter(m => m.status === 'Inadimplente').map(m => {
                     const c = contratos.find(c => c.id === m.contratoId);
-                    return `<option value="${m.id}">${c ? c.locatario : '?'} — Ref ${m.referencia} — R$ ${m.valorConfirmado.toFixed(2)}</option>`;
+                    const imo = c ? imoveis.find(i => i.id === c.imovelId) : null;
+                    const local = imo ? `${imo.empreendimento} - ${imo.enderecoRua || ''}, ${imo.enderecoNum || ''}${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}` : '';
+                    return `<option value="${m.id}">${c ? c.locatario : '?'} — Ref ${m.referencia} — R$ ${m.valorConfirmado.toFixed(2)}${local ? ' — ' + local : ''}</option>`;
                 }).join('');
                 return `
                     <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-amber-500">
@@ -3333,7 +3453,7 @@
             mensalidades[idxMen].banco = 'PIX/TED (extrato)';
             mensalidades[idxMen].dataPgto = formatarDataBR(pend.data);
             mensalidades[idxMen].valorConfirmado = pend.valor;
-            mensalidades[idxMen].observacao = (mensalidades[idxMen].observacao || '') + ` [Conciliado manualmente — pagador: ${pend.razaoSocial}]`;
+            mensalidades[idxMen].observacao = `Conciliado manualmente — pagador: ${pend.razaoSocial}`;
             pend.status = 'Resolvido';
             saveAll(true, "Recebimento vinculado com sucesso!");
         }
@@ -3342,11 +3462,11 @@
             if (!pend) return;
             pend.mensalidadeIdsSugeridas.forEach(menId => {
                 const idxMen = mensalidades.findIndex(m => m.id === menId);
-                if (idxMen !== -1 && mensalidades[idxMen].status === 'Pendente') {
+                if (idxMen !== -1 && mensalidades[idxMen].status === 'Inadimplente') {
                     mensalidades[idxMen].status = 'Pago';
                     mensalidades[idxMen].banco = 'PIX/TED (extrato)';
                     mensalidades[idxMen].dataPgto = formatarDataBR(pend.data);
-                    mensalidades[idxMen].observacao = (mensalidades[idxMen].observacao || '') + ` [Conciliado via pagamento agrupado de 2 meses — pagador: ${pend.razaoSocial}]`;
+                    mensalidades[idxMen].observacao = `Conciliado via pagamento agrupado de 2 meses — pagador: ${pend.razaoSocial}`;
                 }
             });
             pend.status = 'Resolvido';
@@ -3365,7 +3485,7 @@
         function excluirLancamentoMensal(menId) {
             const men = mensalidades.find(m => m.id === menId);
             if (!men) return;
-            if (men.status !== 'Pendente') {
+            if (men.status !== 'Inadimplente') {
                 alert("⚠️ Só é possível excluir lançamentos ainda não recebidos. Este já foi baixado — use 'Estornar' se precisar reverter.");
                 return;
             }
@@ -3408,8 +3528,6 @@
             const fLoc = document.getElementById('men-filtro-locatario')?.value || 'todos';
             const fImo = document.getElementById('men-filtro-imovel')?.value || 'todos';
             
-            let totalAReceber = 0;
-            let totalRecebido = 0;
             const filtradas = mensalidades.filter(men => {
                 if (fComp !== 'todos' && men.referencia !== fComp) return false;
                 const con = contratos.find(c => c.id === men.contratoId);
@@ -3431,29 +3549,42 @@
                 return (ab + mb).localeCompare(aa + ma);
             });
 
+            // Preserva quais grupos estavam abertos/fechados entre re-renderizações
+            // (ex: ao dar baixa ou excluir um item, o grupo não deve fechar sozinho).
+            // Na primeira vez, abre só o mês mais recente por padrão.
+            if (gruposMensalAbertos === null) {
+                gruposMensalAbertos = new Set(competenciasOrdenadas.length > 0 ? [competenciasOrdenadas[0]] : []);
+            }
+
             const hoje = new Date();
-            container.innerHTML = competenciasOrdenadas.map((ref, indiceGrupo) => {
+            container.innerHTML = competenciasOrdenadas.map((ref) => {
                 const itensGrupo = grupos[ref];
-                let aReceberGrupo = 0, recebidoGrupo = 0, inadimplenteGrupo = 0;
+                let recebidoGrupo = 0, inadimplenteGrupo = 0;
+                let qtdRecebido = 0, qtdInadimplente = 0;
                 let htmlItens = '';
 
                 itensGrupo.forEach(men => {
                     const con = contratos.find(c => c.id === men.contratoId);
                     if(!con) return;
+                    const imo = imoveis.find(i => i.id === con.imovelId);
+                    const localImovel = imo ? `${imo.empreendimento} - ${imo.enderecoRua || ''}, ${imo.enderecoNum || ''}${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}` : '';
                     
                     const partesRef = men.referencia.split('/');
                     const diaVenc = con.vencimentoDia || 15;
                     const dataPadraoVenc = `${partesRef[1]}-${partesRef[0]}-${diaVenc < 10 ? '0'+diaVenc : diaVenc}`;
-                    if(men.status === 'Pendente') {
-                        totalAReceber += men.valorConfirmado;
-                        const dataVenc = new Date(dataPadraoVenc + "T00:00:00");
-                        if (dataVenc < hoje) { inadimplenteGrupo += men.valorConfirmado; } else { aReceberGrupo += men.valorConfirmado; }
+                    if(men.status === 'Inadimplente') {
+                        inadimplenteGrupo += men.valorConfirmado;
+                        qtdInadimplente++;
                         htmlItens += `
                             <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-amber-500 space-y-2">
                                 <div class="flex justify-between items-start">
-                                    <div><p class="text-xs font-bold text-slate-900">${con.locatario}</p><p class="text-[11px] text-gray-500">Ref: ${men.referencia}</p></div>
+                                    <div>
+                                        <p class="text-xs font-bold text-slate-900">${con.locatario}</p>
+                                        <p class="text-[11px] text-gray-500">Ref: ${men.referencia}</p>
+                                        ${localImovel ? `<p class="text-[11px] text-gray-400">📍 ${localImovel}</p>` : ''}
+                                    </div>
                                     <div class="flex items-center gap-1">
-                                        <span class="bg-amber-100 text-amber-800 text-[11px] px-2 py-0.5 rounded font-black">Pendente</span>
+                                        <span class="bg-amber-100 text-amber-800 text-[11px] px-2 py-0.5 rounded font-black">Inadimplente</span>
                                         <button onclick="excluirLancamentoMensal('${men.id}')" title="Excluir lançamento" class="w-6 h-6 flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-[11px]">🗑️</button>
                                     </div>
                                 </div>
@@ -3485,8 +3616,8 @@
                                 <button onclick="liquidarMensalidade('${men.id}')" class="w-full bg-emerald-600 text-white text-[13px] py-1.5 rounded font-bold shadow ${isOffline ? 'opacity-50 pointer-events-none' : ''}">Dar Baixa</button>
                             </div>`;
                     } else {
-                        totalRecebido += men.valorConfirmado;
                         recebidoGrupo += men.valorConfirmado;
+                        qtdRecebido++;
                         const log = men.envioLog ? `<p class="text-[11px] text-blue-900 font-semibold">📬 Log: Notificado via ${men.envioLog.canal} (${men.envioLog.data})</p>` : `<p class="text-[11px] text-gray-400">⚠️ Envio pendente</p>`;
                         const txtObs = men.observacao ? `<p class="text-[11px] text-amber-800 italic bg-amber-50 p-1 rounded mt-1">📝 Obs: ${men.observacao}</p>` : '';
                         const txtEnergia = men.valorEnergia > 0 ? `<p class="text-[11px] text-yellow-700 font-semibold">⚡ Energia (controle interno, fora do recibo): R$ ${men.valorEnergia.toFixed(2)}</p>` : '';
@@ -3496,6 +3627,7 @@
                                     <div>
                                         <p class="text-xs font-bold text-gray-900">${con.locatario}</p>
                                         <p class="text-[11px] text-gray-500">Ref: ${men.referencia} | R$ ${men.valorConfirmado.toFixed(2)} (${men.banco} - ${formatarDataBR(men.dataPgto)})</p>
+                                        ${localImovel ? `<p class="text-[11px] text-gray-400">📍 ${localImovel}</p>` : ''}
                                         ${log}
                                         ${txtObs}
                                         ${txtEnergia}
@@ -3510,24 +3642,40 @@
                 });
 
                 const grupoId = 'grupo-mensal-' + ref.replace('/', '-');
-                const abertoPorPadrao = indiceGrupo === 0; // só o mês mais recente começa aberto
+                const abertoPorPadrao = gruposMensalAbertos.has(ref);
                 return `
                     <div class="mb-3">
-                        <button type="button" onclick="document.getElementById('${grupoId}').classList.toggle('hidden'); document.getElementById('${grupoId}-seta').innerText = document.getElementById('${grupoId}').classList.contains('hidden') ? '▼' : '▲';" class="w-full bg-blue-900 text-white p-3 rounded-xl flex justify-between items-center shadow">
+                        <button type="button" onclick="alternarGrupoMensal('${ref}')" class="w-full bg-blue-900 text-white p-3 rounded-xl flex justify-between items-center shadow">
                             <span class="font-bold text-sm">📅 ${ref} <span id="${grupoId}-seta">${abertoPorPadrao ? '▲' : '▼'}</span></span>
                             <span class="text-[11px] flex gap-1.5 flex-wrap justify-end">
-                                <span class="bg-blue-700 px-2 py-0.5 rounded">A receber: R$ ${aReceberGrupo.toFixed(2)}</span>
-                                ${inadimplenteGrupo > 0 ? `<span class="bg-red-600 px-2 py-0.5 rounded">Inadimplente: R$ ${inadimplenteGrupo.toFixed(2)}</span>` : ''}
-                                <span class="bg-green-700 px-2 py-0.5 rounded">Recebido: R$ ${recebidoGrupo.toFixed(2)}</span>
+                                <span class="bg-green-700 px-2 py-0.5 rounded">Recebido R$ ${recebidoGrupo.toFixed(2)} (${qtdRecebido})</span>
+                                ${qtdInadimplente > 0 ? `<span class="bg-red-600 px-2 py-0.5 rounded">Inadimplente (${qtdInadimplente})</span>` : ''}
                             </span>
                         </button>
-                        <div id="${grupoId}" class="${abertoPorPadrao ? '' : 'hidden'} space-y-2 mt-2">${htmlItens}</div>
+                        <div id="${grupoId}" class="${abertoPorPadrao ? '' : 'hidden'} space-y-2 mt-2">
+                            ${qtdInadimplente > 0 ? `<button onclick="apagarInadimplentesDoGrupo('${ref}')" class="w-full bg-red-50 text-red-600 border border-red-200 text-[11px] font-bold py-1.5 rounded">🗑️ Apagar todos os inadimplentes deste mês (${qtdInadimplente})</button>` : ''}
+                            ${htmlItens}
+                        </div>
                     </div>
                 `;
             }).join('');
-
-            document.getElementById('totalizer-a-receber').innerText = "R$ " + totalAReceber.toLocaleString('pt-BR', {minimumFractionDigits: 2});
-            document.getElementById('totalizer-recebido').innerText = "R$ " + totalRecebido.toLocaleString('pt-BR', {minimumFractionDigits: 2});
+        }
+        function alternarGrupoMensal(ref) {
+            const grupoId = 'grupo-mensal-' + ref.replace('/', '-');
+            const div = document.getElementById(grupoId);
+            const seta = document.getElementById(`${grupoId}-seta`);
+            if (!div) return;
+            div.classList.toggle('hidden');
+            const aberto = !div.classList.contains('hidden');
+            if (seta) seta.innerText = aberto ? '▲' : '▼';
+            if (aberto) gruposMensalAbertos.add(ref); else gruposMensalAbertos.delete(ref);
+        }
+        function apagarInadimplentesDoGrupo(ref) {
+            const qtd = mensalidades.filter(m => m.referencia === ref && m.status === 'Inadimplente').length;
+            if (qtd === 0) return;
+            if (!confirm(`Confirma apagar os ${qtd} lançamento(s) inadimplente(s) da competência ${ref}? Lançamentos já recebidos NÃO são afetados.`)) return;
+            mensalidades = mensalidades.filter(m => !(m.referencia === ref && m.status === 'Inadimplente'));
+            saveAll(true, `${qtd} lançamento(s) inadimplente(s) de ${ref} apagado(s).`);
         }
         function abrirModalOpcoesRecibo(menId, conId) {
             activeMenId = menId;
@@ -3856,7 +4004,7 @@
                 
                 if(fMes !== 'todos' && men.referencia !== fMes) return;
                 if(fAlvo !== 'todos' && con.id !== fAlvo) return;
-                if(men.status === 'Pendente') {
+                if(men.status === 'Inadimplente') {
                     totalInad += men.valorConfirmado;
                     const imo = imoveis.find(i => i.id === con.imovelId);
                     itensPendentes.push({ men, con, imo });
