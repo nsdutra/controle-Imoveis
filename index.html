@@ -1,8 +1,8 @@
 <!-- 
 ==================================================================
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
-   VERSÃO: v4.9.0 (Formulário de contrato reformulado, documentos categorizados, vitrine fiel, relatórios agrupados)
-   TOTAL DE LINHAS DE CÓDIGO: 1255 linhas
+   VERSÃO: v5.1.0 (Correções críticas: salvar contrato, botão +, conciliação por documento, labels)
+   TOTAL DE LINHAS DE CÓDIGO: 4364 linhas
 ==================================================================
 -->
 <!DOCTYPE html>
@@ -53,7 +53,7 @@
                 <div id="splash-error-detail" class="text-[11px] text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
             </div>
             <div class="text-[13px] text-slate-500 font-mono">
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v4.9.0</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v5.1.0</span>
             </div>
         </div>
     </div>
@@ -74,6 +74,7 @@
             <button onclick="switchTab('tab-vitrine')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-vitrine">Vitrine</button>
             <button onclick="switchTab('tab-relatorios')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-relatorios">Métricas</button>
             <button onclick="switchTab('tab-socios')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-socios">Sócios</button>
+            <button onclick="switchTab('tab-administradoras')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-administradoras">Admin.</button>
             <button onclick="switchTab('tab-developer')" class="hidden flex-none px-4 py-3 text-red-400 font-bold bg-slate-950 border-l border-red-900/50" id="btn-tab-developer">⚙️ DEV</button>
         </nav>
     </header>
@@ -113,6 +114,9 @@
                                 <option value="Patrocínio">Patrocínio</option>
                                 <option value="Paracatu">Paracatu</option>
                                 <option value="Torres da Serra">Torres da Serra</option>
+                                <option value="Torres">Torres</option>
+                                <option value="Terrenos">Terrenos</option>
+                                <option value="Belo Horizonte">Belo Horizonte</option>
                             </select>
                         </div>
                         <div>
@@ -122,7 +126,12 @@
                                 <option value="Casa">Casa</option>
                                 <option value="Loja">Loja</option>
                                 <option value="Lote">Lote</option>
+                                <option value="Lotes">Lotes</option>
                                 <option value="Vaga Garagem">Vaga Garagem</option>
+                                <option value="Vaga">Vaga</option>
+                                <option value="Conjunto">Conjunto</option>
+                                <option value="Sala">Sala</option>
+                                <option value="Terreno">Terreno</option>
                             </select>
                         </div>
                     </div>
@@ -196,6 +205,10 @@
                             </select>
                         </div>
                     </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Valor de Mercado (R$)</label>
+                        <input type="number" id="imo-valor-mercado" value="0" class="w-full p-2 border rounded mt-1 text-sm" placeholder="Estimativa de mercado do imóvel">
+                    </div>
                     <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                         <span class="text-xs font-black text-slate-700 uppercase block mb-2">Contato de Manutenção</span>
                         <div class="grid grid-cols-2 gap-2">
@@ -215,6 +228,14 @@
                             <button type="button" onclick="adicionarSocioInput()" class="text-[11px] bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold border border-blue-200">+ Adicionar Sócio</button>
                         </div>
                         <div id="proprietarios-divisao" class="space-y-2 text-xs"></div>
+                    </div>
+                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-xs font-black text-slate-700 uppercase">Propriedade do Imóvel (%)</span>
+                            <button type="button" onclick="adicionarParteRumoInput()" class="text-[11px] bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold border border-blue-200">+ Adicionar Proprietário</button>
+                        </div>
+                        <p class="text-[11px] text-gray-400">Registro de quem é dono do imóvel — não afeta aluguel nem repasses.</p>
+                        <div id="proprietarios-parte-rumo" class="space-y-2 text-xs"></div>
                     </div>
                     <!-- Gestão de Múltiplas Fotos (Até 10) -->
                     <div class="bg-slate-50 p-3 rounded-xl border">
@@ -277,14 +298,18 @@
                         <p id="con-doc-indicador" class="text-[11px] mt-0.5 h-3"></p>
                     </div>
                 </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">Pessoa de Contato</label>
+                    <input type="text" id="con-contato-nome" class="w-full p-2 border rounded mt-1 text-sm" placeholder="Nome de quem responde pelo contrato">
+                </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-600">Pessoa de Contato</label>
-                        <input type="text" id="con-contato-nome" class="w-full p-2 border rounded mt-1 text-sm" placeholder="Nome de quem responde pelo contrato">
-                    </div>
                     <div>
                         <label class="block text-xs font-bold text-gray-600">WhatsApp</label>
                         <input type="tel" id="con-whatsapp" class="w-full p-2 border rounded mt-1 text-sm" placeholder="11999999999">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">E-mail</label>
+                        <input type="email" id="con-email" class="w-full p-2 border rounded mt-1 text-sm" placeholder="nome@email.com">
                     </div>
                 </div>
                 <div>
@@ -303,7 +328,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-600">Valor Vigente (R$)</label>
-                    <input type="number" id="con-valor" required class="w-full p-2 border rounded mt-1 text-sm">
+                    <input type="number" id="con-valor" required oninput="atualizarValorLiquidoEsperado()" class="w-full p-2 border rounded mt-1 text-sm">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -311,7 +336,7 @@
                         <p id="con-iptu-display" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50 text-gray-500">Selecione o imóvel</p>
                     </div>
                     <div>
-                        <label class="block text-xs font-bold text-gray-600">Condomínio a cargo do locatário?</label>
+                        <label class="block text-xs font-bold text-gray-600">Condomínio c/ locatário?</label>
                         <select id="con-condominio-locatario" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
                             <option value="Não">Não</option>
                             <option value="Sim">Sim</option>
@@ -376,8 +401,8 @@
                 <div id="secao-avancada-contrato" class="hidden bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
                     <div class="grid grid-cols-2 gap-2">
                         <div>
-                            <label class="block text-[11px] font-bold text-gray-600">Novo Valor (deixe em branco se não houve reajuste)</label>
-                            <input type="number" id="con-valor-anterior" value="" oninput="calcularReajustePorNovoValor()" placeholder="Digite só se for reajustar" class="w-full p-1.5 border rounded mt-1 text-xs">
+                            <label class="block text-[11px] font-bold text-gray-600">Novo Valor</label>
+                            <input type="number" id="con-valor-anterior" value="" oninput="calcularReajustePorNovoValor()" placeholder="Só se for reajustar" class="w-full p-1.5 border rounded mt-1 text-xs">
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-gray-600">% Reajuste</label>
@@ -395,8 +420,11 @@
                         </div>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-gray-600">E-mail</label>
-                        <input type="email" id="con-email" class="w-full p-1.5 border rounded mt-1 text-xs" placeholder="nome@email.com">
+                        <label class="block text-[11px] font-bold text-gray-600">Administradora Terceirizada</label>
+                        <select id="con-administradora" onchange="atualizarValorLiquidoEsperado()" class="w-full p-1.5 border rounded mt-1 text-xs bg-gray-50">
+                            <option value="">-- Nenhuma (gestão direta Rumo) --</option>
+                        </select>
+                        <p id="con-valor-liquido-info" class="text-[11px] text-gray-400 mt-0.5"></p>
                     </div>
                     <div>
                         <label class="block text-[11px] font-bold text-gray-600">Descrição do Contrato</label>
@@ -628,26 +656,59 @@
             <h3 class="text-xs font-black text-slate-500 uppercase mb-2 tracking-wide">📋 Extrato de Entradas e Saídas</h3>
             <div id="lista-socios-prestacao" class="space-y-3"></div>
         </section>
+        <!-- ================= ABA: ADMINISTRADORAS ================= -->
+        <section id="tab-administradoras" class="tab-content">
+            <div class="flex items-center gap-3 mb-4">
+                <h2 class="text-lg font-bold text-blue-900 flex-1">Administradoras Terceirizadas</h2>
+                <button onclick="abrirFormularioAdministradora()" class="offline-disable bg-blue-600 text-white font-black text-xl w-11 h-11 rounded-full shadow flex items-center justify-center active:scale-90 transition flex-none" title="Cadastrar administradora">+</button>
+            </div>
+            <div id="lista-administradoras" class="space-y-3 mb-6"></div>
+
+            <div id="form-administradora-wrapper" class="hidden">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-bold text-slate-900" id="form-administradora-titulo">Nova Administradora</h2>
+                    <button onclick="cancelarEdicaoAdministradora()" class="text-xs text-red-600 font-bold">✕ Fechar</button>
+                </div>
+                <form id="form-administradora" onsubmit="saveAdministradora(event)" class="bg-white p-4 rounded-xl shadow-sm mb-6 space-y-3 border border-gray-200 offline-disable">
+                    <input type="hidden" id="adm-id">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Nome da Administradora</label>
+                        <input type="text" id="adm-nome" required class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Documento (CPF ou CNPJ)</label>
+                        <input type="text" id="adm-documento" oninput="formatarMascaraDocumentoGenerico(this)" placeholder="Só digitar os números" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Taxa de Administração (%)</label>
+                        <input type="number" step="0.01" id="adm-taxa" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Escopo da Administração</label>
+                        <textarea id="adm-escopo" rows="2" class="w-full p-2 border rounded mt-1 text-sm" placeholder="Ex: gestão completa de locação, cobrança e manutenção"></textarea>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 text-white p-2.5 rounded-lg font-bold text-sm shadow">Salvar Administradora</button>
+                </form>
+            </div>
+        </section>
         <!-- ================= ABA OCULTA: DEVELOPER CENTRALLOG ================= -->
         <section id="tab-developer" class="tab-content">
             <h2 class="text-lg font-bold mb-3 text-red-500">⚙️ Central do Desenvolvedor</h2>
             <p class="text-[11px] text-gray-500 mb-4">Aba de depuração ativada. Use as ferramentas abaixo para monitorar a gravação de contratos e a integridade do banco.</p>
+
+            <div class="bg-red-50 border-2 border-red-300 p-3 rounded-xl mb-4">
+                <p class="text-xs font-black text-red-700 mb-1">⚠️ Importar Carga Inicial</p>
+                <p class="text-[11px] text-red-600 mb-2">Isso APAGA todos os imóveis, contratos e administradoras atuais e substitui pelos dados da planilha. Não pode ser desfeito.</p>
+                <input type="file" id="carga-inicial-input" accept=".xlsx,.xls" class="hidden" onchange="processarCargaInicial(this)">
+                <button onclick="document.getElementById('carga-inicial-input').click()" class="offline-disable w-full bg-red-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition">📥 Escolher Planilha de Carga</button>
+            </div>
+
             <div class="flex gap-2 mb-4">
                 <button onclick="copiarLogsDoDesenvolvedor()" class="flex-1 bg-red-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition">📋 Copiar Logs de Erro</button>
                 <button onclick="limparLogsDoDesenvolvedor()" class="bg-slate-800 text-slate-300 font-bold text-xs py-2.5 px-4 rounded-lg border border-slate-700 active:scale-95 transition">Limpar</button>
             </div>
             <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-slate-300 font-mono text-[11px] space-y-2 max-h-96 overflow-y-auto" id="dev-detailed-log-box">
                 <p class="text-red-400">// Central de Logs activa. Iniciando captura de escopos...</p>
-            </div>
-            <!-- Console de diagnóstico bruto — movido para cá (antes ficava visível na aba Imóveis) -->
-            <div class="bg-slate-950 text-green-400 p-3 rounded-xl font-mono text-[11px] mt-4 border border-slate-800 shadow-inner">
-                <div class="flex justify-between items-center border-b border-slate-800 pb-1.5 mb-1.5">
-                    <span class="font-bold text-blue-400">⚡ CONSOLE DE DIAGNÓSTICO RUMO</span>
-                    <button onclick="limparLogsTela()" class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded text-[11px] hover:bg-slate-700">Limpar</button>
-                </div>
-                <div id="system-diagnostic-logs" class="max-h-36 overflow-y-auto space-y-1">
-                    <p class="text-slate-500">// Aguardando inicialização do sistema...</p>
-                </div>
             </div>
         </section>
     </main>
@@ -723,6 +784,7 @@
         let mensalidades = [];
         let repasses = [];
         let pendenciasExtrato = [];
+        let administradoras = [];
         let extratoFingerprints = [];
         // Sócios conhecidos para identificar repasses (PIX enviado) no extrato bancário.
         // Comparação sempre em maiúsculas/sem espaços extras.
@@ -739,6 +801,7 @@
         let activeMenId = null;
         let activeConId = null;
         let sociosAdicionais = []; 
+        let parteRumoAdicionais = [];
         let fotosCarregadasBase64 = []; 
         const arrayCompetencias = [];
         for(let ano = 2026; ano <= 2028; ano++) {
@@ -930,6 +993,15 @@
                     manutencaoZap: raw.manutencaoZap || raw.manutencao_zap || '',
                     descricao: raw.descricao || raw.Descricao || '',
                     energiaRumo: raw.energiaRumo || raw.energia_rumo || 'Não',
+                    valorMercado: parseFloat(raw.valorMercado || raw.valor_mercado || 0) || 0,
+                    parteRumo: (function() {
+                        const d = raw.parteRumo || raw.parte_rumo;
+                        if (d && typeof d === 'object' && !Array.isArray(d)) return d;
+                        if (typeof d === 'string' && d.trim().startsWith('{')) {
+                            try { return JSON.parse(d); } catch(e) { return { "Rumo": 100 }; }
+                        }
+                        return { "Rumo": 100 };
+                    })(),
                     valor: parseFloat(raw.valor || raw.Valor || raw.aluguel_alvo || 0) || 0,
                     fotos: fotosTratadas,
                     divisao: divisaoTratada,
@@ -971,8 +1043,20 @@
                 })(),
                 descontoEnergia: parseFloat(raw.descontoEnergia || raw.desconto_energia || 0) || 0,
                 condominioLocatario: raw.condominioLocatario || raw.condominio_locatario || 'Não',
+                administradoraId: raw.administradoraId || raw.administradora_id || '',
                 descricao: raw.descricao || raw.Descricao || '',
                 historico: raw.historico || []
+            };
+        }
+        function normalizarAdministradora(raw) {
+            if (!raw) return null;
+            return {
+                id: raw.id || 'adm_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                nome: raw.nome || raw.Nome || '',
+                docTipo: raw.docTipo || 'CNPJ',
+                documento: raw.documento || raw.cpf || raw.cnpj || '',
+                taxaAdm: parseFloat(raw.taxaAdm || raw.taxa_adm || 0) || 0,
+                escopo: raw.escopo || ''
             };
         }
         function normalizarMensalidade(raw) {
@@ -1162,6 +1246,26 @@
                 indicador.innerText = '';
             }
         }
+        function popularDropdownAdministradoras() {
+            const select = document.getElementById('con-administradora');
+            if (!select) return;
+            const valorAtual = select.value;
+            select.innerHTML = '<option value="">-- Nenhuma (gestão direta Rumo) --</option>' +
+                administradoras.map(a => `<option value="${a.id}">${a.nome} (Taxa: ${a.taxaAdm}%)</option>`).join('');
+            if (administradoras.some(a => a.id === valorAtual)) select.value = valorAtual;
+        }
+        function atualizarValorLiquidoEsperado() {
+            const admSelect = document.getElementById('con-administradora');
+            const info = document.getElementById('con-valor-liquido-info');
+            if (!admSelect || !info) return;
+            const admId = admSelect.value;
+            const valorAluguel = parseFloat(document.getElementById('con-valor').value) || 0;
+            if (!admId) { info.innerText = ''; return; }
+            const adm = administradoras.find(a => a.id === admId);
+            if (!adm) { info.innerText = ''; return; }
+            const liquido = valorAluguel * (1 - (adm.taxaAdm || 0) / 100);
+            info.innerText = `Valor líquido esperado (após taxa de ${adm.taxaAdm}%): R$ ${liquido.toFixed(2)}`;
+        }
         function alternarSecaoAvancadaContrato() {
             const secao = document.getElementById('secao-avancada-contrato');
             const seta = document.getElementById('seta-avancado-contrato');
@@ -1343,6 +1447,7 @@
                     });
                     pendenciasExtrato = resData.dados.pendenciasExtrato || [];
                     extratoFingerprints = resData.dados.extratoFingerprints || [];
+                    administradoras = (resData.dados.administradoras || []).map(normalizarAdministradora).filter(Boolean);
                     logScreen(`Normalizados com sucesso: ${imoveis.length} imóveis, ${contratos.length} contratos.`);
                     localStorage.setItem('rumo_imoveis', JSON.stringify(imoveis));
                     localStorage.setItem('rumo_contratos', JSON.stringify(contratos));
@@ -1387,6 +1492,7 @@
                     
                     try {
                         renderSocioInputs();
+                        renderParteRumoInputs();
                         renderImoveis();
                         renderContratos();
                         renderMensalidades();
@@ -1395,6 +1501,7 @@
                         renderRelatorios();
                         renderVitrine();
                         renderPendenciasExtrato();
+                        renderAdministradoras();
                         atualizarListaSelecaoSociosRepasse();
                         atualizarDropdownFiltrosDinamicos();
                         logScreen("=== COMPONENTES INICIALIZADOS COM SUCESSO ===");
@@ -1527,6 +1634,7 @@
             localStorage.setItem('rumo_mensalidades', JSON.stringify(mensalidades));
             localStorage.setItem('rumo_repasses', JSON.stringify(repasses));
             renderSocioInputs();
+            renderParteRumoInputs();
             renderImoveis();
             renderContratos();
             renderMensalidades();
@@ -1535,6 +1643,7 @@
             renderRelatorios();
             renderVitrine();
             renderPendenciasExtrato();
+            renderAdministradoras();
             atualizarListaSelecaoSociosRepasse();
             atualizarDropdownFiltrosDinamicos();
             if (!enviarParaNuvem) return;
@@ -1543,13 +1652,14 @@
                 return;
             }
             mostrarCarregamentoGlobal("Salvando na nuvem...");
-            const nomesAmigaveis = { imoveis: "Imóveis", contratos: "Contratos", mensalidades: "Mensalidades", repasses: "Repasses", pendenciasExtrato: "Pendências do Extrato" };
+            const nomesAmigaveis = { imoveis: "Imóveis", contratos: "Contratos", mensalidades: "Mensalidades", repasses: "Repasses", pendenciasExtrato: "Pendências do Extrato", administradoras: "Administradoras" };
             const resultados = await Promise.all([
                 enviarDadosParaGoogleSheets("imoveis", imoveis).then(ok => ({ rota: "imoveis", ok })),
                 enviarDadosParaGoogleSheets("contratos", contratos).then(ok => ({ rota: "contratos", ok })),
                 enviarDadosParaGoogleSheets("mensalidades", mensalidades).then(ok => ({ rota: "mensalidades", ok })),
                 enviarDadosParaGoogleSheets("repasses", repasses).then(ok => ({ rota: "repasses", ok })),
-                enviarDadosParaGoogleSheets("pendenciasExtrato", pendenciasExtrato).then(ok => ({ rota: "pendenciasExtrato", ok }))
+                enviarDadosParaGoogleSheets("pendenciasExtrato", pendenciasExtrato).then(ok => ({ rota: "pendenciasExtrato", ok })),
+                enviarDadosParaGoogleSheets("administradoras", administradoras).then(ok => ({ rota: "administradoras", ok }))
             ]);
             esconderCarregamentoGlobal();
             const falhas = resultados.filter(r => !r.ok).map(r => nomesAmigaveis[r.rota] || r.rota);
@@ -1743,6 +1853,57 @@
             // preserva o percentual que ele já tinha.
             renderSocioInputs(sociosAdicionais.length === 0 ? 100 : pctRuyterAtual);
         }
+        function renderParteRumoInputs(pctRumoAtual) {
+            const container = document.getElementById('proprietarios-parte-rumo');
+            if(!container) return;
+            const valorRumo = (pctRumoAtual !== undefined && pctRumoAtual !== null) ? pctRumoAtual : 100;
+            container.innerHTML = `
+                <div class="flex items-center justify-between gap-2 border-b border-gray-100 pb-1">
+                    <span class="font-bold text-slate-800">Rumo (Padrão)</span>
+                    <div class="flex items-center space-x-1">
+                        <input type="number" id="parte-rumo-pct-Rumo" value="${valorRumo}" min="0" max="100" class="w-16 p-1 border rounded text-center font-black text-blue-600 bg-gray-50">
+                        <span class="font-bold text-gray-500">%</span>
+                    </div>
+                </div>
+            `;
+            parteRumoAdicionais.forEach((prop, index) => {
+                container.innerHTML += `
+                    <div class="flex items-center justify-between gap-2 text-xs">
+                        <span class="font-medium text-slate-700">${prop.nome}</span>
+                        <div class="flex items-center space-x-1">
+                            <input type="number" value="${prop.pct}" min="0" max="100" onchange="atualizarPctParteRumoAdicional(${index}, this.value)" class="w-16 p-1 border rounded text-center font-bold">
+                            <span>%</span>
+                            <button type="button" onclick="removerParteRumoInput(${index})" class="text-red-500 font-bold px-1 ml-1">✕</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        function adicionarParteRumoInput() {
+            const nome = prompt("Digite o nome do proprietário:");
+            if(!nome || nome.trim() === "") return;
+            if(nome.trim().toLowerCase() === 'rumo') return alert("Rumo já é padrão!");
+
+            const inputRumo = document.getElementById('parte-rumo-pct-Rumo');
+            const pctRumoAtual = inputRumo ? (parseFloat(inputRumo.value) || 0) : 100;
+
+            if (parteRumoAdicionais.length === 0) {
+                parteRumoAdicionais.push({ nome: nome.trim(), pct: 50 });
+                renderParteRumoInputs(50);
+            } else {
+                parteRumoAdicionais.push({ nome: nome.trim(), pct: 0 });
+                renderParteRumoInputs(pctRumoAtual);
+            }
+        }
+        function removerParteRumoInput(index) {
+            const inputRumo = document.getElementById('parte-rumo-pct-Rumo');
+            const pctRumoAtual = inputRumo ? (parseFloat(inputRumo.value) || 0) : 100;
+            parteRumoAdicionais.splice(index, 1);
+            renderParteRumoInputs(parteRumoAdicionais.length === 0 ? 100 : pctRumoAtual);
+        }
+        function atualizarPctParteRumoAdicional(index, valor) {
+            parteRumoAdicionais[index].pct = parseFloat(valor) || 0;
+        }
         function atualizarPctSocioAdicional(index, valor) {
             sociosAdicionais[index].pct = parseFloat(valor) || 0;
         }
@@ -1790,6 +1951,19 @@
                 alert("⚠️ A soma societária precisa ser exatamente 100%. Total atual: " + somaPct + "%");
                 return;
             }
+
+            let parteRumo = {};
+            const pctRumo = parseFloat(document.getElementById('parte-rumo-pct-Rumo').value) || 0;
+            parteRumo["Rumo"] = pctRumo;
+            let somaPctRumo = pctRumo;
+            parteRumoAdicionais.forEach(prop => {
+                parteRumo[prop.nome] = prop.pct;
+                somaPctRumo += prop.pct;
+            });
+            if(somaPctRumo !== 100) {
+                alert("⚠️ A soma da propriedade do imóvel precisa ser exatamente 100%. Total atual: " + somaPctRumo + "%");
+                return;
+            }
             const empreendimentoSalvo = document.getElementById('imo-empreendimento').value;
             const tipoSalvo = document.getElementById('imo-tipo').value;
             const ruaSalva = document.getElementById('imo-endereco-rua').value;
@@ -1814,6 +1988,8 @@
                 manutencaoZap: document.getElementById('imo-manutencao-zap').value.trim().replace(/\D/g, ''),
                 descricao: document.getElementById('imo-descricao').value.trim(),
                 energiaRumo: document.getElementById('imo-energia-rumo').value,
+                valorMercado: parseFloat(document.getElementById('imo-valor-mercado').value) || 0,
+                parteRumo: parteRumo,
                 valor: parseFloat(document.getElementById('imo-valor').value) || 0,
                 fotos: fotosCarregadasBase64.length > 0 ? fotosCarregadasBase64 : (id ? (imoveis.find(i => i.id === id).fotos || []) : []),
                 divisao: divisao,
@@ -1860,6 +2036,7 @@
             document.getElementById('imo-descricao').value = imo.descricao || '';
             document.getElementById('imo-energia-rumo').value = imo.energiaRumo || 'Não';
             document.getElementById('imo-valor').value = imo.valor;
+            document.getElementById('imo-valor-mercado').value = imo.valorMercado || 0;
             
             fotosCarregadasBase64 = imo.fotos || [];
             renderPreviewFotosImovel();
@@ -1872,6 +2049,15 @@
                 });
             }
             renderSocioInputs(pctRuyterEdicao);
+            parteRumoAdicionais = [];
+            let pctRumoEdicao = 100;
+            if(imo.parteRumo) {
+                pctRumoEdicao = imo.parteRumo["Rumo"] || 0;
+                Object.keys(imo.parteRumo).forEach(nome => {
+                    if(nome !== "Rumo") parteRumoAdicionais.push({ nome: nome, pct: imo.parteRumo[nome] });
+                });
+            }
+            renderParteRumoInputs(pctRumoEdicao);
             document.getElementById('form-imovel-titulo').innerText = "Editar Imóvel 📝";
             document.getElementById('form-imovel-wrapper').classList.remove('hidden');
             window.scrollTo({top: 0, behavior: 'smooth'});
@@ -1880,9 +2066,11 @@
             document.getElementById('imo-id').value = '';
             document.getElementById('form-imovel-titulo').innerText = "Cadastrar Imóvel";
             sociosAdicionais = [];
+            parteRumoAdicionais = [];
             fotosCarregadasBase64 = [];
             document.getElementById('form-images-preview-container').innerHTML = '';
             renderSocioInputs(100);
+            renderParteRumoInputs(100);
             document.getElementById('form-imovel-wrapper').classList.add('hidden');
         }
         function acionarManutencaoWhatsApp(zap, nomeManutencao, empreendimento, endereco) {
@@ -1926,6 +2114,99 @@
             if (!confirm(`Confirma a exclusão do imóvel "${imo.empreendimento} - ${imo.enderecoRua}, ${imo.enderecoNum}"? Esta ação não pode ser desfeita.`)) return;
             imoveis = imoveis.filter(i => i.id !== id);
             saveAll(true, "Imóvel excluído com sucesso.");
+        }
+        function formatarMascaraDocumentoGenerico(input) {
+            const digitos = input.value.replace(/\D/g, '').slice(0, 14);
+            if (digitos.length <= 11) {
+                input.value = digitos
+                    .replace(/(\d{3})(\d)/, '$1.$2')
+                    .replace(/(\d{3})(\d)/, '$1.$2')
+                    .replace(/(\d{3})(\d{1,2})$/, '$1-$2');
+            } else {
+                input.value = digitos
+                    .replace(/(\d{2})(\d)/, '$1.$2')
+                    .replace(/(\d{3})(\d)/, '$1.$2')
+                    .replace(/(\d{3})(\d)/, '$1/$2')
+                    .replace(/(\d{4})(\d{1,2})$/, '$1-$2');
+            }
+        }
+        function abrirFormularioAdministradora() {
+            cancelarEdicaoAdministradora();
+            document.getElementById('form-administradora-wrapper').classList.remove('hidden');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+        function cancelarEdicaoAdministradora() {
+            document.getElementById('adm-id').value = '';
+            document.getElementById('form-administradora').reset();
+            document.getElementById('form-administradora-titulo').innerText = 'Nova Administradora';
+            document.getElementById('form-administradora-wrapper').classList.add('hidden');
+        }
+        function editarAdministradora(id) {
+            const adm = administradoras.find(a => a.id === id);
+            if (!adm) return;
+            document.getElementById('adm-id').value = adm.id;
+            document.getElementById('adm-nome').value = adm.nome;
+            document.getElementById('adm-documento').value = adm.documento || '';
+            document.getElementById('adm-taxa').value = adm.taxaAdm || 0;
+            document.getElementById('adm-escopo').value = adm.escopo || '';
+            document.getElementById('form-administradora-titulo').innerText = 'Editar Administradora';
+            document.getElementById('form-administradora-wrapper').classList.remove('hidden');
+            window.scrollTo({top: 0, behavior: 'smooth'});
+        }
+        function saveAdministradora(e) {
+            e.preventDefault();
+            const id = document.getElementById('adm-id').value;
+            const documento = document.getElementById('adm-documento').value.trim();
+            const digitos = documento.replace(/\D/g, '');
+            const dados = {
+                id: id || 'adm_' + Date.now() + Math.random().toString(36).substr(2, 4),
+                nome: document.getElementById('adm-nome').value.trim(),
+                docTipo: digitos.length > 11 ? 'CNPJ' : 'CPF',
+                documento: documento,
+                taxaAdm: parseFloat(document.getElementById('adm-taxa').value) || 0,
+                escopo: document.getElementById('adm-escopo').value.trim()
+            };
+            if (id) {
+                const idx = administradoras.findIndex(a => a.id === id);
+                if (idx !== -1) administradoras[idx] = dados;
+            } else {
+                administradoras.push(dados);
+            }
+            cancelarEdicaoAdministradora();
+            saveAll(true, "Administradora salva com sucesso!");
+        }
+        function excluirAdministradora(id) {
+            const emUso = contratos.some(c => c.administradoraId === id);
+            if (emUso) {
+                alert("⚠️ Não é possível excluir: há contrato(s) vinculado(s) a esta administradora. Desvincule antes de excluir.");
+                return;
+            }
+            if (!confirm("Confirma a exclusão desta administradora?")) return;
+            administradoras = administradoras.filter(a => a.id !== id);
+            saveAll(true, "Administradora excluída.");
+        }
+        function renderAdministradoras() {
+            popularDropdownAdministradoras();
+            const container = document.getElementById('lista-administradoras');
+            if (!container) return;
+            if (administradoras.length === 0) {
+                container.innerHTML = '<p class="text-xs text-center text-gray-400 py-4">Nenhuma administradora cadastrada.</p>';
+                return;
+            }
+            container.innerHTML = administradoras.map(adm => {
+                const qtdContratos = contratos.filter(c => c.administradoraId === adm.id).length;
+                return `
+                    <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
+                        <p class="text-xs font-bold text-slate-900">${adm.nome}</p>
+                        <p class="text-[11px] text-gray-500">${adm.docTipo}: ${adm.documento || '-'} | Taxa: ${adm.taxaAdm}% | ${qtdContratos} contrato(s) vinculado(s)</p>
+                        ${adm.escopo ? `<p class="text-[11px] text-gray-400 italic mt-0.5">${adm.escopo}</p>` : ''}
+                        <div class="flex gap-1.5 mt-2">
+                            <button onclick="editarAdministradora('${adm.id}')" title="Editar" class="w-7 h-7 flex items-center justify-center bg-blue-50 text-blue-700 rounded-full border border-blue-200 text-xs">📝</button>
+                            <button onclick="excluirAdministradora('${adm.id}')" title="Excluir" class="w-7 h-7 flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-xs">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
         }
         function excluirContrato(id) {
             const con = contratos.find(c => c.id === id);
@@ -2123,6 +2404,7 @@
         }
         function saveContrato(e) {
             e.preventDefault();
+            try {
             const id = document.getElementById('con-id').value;
             const imoId = document.getElementById('con-imovel').value;
             const docTipo = tipoDocumentoDetectado();
@@ -2175,6 +2457,7 @@
                 reajuste: document.getElementById('con-reajuste').value,
                 condominioLocatario: document.getElementById('con-condominio-locatario').value,
                 descricao: document.getElementById('con-descricao').value.trim(),
+                administradoraId: document.getElementById('con-administradora').value,
                 contatoNome: document.getElementById('con-contato-nome').value.trim(),
                 formaPagamento: document.getElementById('con-forma-pagamento').value,
                 descontoEnergia: parseFloat(document.getElementById('con-desconto-energia').value) || 0,
@@ -2256,11 +2539,16 @@
             }
             document.getElementById('form-contrato').reset();
             documentosCarregadosContrato = [];
-            document.getElementById('con-documentos-preview').innerHTML = '';
+            renderPreviewDocumentosContrato();
             cancelarEdicaoContrato();
             saveAll(true, "Contrato de locação salvo!");
+            } catch (err) {
+                alert("⚠️ Erro ao salvar o contrato: " + err.message + "\n\nPor favor, copie esta mensagem e me envie para eu corrigir.");
+                devLog("ERRO_SALVAR_CONTRATO", `Falha ao salvar contrato: ${err.message}`, err);
+            }
         }
         function editarContrato(id) {
+            try {
             activeConId = id;
             const con = contratos.find(c => c.id === id);
             if(!con) return;
@@ -2288,6 +2576,9 @@
             document.getElementById('con-desconto-energia').value = con.descontoEnergia || 0;
             document.getElementById('con-condominio-locatario').value = con.condominioLocatario || 'Não';
             document.getElementById('con-descricao').value = con.descricao || '';
+            popularDropdownAdministradoras();
+            document.getElementById('con-administradora').value = con.administradoraId || '';
+            atualizarValorLiquidoEsperado();
             document.getElementById('con-vigente-desde').value = '';
             sugerirDescontoEnergia(); // também atualiza o display do IPTU do imóvel
             documentosCarregadosContrato = con.anexos || [];
@@ -2298,14 +2589,18 @@
             document.getElementById('form-contrato-titulo').innerText = "Renovar / Editar Contrato 📝";
             document.getElementById('form-contrato-wrapper').classList.remove('hidden');
             window.scrollTo({top: 0, behavior: 'smooth'});
+            } catch (err) {
+                alert("⚠️ Erro ao abrir a edição do contrato: " + err.message);
+                devLog("ERRO_EDITAR_CONTRATO", `Falha ao abrir edição: ${err.message}`, err);
+            }
         }
         function cancelarEdicaoContrato() {
             activeConId = null;
             document.getElementById('con-id').value = '';
+            document.getElementById('form-contrato').reset();
             document.getElementById('form-contrato-titulo').innerText = "Novo Contrato de Locação";
             documentosCarregadosContrato = [];
-            const previewDocs = document.getElementById('con-documentos-preview');
-            if (previewDocs) previewDocs.innerHTML = '';
+            renderPreviewDocumentosContrato();
             const indicador = document.getElementById('con-doc-indicador');
             if (indicador) indicador.innerText = '';
             const secaoAvancada = document.getElementById('secao-avancada-contrato');
@@ -2381,7 +2676,7 @@
             contratos.forEach(con => {
                 const imo = imoveis.find(i => i.id === con.imovelId);
                 const temAlerta = contratoPrecisaRevisao(con) || contratoVencido(con);
-                const alertaTriangulo = temAlerta ? `<span title="Ver alertas deste contrato" onclick="verAlertasContrato('${con.id}')" class="text-red-600 cursor-pointer">🔺</span>` : '';
+                const alertaTriangulo = temAlerta ? `<span title="Ver alertas deste contrato" onclick="verAlertasContrato('${con.id}')" class="text-red-600 cursor-pointer text-sm">🔺</span>` : '';
                 const badgeEnergia = (imo && imo.energiaRumo === 'Sim' && con.descontoEnergia > 0) ? `<span title="Energia Rumo com desconto" class="text-[11px]">⚡</span>` : '';
                 const badgeAnexos = (con.anexos && con.anexos.length > 0) ? `<span title="Contrato tem anexos" class="text-[11px]">📎</span>` : '';
                 const badgeStatus = `<span class="text-[11px] font-bold px-1.5 py-0.5 rounded ${con.status==='Ativo'?'bg-green-100 text-green-800':(con.status==='Suspenso'?'bg-amber-100 text-amber-800':'bg-red-100 text-red-800')}">${con.status}</span>`;
@@ -2486,14 +2781,9 @@
             }
             return valor;
         }
-        function gerarMensalidades() {
-            const selectRef = document.getElementById('men-referencia');
-            const ref = selectRef.value;
-            
-            if(!contratos || contratos.length === 0) {
-                alert("⚠️ Não há contratos cadastrados.");
-                return;
-            }
+        function gerarMensalidadesParaCompetencia(ref) {
+            if(!contratos || contratos.length === 0) return 0;
+            let geradas = 0;
             const [mesRef, anoRef] = ref.split('/').map(Number);
             const dataPrimeiroDiaCompetencia = new Date(anoRef, mesRef - 1, 1);
             const dataUltimoDiaCompetencia = new Date(anoRef, mesRef, 0);
@@ -2528,6 +2818,17 @@
                 let valorEfetivo = parseFloat((somaProporcional - (con.desconto || 0)).toFixed(2));
                 if (valorEfetivo < 0) valorEfetivo = 0;
 
+                // Se o contrato tem uma administradora terceirizada vinculada, o valor
+                // que efetivamente cai na conta é o líquido (aluguel menos taxa de
+                // administração) — é isso que deve ser esperado/conciliado, não o
+                // valor bruto do aluguel.
+                if (con.administradoraId) {
+                    const adm = administradoras.find(a => a.id === con.administradoraId);
+                    if (adm && adm.taxaAdm > 0) {
+                        valorEfetivo = parseFloat((valorEfetivo * (1 - adm.taxaAdm / 100)).toFixed(2));
+                    }
+                }
+
                 const diaPadrao = con.vencimentoDia || 15;
                 const diaPgoString = diaPadrao < 10 ? '0' + diaPadrao : diaPadrao;
                 const dataDePagamentoGerada = `${diaPgoString}/${mesRef < 10 ? '0'+mesRef : mesRef}/${anoRef}`;
@@ -2546,8 +2847,19 @@
                         observacao: '',
                         valorConfirmado: valorEfetivo
                     });
+                    geradas++;
                 }
             });
+            return geradas;
+        }
+        function gerarMensalidades() {
+            const selectRef = document.getElementById('men-referencia');
+            const ref = selectRef.value;
+            if(!contratos || contratos.length === 0) {
+                alert("⚠️ Não há contratos cadastrados.");
+                return;
+            }
+            gerarMensalidadesParaCompetencia(ref);
             const idxAtual = arrayCompetencias.indexOf(ref);
             if(idxAtual !== -1 && idxAtual + 1 < arrayCompetencias.length) {
                 selectRef.value = arrayCompetencias[idxAtual + 1];
@@ -2629,6 +2941,165 @@
             }
             return null;
         }
+        // ============================================================================
+        // IMPORTAÇÃO DE CARGA INICIAL (imóveis + contratos + administradoras)
+        // ============================================================================
+        function parseDataCarga(valor) {
+            if (!valor) return '';
+            if (valor instanceof Date) return valor.toISOString().split('T')[0];
+            if (typeof valor === 'string') {
+                if (valor.includes('-')) return valor.split(' ')[0]; // já é yyyy-mm-dd
+                if (valor.includes('/')) { const [d, m, a] = valor.split('/'); return `${a}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`; }
+            }
+            if (typeof valor === 'number') {
+                const dataBase = new Date(Date.UTC(1899, 11, 30));
+                dataBase.setUTCDate(dataBase.getUTCDate() + Math.floor(valor));
+                return dataBase.toISOString().split('T')[0];
+            }
+            return '';
+        }
+        function parseJsonCampoCarga(valor, fallback) {
+            if (!valor) return fallback;
+            if (typeof valor === 'object') return valor;
+            try { return JSON.parse(valor); } catch(e) { return fallback; }
+        }
+        async function processarCargaInicial(inputElement) {
+            const file = inputElement.files[0];
+            if (!file) return;
+            if (!confirm("⚠️ ATENÇÃO: isso vai APAGAR todos os imóveis, contratos e administradoras atuais e substituir pelos dados desta planilha. Esta ação NÃO PODE SER DESFEITA. Confirma?")) {
+                inputElement.value = '';
+                return;
+            }
+            if (!confirm("Tem certeza mesmo? Essa é a ÚLTIMA confirmação antes de apagar os dados atuais.")) {
+                inputElement.value = '';
+                return;
+            }
+            mostrarCarregamentoGlobal("Processando carga inicial...");
+            try {
+                const buffer = await file.arrayBuffer();
+                const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
+                const nomeAba = workbook.SheetNames[0];
+                const linhas = XLSX.utils.sheet_to_json(workbook.Sheets[nomeAba], { header: 1, raw: true });
+
+                // Layout fixo de colunas (posição, não nome — a planilha tem cabeçalhos
+                // repetidos como "id"/"id.1" que não dá pra usar como chave única):
+                // 0:id 1:EMPREENDIMENTO 2:enderecoRua 3:enderecoNum 4:enderecoComp
+                // 5:enderecoBairro 6:enderecoCidade 7:tipo 8:tamanho 9:suites 10:banheiros
+                // 11:condominio 12:iptu 13:codigoIPTU 14:valor 15:fotos 16:divisao 17:status
+                // 18:manutencaoNome 19:manutencaoZap 20:energiaRumo 21:descricao
+                // 22:parteRumo(descricaoPropriedade) 23:valorMercado 24:txAdm 25:administradora
+                // 26:documentoAdministradora 27:id.1 28:imovelId 29:status(contrato)
+                // 30:locatario 31:docTipo 32:cpf 33:vencimentoDia 34:whatsapp 35:email
+                // 36:inicio 37:fim 38:valor(contrato) 39:valorAnterior 40:desconto
+                // 41:reajusteAplicado 42:reajuste 43:iptu(contrato) 44:historico
+                // 45:contatoNome 46:formaPagamento 47:descontoEnergia 48:anexos
+                // 49:condominioLocatario 50:descricao(contrato)
+
+                const novosImoveis = [];
+                const novosContratos = [];
+                const mapaAdministradoras = {};
+
+                for (let i = 1; i < linhas.length; i++) {
+                    const l = linhas[i];
+                    if (!l || l.length === 0 || !l[1]) continue; // sem empreendimento, ignora a linha
+
+                    const imovelId = 'imo_' + Date.now() + '_' + i;
+                    novosImoveis.push({
+                        id: imovelId,
+                        empreendimento: String(l[1] || '').trim(),
+                        enderecoRua: String(l[2] || '').trim(),
+                        enderecoNum: String(l[3] || '').trim(),
+                        enderecoComp: String(l[4] || '').trim(),
+                        enderecoBairro: String(l[5] || '').trim(),
+                        enderecoCidade: String(l[6] || '').trim(),
+                        tipo: String(l[7] || '').trim(),
+                        tamanho: parseFloat(l[8]) || 0,
+                        suites: parseInt(l[9]) || 0,
+                        banheiros: parseInt(l[10]) || 0,
+                        condominio: parseFloat(l[11]) || 0,
+                        iptu: parseFloat(l[12]) || 0,
+                        codigoIPTU: String(l[13] || '').trim(),
+                        valor: parseFloat(l[14]) || 0,
+                        fotos: [],
+                        divisao: parseJsonCampoCarga(l[16], { "Ruyter": 100 }),
+                        status: String(l[17] || 'Vago').trim(),
+                        manutencaoNome: String(l[18] || '').trim(),
+                        manutencaoZap: String(l[19] || '').trim().replace(/\D/g, ''),
+                        energiaRumo: String(l[20] || 'Não').trim(),
+                        descricao: String(l[21] || '').trim(),
+                        parteRumo: parseJsonCampoCarga(l[22], { "Rumo": 100 }),
+                        valorMercado: parseFloat(l[23]) || 0
+                    });
+
+                    let administradoraId = '';
+                    const nomeAdm = String(l[25] || '').trim();
+                    if (nomeAdm) {
+                        const chave = nomeAdm.toUpperCase();
+                        if (!mapaAdministradoras[chave]) {
+                            mapaAdministradoras[chave] = {
+                                id: 'adm_' + Date.now() + '_' + i,
+                                nome: nomeAdm,
+                                docTipo: 'CNPJ',
+                                documento: String(l[26] || '').trim(),
+                                taxaAdm: (parseFloat(l[24]) || 0) * 100,
+                                escopo: ''
+                            };
+                        }
+                        administradoraId = mapaAdministradoras[chave].id;
+                    }
+
+                    const locatario = String(l[30] || '').trim();
+                    if (locatario) {
+                        let reajusteCarga = String(l[42] || 'IPCA').trim().toUpperCase();
+                        if (reajusteCarga === 'IGPM') reajusteCarga = 'IGP-M';
+                        const dataInicioCarga = parseDataCarga(l[36]);
+                        novosContratos.push({
+                            id: 'con_' + Date.now() + '_' + i,
+                            imovelId: imovelId,
+                            status: String(l[29] || 'Ativo').trim(),
+                            locatario: locatario,
+                            docTipo: String(l[31] || 'CPF').trim(),
+                            cpf: String(l[32] || '').trim(),
+                            vencimentoDia: parseInt(l[33]) || 15,
+                            whatsapp: String(l[34] || '').trim().replace(/\D/g, ''),
+                            email: String(l[35] || '').trim(),
+                            inicio: dataInicioCarga,
+                            fim: parseDataCarga(l[37]),
+                            valor: parseFloat(l[38]) || 0,
+                            valorAnterior: 0,
+                            desconto: parseFloat(l[40]) || 0,
+                            reajusteAplicado: 0,
+                            reajuste: reajusteCarga,
+                            iptu: 0,
+                            contatoNome: String(l[45] || '').trim(),
+                            formaPagamento: String(l[46] || 'PIX').trim(),
+                            descontoEnergia: parseFloat(l[47]) || 0,
+                            anexos: [],
+                            condominioLocatario: String(l[49] || 'Não').trim(),
+                            descricao: String(l[50] || '').trim(),
+                            administradoraId: administradoraId,
+                            historico: [{
+                                data: new Date().toISOString(),
+                                vigenteDesde: dataInicioCarga,
+                                alteracoes: [{ campo: 'Contrato criado', de: '-', para: `Carga inicial — ${locatario}` }]
+                            }]
+                        });
+                    }
+                }
+
+                imoveis = novosImoveis;
+                contratos = novosContratos;
+                administradoras = Object.values(mapaAdministradoras);
+
+                esconderCarregamentoGlobal();
+                await saveAll(true, `✅ Carga concluída: ${novosImoveis.length} imóveis, ${novosContratos.length} contratos, ${administradoras.length} administradora(s).`);
+            } catch (err) {
+                esconderCarregamentoGlobal();
+                alert("⚠️ Falha ao processar a carga: " + err.message);
+                devLog("ERRO_CARGA", `Falha ao processar carga inicial: ${err.message}`);
+            }
+            inputElement.value = '';
+        }
         async function processarExtratoImportado(inputElement) {
             const file = inputElement.files[0];
             if (!file) return;
@@ -2687,6 +3158,18 @@
             const novosFingerprints = [];
             let qtdConciliados = 0, qtdRepasses = 0, qtdPendencias = 0, qtdIgnorados = 0, qtdJaImportados = 0;
 
+            // CORREÇÃO: antes de tentar conciliar qualquer coisa, garante que as
+            // mensalidades das competências realmente cobertas pelo extrato já
+            // existem. Sem isso, um pagamento de abril podia acabar batendo (por
+            // coincidência de valor) numa mensalidade de agosto que já existia,
+            // só porque a de abril ainda nem tinha sido gerada.
+            const competenciasDoExtrato = new Set();
+            transacoes.forEach(t => {
+                const [ano, mes] = t.dataISO.split('-');
+                competenciasDoExtrato.add(`${mes}/${ano}`);
+            });
+            competenciasDoExtrato.forEach(ref => gerarMensalidadesParaCompetencia(ref));
+
             transacoes.forEach(t => {
                 const chave = `${t.dataISO}|${t.valor.toFixed(2)}|${t.razaoSocial.toUpperCase()}`;
                 if (chavesJaImportadas.has(chave)) { qtdJaImportados++; return; }
@@ -2704,17 +3187,29 @@
                     const nomeSocioEntrada = SOCIOS_CONHECIDOS.find(s => nomesParecem(s, t.razaoSocial));
                     if (nomeSocioEntrada) { qtdIgnorados++; return; } // entrada de sócio não é aluguel
 
-                    const contratoCandidato = contratos.find(c => nomesParecem(c.locatario, t.razaoSocial));
+                    // Ordem de tentativa para achar o contrato: 1º pelo nome do
+                    // locatário, 2º pelo documento (CPF/CNPJ) do extrato.
+                    const documentoLimpo = (t.documento || '').replace(/\D/g, '');
+                    let contratoCandidato = contratos.find(c => nomesParecem(c.locatario, t.razaoSocial));
+                    if (!contratoCandidato && documentoLimpo) {
+                        contratoCandidato = contratos.find(c => (c.cpf || '').replace(/\D/g, '') === documentoLimpo);
+                    }
+
                     const pendentesDoContrato = contratoCandidato
                         ? mensalidades.filter(m => m.contratoId === contratoCandidato.id && m.status === 'Pendente')
                               .sort((a, b) => { const [ma,aa]=a.referencia.split('/'), [mb,ab]=b.referencia.split('/'); return (aa+ma).localeCompare(ab+mb); })
                         : [];
 
-                    // Tolerância generosa (20%) — o valor cadastrado no contrato pode não
-                    // bater exatamente com o valor líquido depositado (taxas, descontos).
-                    const dentroTolerancia = (esperado, recebido) => Math.abs(esperado - recebido) <= Math.max(esperado * 0.20, 5);
+                    // Tolerância reduzida para 5% — o nome/documento já fez a maior
+                    // parte do trabalho de identificação; o valor é só a confirmação
+                    // final, não precisa de margem grande.
+                    const dentroTolerancia = (esperado, recebido) => Math.abs(esperado - recebido) <= Math.max(esperado * 0.05, 2);
 
-                    const matchUnico = pendentesDoContrato.find(m => dentroTolerancia(m.valorConfirmado, t.valor));
+                    // Prioriza a mensalidade da MESMA competência do pagamento (evita
+                    // cair num mês errado só porque o valor bateu por coincidência).
+                    // Só cai para outra competência pendente se não achar na exata.
+                    const matchMesExato = pendentesDoContrato.find(m => m.referencia === referenciaDoMes && dentroTolerancia(m.valorConfirmado, t.valor));
+                    const matchUnico = matchMesExato || pendentesDoContrato.find(m => dentroTolerancia(m.valorConfirmado, t.valor));
                     if (matchUnico) {
                         const idx = mensalidades.findIndex(m => m.id === matchUnico.id);
                         mensalidades[idx].status = 'Pago';
@@ -2758,9 +3253,14 @@
                     // SAÍDA — só interessa se for repasse para um dos 4 sócios conhecidos.
                     const nomeSocio = SOCIOS_CONHECIDOS.find(s => nomesParecem(s, t.razaoSocial));
                     if (nomeSocio) {
+                        // Usa apenas o primeiro nome do sócio ao lançar o repasse
+                        // (ex: "RUYTER CARLOS DA SILVA" -> "Ruyter"), consistente com
+                        // como os sócios são identificados no resto do sistema.
+                        const primeiroNomeSocio = nomeSocio.split(' ')[0];
+                        const primeiroNomeFormatado = primeiroNomeSocio.charAt(0) + primeiroNomeSocio.slice(1).toLowerCase();
                         repasses.push({
                             id: 'rep_' + Date.now() + Math.random().toString(36).substr(2, 4),
-                            socio: nomeSocio, mes: referenciaDoMes, valor: Math.abs(t.valor),
+                            socio: primeiroNomeFormatado, mes: referenciaDoMes, valor: Math.abs(t.valor),
                             dataReal: dataBR, timestamp: Date.now()
                         });
                         qtdRepasses++;
