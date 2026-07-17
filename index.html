@@ -1,7 +1,7 @@
 <!-- 
 ==================================================================
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
-   VERSÃO: v4.5.0 (Rateio proporcional, exclusões, filtros, energia Rumo, 2-linhas, revisão pendente)
+   VERSÃO: v4.6.0 (Fotos/docs acumulativos, tipografia padronizada, campo descrição no banco, botão fechar)
    TOTAL DE LINHAS DE CÓDIGO: 1255 linhas
 ==================================================================
 -->
@@ -48,20 +48,20 @@
                 <button id="btn-entrar" onclick="entrarNoSistema()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition transform active:scale-95 flex justify-center items-center gap-2">
                     <span>Acessar Sistema</span>
                 </button>
-                <div id="splash-status" class="text-2xs text-amber-400 font-semibold px-4 break-words"></div>
-                <div id="splash-error-detail" class="text-3xs text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
+                <div id="splash-status" class="text-[13px] text-amber-400 font-semibold px-4 break-words"></div>
+                <div id="splash-error-detail" class="text-[11px] text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
             </div>
-            <div class="text-2xs text-slate-500 font-mono">
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v4.5.0</span>
+            <div class="text-[13px] text-slate-500 font-mono">
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v4.6.0</span>
             </div>
         </div>
     </div>
     <!-- ================= HEADER E NAVEGAÇÃO ================= -->
     <header id="main-header" class="hidden bg-slate-900 text-white sticky top-0 z-50 shadow-md">
-        <div class="p-3 flex justify-between items-center bg-slate-955">
+        <div class="p-3 flex justify-between items-center bg-slate-950">
             <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" onclick="agendarCliqueLogo()" ondblclick="cancelarCliqueLogoEAbrirDev()">
                 <span class="text-lg font-black tracking-wider text-blue-400">RUMO 🏠</span>
-                <span id="header-offline-tag" class="hidden text-3xs bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
+                <span id="header-offline-tag" class="hidden text-[11px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
             </div>
             <button onclick="voltarParaSplash()" class="text-xs text-slate-400 bg-slate-800 px-2 py-1 rounded">Sair</button>
         </div>
@@ -81,13 +81,13 @@
         <!-- Alerta de Restrição Offline -->
         <div id="offline-warning-banner" class="hidden mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-center">
             <p class="text-xs font-black text-red-800">⚠️ MODO CONSULTA ATIVO (SISTEMA OFFLINE)</p>
-            <p class="text-4xs text-red-600 mt-0.5">As abas de alteração de caixa e cadastros estão suspensas.</p>
+            <p class="text-[11px] text-red-600 mt-0.5">As abas de alteração de caixa e cadastros estão suspensas.</p>
         </div>
         <!-- ================= ABA: IMÓVEIS ================= -->
         <section id="tab-imoveis" class="tab-content active">
             <div class="flex items-center gap-3 mb-4">
                 <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 text-center flex-1">
-                    <p class="text-xs font-bold text-blue-900">Total de Imóveis Cadastrados: <span id="total-imoveis-contador" class="text-sm font-black">0</span></p>
+                    <p class="text-xs font-bold text-blue-900">Imóveis: <span id="imoveis-vagos-contador" class="text-sm font-black text-amber-700">0</span> vagos / <span id="imoveis-alugados-contador" class="text-sm font-black text-green-700">0</span> alugados / <span id="total-imoveis-contador" class="text-sm font-black">0</span> total</p>
                 </div>
                 <button onclick="abrirFormularioImovel()" class="offline-disable bg-blue-600 text-white font-black text-xl w-11 h-11 rounded-full shadow flex items-center justify-center active:scale-90 transition flex-none" title="Cadastrar novo imóvel">+</button>
             </div>
@@ -199,11 +199,11 @@
                         <span class="text-xs font-black text-slate-700 uppercase block mb-2">Contato de Manutenção</span>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="block text-4xs font-bold text-gray-600">Nome</label>
+                                <label class="block text-[11px] font-bold text-gray-600">Nome</label>
                                 <input type="text" id="imo-manutencao-nome" class="w-full p-1.5 border rounded mt-1 text-xs">
                             </div>
                             <div>
-                                <label class="block text-4xs font-bold text-gray-600">WhatsApp</label>
+                                <label class="block text-[11px] font-bold text-gray-600">WhatsApp</label>
                                 <input type="text" id="imo-manutencao-zap" class="w-full p-1.5 border rounded mt-1 text-xs" placeholder="Só números, com DDD">
                             </div>
                         </div>
@@ -211,7 +211,7 @@
                     <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-black text-slate-700 uppercase">Sócios e Porcentagem (%)</span>
-                            <button type="button" onclick="adicionarSocioInput()" class="text-3xs bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold border border-blue-200">+ Adicionar Sócio</button>
+                            <button type="button" onclick="adicionarSocioInput()" class="text-[11px] bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold border border-blue-200">+ Adicionar Sócio</button>
                         </div>
                         <div id="proprietarios-divisao" class="space-y-2 text-xs"></div>
                     </div>
@@ -220,7 +220,7 @@
                         <div class="flex items-center justify-between">
                             <label class="block text-xs font-bold text-gray-600">Fotos do Imóvel (até 10)</label>
                             <input type="file" id="imo-file-picker" accept="image/*" multiple class="hidden" onchange="processarMultiplasFotos(this)">
-                            <button type="button" onclick="document.getElementById('imo-file-picker').click()" title="Anexar fotos" class="w-9 h-9 flex-none flex items-center justify-center bg-slate-800 text-white rounded-full shadow-sm text-base">📎</button>
+                            <button type="button" onclick="document.getElementById('imo-file-picker').click()" title="Anexar fotos" class="w-9 h-9 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
                         </div>
                         <div id="form-images-preview-container" class="grid grid-cols-5 gap-2 mt-2" style="grid-auto-rows: auto;"></div>
                     </div>
@@ -235,7 +235,7 @@
         <section id="tab-contratos" class="tab-content">
             <div class="flex items-center gap-3 mb-4">
                 <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 text-center flex-1">
-                    <p class="text-xs font-bold text-blue-900">Contratos: <span id="contratos-ativos-contador" class="text-sm font-black">0</span> ativos / <span id="contratos-totais-contador" class="text-sm font-black">0</span> cadastrados</p>
+                    <p class="text-xs font-bold text-blue-900">Contratos: <span id="contratos-ativos-contador" class="text-sm font-black text-green-700">0</span> ativos / <span id="contratos-suspensos-contador" class="text-sm font-black text-amber-700">0</span> suspensos / <span id="contratos-finalizados-contador" class="text-sm font-black text-red-700">0</span> finalizados / <span id="contratos-totais-contador" class="text-sm font-black">0</span> total</p>
                 </div>
                 <button onclick="abrirFormularioContrato()" class="offline-disable bg-green-600 text-white font-black text-xl w-11 h-11 rounded-full shadow flex items-center justify-center active:scale-90 transition flex-none" title="Cadastrar novo contrato">+</button>
             </div>
@@ -308,21 +308,21 @@
                         <input type="date" id="con-fim" required class="w-full p-2 border rounded mt-1 text-sm">
                     </div>
                 </div>
-                <div class="grid grid-cols-4 gap-2">
+                <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-4xs font-bold text-gray-600">Valor Vigente</label>
+                        <label class="block text-[11px] font-bold text-gray-600">Valor Vigente</label>
                         <input type="number" id="con-valor" required class="w-full p-1.5 border rounded mt-1 text-xs">
                     </div>
                     <div>
-                        <label class="block text-4xs font-bold text-gray-600">Valor Anterior</label>
+                        <label class="block text-[11px] font-bold text-gray-600">Valor Anterior</label>
                         <input type="number" id="con-valor-anterior" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
                     </div>
                     <div>
-                        <label class="block text-4xs font-bold text-gray-600">Desconto Vig.</label>
+                        <label class="block text-[11px] font-bold text-gray-600">Desconto Vig.</label>
                         <input type="number" id="con-desconto" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
                     </div>
                     <div>
-                        <label class="block text-4xs font-bold text-gray-600">Contrato IPTU</label>
+                        <label class="block text-[11px] font-bold text-gray-600">Contrato IPTU</label>
                         <div class="flex items-center gap-1">
                             <input type="number" id="con-iptu" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
                             <button type="button" onclick="acionarZapIptu()" title="Enviar código do IPTU para o locatário" class="mt-1 text-xs bg-green-50 border border-green-200 rounded px-1.5 py-1.5">💬</button>
@@ -358,29 +358,29 @@
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="block text-4xs font-bold text-gray-600">Desconto Energia (%)</label>
+                        <label class="block text-[11px] font-bold text-gray-600">Desconto Energia (%)</label>
                         <input type="number" id="con-desconto-energia" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
-                        <p class="text-4xs text-gray-400 mt-0.5">Sugerido automaticamente se o imóvel tem Energia Rumo.</p>
+                        <p class="text-[11px] text-gray-400 mt-0.5">Sugerido automaticamente se o imóvel tem Energia Rumo.</p>
                     </div>
                     <div>
-                        <label class="block text-4xs font-bold text-gray-600">Alteração vigente a partir de</label>
+                        <label class="block text-[11px] font-bold text-gray-600">Alteração vigente a partir de</label>
                         <input type="date" id="con-vigente-desde" class="w-full p-1.5 border rounded mt-1 text-xs">
-                        <p class="text-4xs text-gray-400 mt-0.5">Usado para ratear mensalidades quando um valor muda no meio de uma competência.</p>
+                        <p class="text-[11px] text-gray-400 mt-0.5">Usado para ratear mensalidades quando um valor muda no meio de uma competência.</p>
                     </div>
                 </div>
                 <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
                     <div class="flex items-center justify-between">
                         <label class="block text-xs font-bold text-gray-600">Documentos do Contrato (até 5)</label>
                         <input type="file" id="con-documentos-input" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="processarMultiplosDocumentos(this)" class="hidden">
-                        <button type="button" onclick="document.getElementById('con-documentos-input').click()" title="Anexar documentos" class="w-9 h-9 flex-none flex items-center justify-center bg-slate-800 text-white rounded-full shadow-sm text-base">📎</button>
+                        <button type="button" onclick="document.getElementById('con-documentos-input').click()" title="Anexar documentos" class="w-9 h-9 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
                     </div>
-                    <div id="con-documentos-preview" class="mt-2 space-y-1 text-3xs"></div>
+                    <div id="con-documentos-preview" class="mt-2 space-y-1 text-[11px]"></div>
                 </div>
                 <button type="submit" id="btn-salvar-con" class="w-full bg-green-600 text-white p-2.5 rounded-lg font-bold text-sm shadow">Firmar / Atualizar Contrato</button>
                 </form>
             </div>
 
-            <p id="banner-revisao-contratos" class="hidden bg-red-50 border border-red-200 text-red-700 text-2xs font-bold p-2 rounded-lg mb-3"></p>
+            <p id="banner-revisao-contratos" class="hidden bg-red-50 border border-red-200 text-red-700 text-[13px] font-bold p-2 rounded-lg mb-3"></p>
             <h2 class="text-lg font-bold mb-3 text-blue-900">Contratos de Locação Ativos</h2>
             <div id="lista-contratos" class="space-y-3 mb-6"></div>
         </section>
@@ -392,33 +392,34 @@
             </div>
 
             <div id="painel-gerar-mes" class="hidden bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3 offline-disable">
-                <div>
+                <div class="flex justify-between items-center">
                     <label class="block text-xs font-bold text-gray-600">Mês de Competência</label>
-                    <div class="flex gap-2 items-center mt-1">
-                        <select id="men-referencia" class="flex-1 p-2 border rounded text-sm bg-gray-50"></select>
-                        <button onclick="gerarMensalidades()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow">Gerar Mês</button>
-                    </div>
+                    <button type="button" onclick="alternarPainelGerarMes()" class="text-xs text-red-600 font-bold">✕ Fechar</button>
+                </div>
+                <div class="flex gap-2 items-center mt-1">
+                    <select id="men-referencia" class="flex-1 p-2 border rounded text-sm bg-gray-50"></select>
+                    <button onclick="gerarMensalidades()" class="bg-purple-600 text-white px-4 py-2 rounded-lg font-bold text-sm shadow">Gerar Mês</button>
                 </div>
             </div>
 
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200">
-                <span class="text-3xs font-bold uppercase text-slate-500 block mb-2">Filtrar Fila de Recebimentos</span>
+                <span class="text-[11px] font-bold uppercase text-slate-500 block mb-2">Filtrar Fila de Recebimentos</span>
                 <div class="grid grid-cols-3 gap-2">
                     <div>
-                        <label class="block text-4xs font-bold text-gray-500">Competência</label>
-                        <select id="men-filtro-competencia" onchange="renderMensalidades()" class="w-full p-1.5 border rounded text-2xs bg-gray-50">
+                        <label class="block text-[11px] font-bold text-gray-500">Competência</label>
+                        <select id="men-filtro-competencia" onchange="renderMensalidades()" class="w-full p-1.5 border rounded text-[13px] bg-gray-50">
                             <option value="todos">Todas</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-4xs font-bold text-gray-500">Locatário</label>
-                        <select id="men-filtro-locatario" onchange="renderMensalidades()" class="w-full p-1.5 border rounded text-2xs bg-gray-50">
+                        <label class="block text-[11px] font-bold text-gray-500">Locatário</label>
+                        <select id="men-filtro-locatario" onchange="renderMensalidades()" class="w-full p-1.5 border rounded text-[13px] bg-gray-50">
                             <option value="todos">Todos</option>
                         </select>
                     </div>
                     <div>
-                        <label class="block text-4xs font-bold text-gray-500">Imóvel</label>
-                        <select id="men-filtro-imovel" onchange="renderMensalidades()" class="w-full p-1.5 border rounded text-2xs bg-gray-50">
+                        <label class="block text-[11px] font-bold text-gray-500">Imóvel</label>
+                        <select id="men-filtro-imovel" onchange="renderMensalidades()" class="w-full p-1.5 border rounded text-[13px] bg-gray-50">
                             <option value="todos">Todos</option>
                         </select>
                     </div>
@@ -427,12 +428,12 @@
 
             <div class="grid grid-cols-2 gap-2 mb-4">
                 <div class="bg-blue-50 p-3 rounded-xl border border-blue-200">
-                    <span class="text-3xs font-bold uppercase text-blue-600">Total a Receber</span>
-                    <p class="text-md font-black text-blue-900 mt-0.5" id="totalizer-a-receber">R$ 0,00</p>
+                    <span class="text-[11px] font-bold uppercase text-blue-600">Total a Receber</span>
+                    <p class="text-base font-black text-blue-900 mt-0.5" id="totalizer-a-receber">R$ 0,00</p>
                 </div>
                 <div class="bg-green-50 p-3 rounded-xl border border-green-200">
-                    <span class="text-3xs font-bold uppercase text-green-600">Total Recebido</span>
-                    <p class="text-md font-black text-green-900 mt-0.5" id="totalizer-recebido">R$ 0,00</p>
+                    <span class="text-[11px] font-bold uppercase text-green-600">Total Recebido</span>
+                    <p class="text-base font-black text-green-900 mt-0.5" id="totalizer-recebido">R$ 0,00</p>
                 </div>
             </div>
             <h2 class="text-lg font-bold mb-2 text-blue-900">Fila de Recebimentos</h2>
@@ -453,36 +454,36 @@
                 </div>
                 <div class="grid grid-cols-2 gap-2 pt-1 border-t border-gray-100">
                     <div>
-                        <label class="font-bold text-gray-400 text-3xs uppercase">Mês de Referência</label>
+                        <label class="font-bold text-gray-400 text-[11px] uppercase">Mês de Referência</label>
                         <select id="inad-filtro-mes" onchange="renderInadimplencia()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
                     </div>
                     <div>
-                        <label class="font-bold text-gray-400 text-3xs uppercase">Locatário / Inquilino</label>
+                        <label class="font-bold text-gray-400 text-[11px] uppercase">Locatário / Inquilino</label>
                         <select id="inad-filtro-alvo" onchange="renderInadimplencia()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
                     </div>
                 </div>
             </div>
             <div class="grid grid-cols-2 gap-2 mb-4">
                 <div class="bg-red-50 p-3 rounded-lg border border-red-200">
-                    <span class="text-2xs font-bold uppercase text-red-600">Total em Aberto</span>
+                    <span class="text-[13px] font-bold uppercase text-red-600">Total em Aberto</span>
                     <p class="text-xl font-black text-red-700 mt-1" id="inad-total-geral">R$ 0</p>
                 </div>
                 <div class="bg-amber-50 p-3 rounded-lg border border-amber-200">
-                    <span class="text-2xs font-bold uppercase text-amber-600">Taxa Inadimplência</span>
+                    <span class="text-[13px] font-bold uppercase text-amber-600">Taxa Inadimplência</span>
                     <p class="text-xl font-black text-amber-700 mt-1" id="inad-taxa">0%</p>
                 </div>
             </div>
-            <p id="inad-energia-recebida" class="hidden bg-yellow-50 border border-yellow-200 text-yellow-800 text-2xs font-bold p-2 rounded-lg mb-4"></p>
+            <p id="inad-energia-recebida" class="hidden bg-yellow-50 border border-yellow-200 text-yellow-800 text-[13px] font-bold p-2 rounded-lg mb-4"></p>
             <div id="lista-inadimplencia" class="space-y-3"></div>
         </section>
         <!-- ================= ABA: VITRINE (SHOWCASE) ================= -->
         <section id="tab-vitrine" class="tab-content">
             <h2 class="text-lg font-bold text-slate-900 mb-3">Vitrine Imobiliária</h2>
-            <p class="text-3xs text-gray-500 mb-3">Selecione os imóveis do portfólio para criar um card de divulgação customizado e compartilhá-lo via link ou WhatsApp.</p>
+            <p class="text-[11px] text-gray-500 mb-3">Selecione os imóveis do portfólio para criar um card de divulgação customizado e compartilhá-lo via link ou WhatsApp.</p>
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-2 text-xs">
                 <div class="grid grid-cols-2 gap-2">
                     <div>
-                        <label class="font-bold text-gray-500 text-4xs uppercase">Empreendimento</label>
+                        <label class="font-bold text-gray-500 text-[11px] uppercase">Empreendimento</label>
                         <select id="vitrine-filtro-emp" onchange="renderVitrine()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
                             <option value="todos">Todos</option>
                             <option value="Canaã">Canaã</option>
@@ -494,7 +495,7 @@
                         </select>
                     </div>
                     <div>
-                        <label class="font-bold text-gray-500 text-4xs uppercase">Status</label>
+                        <label class="font-bold text-gray-500 text-[11px] uppercase">Status</label>
                         <select id="vitrine-filtro-status" onchange="renderVitrine()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
                             <option value="todos">Todos</option>
                             <option value="Vago">Apenas Vagos</option>
@@ -526,20 +527,20 @@
             <div id="capture-relatorios-pdf" class="bg-transparent p-1">
                 <div class="grid grid-cols-2 gap-3">
                     <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500">
-                        <p class="text-2xs text-gray-500 font-bold uppercase">Ocupação</p>
+                        <p class="text-[13px] text-gray-500 font-bold uppercase">Ocupação</p>
                         <p class="text-xl font-black text-slate-900 mt-1" id="rel-taxa">0%</p>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-500">
-                        <p class="text-2xs text-gray-500 font-bold uppercase">Recebido</p>
+                        <p class="text-[13px] text-gray-500 font-bold uppercase">Recebido</p>
                         <p class="text-lg font-black text-green-700 mt-1" id="rel-faturamento">R$ 0</p>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow border-l-4 border-purple-500">
-                        <p class="text-2xs text-gray-500 font-bold uppercase">Potencial</p>
+                        <p class="text-[13px] text-gray-500 font-bold uppercase">Potencial</p>
                         <p class="text-lg font-black text-purple-700 mt-1" id="rel-potencial">R$ 0</p>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow border-l-4 border-gray-400">
-                        <p class="text-2xs text-gray-500 font-bold uppercase">Imóveis</p>
-                        <p class="text-2xs font-semibold text-slate-700 mt-2" id="rel-contagem">-</p>
+                        <p class="text-[13px] text-gray-500 font-bold uppercase">Imóveis</p>
+                        <p class="text-[13px] font-semibold text-slate-700 mt-2" id="rel-contagem">-</p>
                     </div>
                 </div>
             </div>
@@ -554,15 +555,15 @@
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-2 text-xs">
                 <div class="grid grid-cols-3 gap-1">
                     <div>
-                        <label class="font-bold text-gray-500 text-4xs uppercase">Sócio</label>
+                        <label class="font-bold text-gray-500 text-[11px] uppercase">Sócio</label>
                         <select id="socio-filtro-nome" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
                     </div>
                     <div>
-                        <label class="font-bold text-gray-500 text-4xs uppercase">Mês Ref</label>
+                        <label class="font-bold text-gray-500 text-[11px] uppercase">Mês Ref</label>
                         <select id="socio-filtro-mes" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
                     </div>
                     <div>
-                        <label class="font-bold text-gray-500 text-4xs uppercase">Ano Civil</label>
+                        <label class="font-bold text-gray-500 text-[11px] uppercase">Ano Civil</label>
                         <select id="socio-filtro-ano" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
                             <option value="todos">Todos</option>
                             <option value="2026">2026</option>
@@ -571,7 +572,7 @@
                         </select>
                     </div>
                 </div>
-                <button onclick="exportarRelatorioSocioPDF()" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-2xs py-2 rounded-lg shadow transition active:scale-95">
+                <button onclick="exportarRelatorioSocioPDF()" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[13px] py-2 rounded-lg shadow transition active:scale-95">
                     📄 Exportar Extrato Sócio PDF
                 </button>
             </div>
@@ -593,19 +594,19 @@
         <!-- ================= ABA OCULTA: DEVELOPER CENTRALLOG ================= -->
         <section id="tab-developer" class="tab-content">
             <h2 class="text-lg font-bold mb-3 text-red-500">⚙️ Central do Desenvolvedor</h2>
-            <p class="text-3xs text-gray-500 mb-4">Aba de depuração ativada. Use as ferramentas abaixo para monitorar a gravação de contratos e a integridade do banco.</p>
+            <p class="text-[11px] text-gray-500 mb-4">Aba de depuração ativada. Use as ferramentas abaixo para monitorar a gravação de contratos e a integridade do banco.</p>
             <div class="flex gap-2 mb-4">
                 <button onclick="copiarLogsDoDesenvolvedor()" class="flex-1 bg-red-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition">📋 Copiar Logs de Erro</button>
                 <button onclick="limparLogsDoDesenvolvedor()" class="bg-slate-800 text-slate-300 font-bold text-xs py-2.5 px-4 rounded-lg border border-slate-700 active:scale-95 transition">Limpar</button>
             </div>
-            <div class="bg-slate-955 p-4 rounded-xl border border-slate-800 text-slate-300 font-mono text-3xs space-y-2 max-h-96 overflow-y-auto" id="dev-detailed-log-box">
+            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-slate-300 font-mono text-[11px] space-y-2 max-h-96 overflow-y-auto" id="dev-detailed-log-box">
                 <p class="text-red-400">// Central de Logs activa. Iniciando captura de escopos...</p>
             </div>
             <!-- Console de diagnóstico bruto — movido para cá (antes ficava visível na aba Imóveis) -->
-            <div class="bg-slate-955 text-green-400 p-3 rounded-xl font-mono text-3xs mt-4 border border-slate-800 shadow-inner">
+            <div class="bg-slate-950 text-green-400 p-3 rounded-xl font-mono text-[11px] mt-4 border border-slate-800 shadow-inner">
                 <div class="flex justify-between items-center border-b border-slate-800 pb-1.5 mb-1.5">
                     <span class="font-bold text-blue-400">⚡ CONSOLE DE DIAGNÓSTICO RUMO</span>
-                    <button onclick="limparLogsTela()" class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded text-4xs hover:bg-slate-700">Limpar</button>
+                    <button onclick="limparLogsTela()" class="bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded text-[11px] hover:bg-slate-700">Limpar</button>
                 </div>
                 <div id="system-diagnostic-logs" class="max-h-36 overflow-y-auto space-y-1">
                     <p class="text-slate-500">// Aguardando inicialização do sistema...</p>
@@ -619,7 +620,7 @@
             <div class="flex justify-between items-center pb-2 border-b border-slate-800">
                 <div>
                     <h3 class="text-sm font-black text-blue-400 uppercase tracking-wide">Recibo de Aluguel</h3>
-                    <p class="text-4xs text-slate-400 mt-0.5" id="modal-subtitulo-info">-</p>
+                    <p class="text-[11px] text-slate-400 mt-0.5" id="modal-subtitulo-info">-</p>
                 </div>
                 <button onclick="fecharModalOpcoes()" class="text-slate-400 hover:text-white font-bold text-sm bg-slate-900 w-7 h-7 rounded-full flex items-center justify-center transition active:scale-90">✕</button>
             </div>
@@ -632,10 +633,10 @@
                     📥 Gerar e Baixar PDF Oficial
                 </button>
                 <div class="pt-2 border-t border-slate-900 grid grid-cols-2 gap-2">
-                    <button onclick="dispararAcaoDoMenu('zap')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-2xs py-2.5 rounded-xl flex items-center justify-center gap-1 transition active:scale-95 shadow">
+                    <button onclick="dispararAcaoDoMenu('zap')" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-[13px] py-2.5 rounded-xl flex items-center justify-center gap-1 transition active:scale-95 shadow">
                         🟢 WhatsApp
                     </button>
-                    <button onclick="dispararAcaoDoMenu('email')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-2xs py-2.5 rounded-xl border border-slate-700 flex items-center justify-center gap-1 transition active:scale-95 shadow">
+                    <button onclick="dispararAcaoDoMenu('email')" class="bg-slate-800 hover:bg-slate-700 text-slate-300 font-bold text-[13px] py-2.5 rounded-xl border border-slate-700 flex items-center justify-center gap-1 transition active:scale-95 shadow">
                         🔵 E-mail
                     </button>
                 </div>
@@ -644,7 +645,7 @@
     </div>
     <!-- ================= CONTÊINER DE VISUALIZAÇÃO DO RECIBO ================= -->
     <div id="pdf-wrapper" class="hidden fixed inset-0 bg-slate-900/90 z-100 flex flex-col p-4 overflow-y-auto">
-        <div class="flex justify-between items-center p-3 bg-slate-955 text-white rounded-t-xl max-w-lg mx-auto w-full border-b border-slate-800 shadow-lg">
+        <div class="flex justify-between items-center p-3 bg-slate-950 text-white rounded-t-xl max-w-lg mx-auto w-full border-b border-slate-800 shadow-lg">
             <span class="text-xs font-black text-blue-400">🔍 VISUALIZANDO RECIBO</span>
             <button onclick="fecharPreviewPdfOnly()" class="bg-red-600 hover:bg-red-500 text-white font-bold text-xs px-3 py-1.5 rounded shadow transition active:scale-95">Voltar</button>
         </div>
@@ -713,7 +714,7 @@
             
             if(objectPayload) {
                 try {
-                    payloadStr = `<pre class="bg-slate-900 p-1.5 rounded text-4xs mt-1 border border-slate-800 text-amber-400 overflow-x-auto">${JSON.stringify(objectPayload, null, 2)}</pre>`;
+                    payloadStr = `<pre class="bg-slate-900 p-1.5 rounded text-[11px] mt-1 border border-slate-800 text-amber-400 overflow-x-auto">${JSON.stringify(objectPayload, null, 2)}</pre>`;
                 } catch(e) {
                     payloadStr = `<span class="text-red-500">[Falha stringify: ${e.message}]</span>`;
                 }
@@ -721,7 +722,7 @@
             const entryHtml = `
                 <div class="border-b border-slate-900 pb-1.5">
                     <span class="text-red-400 font-bold">[${time}]</span> 
-                    <span class="bg-slate-800 text-slate-100 px-1 py-0.2 rounded font-black text-4xs uppercase tracking-wider">${origin}</span> 
+                    <span class="bg-slate-800 text-slate-100 px-1 py-0.2 rounded font-black text-[11px] uppercase tracking-wider">${origin}</span> 
                     <span class="text-slate-200 ml-1">${message}</span>
                     ${payloadStr}
                 </div>
@@ -740,7 +741,7 @@
         function agendarCliqueLogo() {
             if (timerCliqueLogo) clearTimeout(timerCliqueLogo);
             timerCliqueLogo = setTimeout(() => {
-                switchTab('tab-imoveis');
+                voltarParaSplash();
                 window.scrollTo({top: 0, behavior: 'smooth'});
                 timerCliqueLogo = null;
             }, 250);
@@ -1117,37 +1118,63 @@
         async function processarMultiplasFotos(inputElement) {
             const files = inputElement.files;
             if (!files || files.length === 0) return;
-            fotosCarregadasBase64 = [];
+
+            const vagas = 10 - fotosCarregadasBase64.length;
+            if (vagas <= 0) {
+                alert("⚠️ Você já tem 10 fotos anexadas (o máximo). Remova alguma antes de adicionar novas.");
+                inputElement.value = '';
+                return;
+            }
+            const count = Math.min(files.length, vagas);
+            if (files.length > vagas) {
+                alert(`⚠️ Só há espaço para mais ${vagas} foto(s) (máximo de 10 no total). As ${count} primeira(s) selecionada(s) serão usadas.`);
+            }
+
             const previewContainer = document.getElementById('form-images-preview-container');
-            previewContainer.innerHTML = '<p class="text-4xs text-slate-400 col-span-5">🔄 Processando imagens...</p>';
-            const count = Math.min(files.length, 10);
-            if (files.length > 10) {
-                alert("⚠️ Máximo de 10 fotos por imóvel. Apenas as 10 primeiras selecionadas serão usadas.");
+            previewContainer.innerHTML += '<p class="text-[11px] text-slate-400 col-span-5" id="msg-processando-fotos">🔄 Processando imagens...</p>';
+
+            // Usamos allSettled em vez de all: se UMA foto falhar ao comprimir
+            // (arquivo corrompido, formato inesperado), as demais continuam
+            // funcionando normalmente em vez de travar o lote inteiro com erro.
+            const promessas = [];
+            for (let i = 0; i < count; i++) {
+                promessas.push(comprimirImagem(files[i]));
             }
-            try {
-                const promessas = [];
-                for (let i = 0; i < count; i++) {
-                    promessas.push(comprimirImagem(files[i]));
+            const resultados = await Promise.allSettled(promessas);
+
+            const msgProcessando = document.getElementById('msg-processando-fotos');
+            if (msgProcessando) msgProcessando.remove();
+
+            let falhas = 0;
+            resultados.forEach(r => {
+                if (r.status === 'fulfilled') {
+                    fotosCarregadasBase64.push(r.value);
+                } else {
+                    falhas++;
+                    devLog("ERRO_FOTOS", `Falha ao comprimir uma foto: ${r.reason && r.reason.message}`);
                 }
-                const resultados = await Promise.all(promessas);
-                fotosCarregadasBase64 = resultados;
-                previewContainer.innerHTML = '';
-                // Referenciamos a variável global fotosCarregadasBase64 diretamente no
-                // onclick (sem JSON.stringify) — embutir o array inteiro em base64 no
-                // atributo HTML de cada miniatura sobrecarregava o DOM e travava o clique.
-                resultados.forEach((base64Data, idxFoto) => {
-                    previewContainer.innerHTML += `
-                        <div class="relative">
-                            <img src="${base64Data}" onclick="abrirLightboxGeral(fotosCarregadasBase64, ${idxFoto})" class="w-10 h-10 object-cover rounded border cursor-pointer active:scale-90 transition">
-                        </div>
-                    `;
-                });
-                devLog("FOTOS", `${resultados.length} foto(s) comprimida(s) e prontas para envio.`);
-            } catch (err) {
-                previewContainer.innerHTML = '<p class="text-4xs text-red-500 col-span-5">⚠️ Falha ao processar imagens.</p>';
-                devLog("ERRO_FOTOS", `Falha ao comprimir imagens: ${err.message}`);
-                alert("⚠️ Não foi possível processar uma ou mais fotos. Tente novamente com outras imagens.");
+            });
+
+            if (falhas > 0) {
+                alert(`⚠️ ${falhas} foto(s) não puderam ser processadas e foram ignoradas. As demais foram anexadas normalmente.`);
             }
+
+            renderPreviewFotosImovel();
+            inputElement.value = ''; // permite escolher o mesmo arquivo de novo, se quiser
+            devLog("FOTOS", `Total de fotos anexadas agora: ${fotosCarregadasBase64.length}.`);
+        }
+        function renderPreviewFotosImovel() {
+            const previewContainer = document.getElementById('form-images-preview-container');
+            previewContainer.innerHTML = fotosCarregadasBase64.map((base64Data, idxFoto) => `
+                <div class="relative">
+                    <img src="${base64Data}" onclick="abrirLightboxGeral(fotosCarregadasBase64, ${idxFoto})" class="w-10 h-10 object-cover rounded border cursor-pointer active:scale-90 transition">
+                    <button type="button" onclick="removerFotoImovel(${idxFoto})" title="Remover" class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-600 text-white rounded-full text-[11px] font-bold flex items-center justify-center leading-none">✕</button>
+                </div>
+            `).join('');
+        }
+        function removerFotoImovel(idx) {
+            fotosCarregadasBase64.splice(idx, 1);
+            renderPreviewFotosImovel();
         }
         function obterNomeUsuarioLocal() {
             let nome = localStorage.getItem('rumo_usuario_nome');
@@ -1711,17 +1738,8 @@
             document.getElementById('imo-energia-rumo').value = imo.energiaRumo || 'Não';
             document.getElementById('imo-valor').value = imo.valor;
             
-            const previewContainer = document.getElementById('form-images-preview-container');
-            previewContainer.innerHTML = '';
             fotosCarregadasBase64 = imo.fotos || [];
-            
-            fotosCarregadasBase64.forEach(foto => {
-                previewContainer.innerHTML += `
-                    <div class="relative">
-                        <img src="${foto}" class="w-14 h-14 object-cover rounded border shadow-sm">
-                    </div>
-                `;
-            });
+            renderPreviewFotosImovel();
             sociosAdicionais = [];
             let pctRuyterEdicao = 100;
             if(imo.divisao) {
@@ -1805,6 +1823,8 @@
             
             logScreen(`Disparada renderImoveis(). Array possui ${imoveis.length} registros em memória.`);
             document.getElementById('total-imoveis-contador').innerText = imoveis.length;
+            document.getElementById('imoveis-vagos-contador').innerText = imoveis.filter(i => i.status === 'Vago').length;
+            document.getElementById('imoveis-alugados-contador').innerText = imoveis.filter(i => i.status === 'Alugado').length;
             const selectCon = document.getElementById('con-imovel');
             const selConVal = selectCon ? selectCon.value : '';
             if(selectCon) selectCon.innerHTML = '<option value="">-- Escolha o Imóvel --</option>';
@@ -1831,19 +1851,19 @@
                         ftHtml += '</div>';
                     }
                     const endExibivel = `${imo.enderecoRua || ''}, ${imo.enderecoNum || ''} ${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}, ${imo.enderecoBairro || ''}, ${imo.enderecoCidade || ''}`;
-                    const badgeEnergia = imo.energiaRumo === 'Sim' ? `<span class="text-4xs font-bold px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800 ml-1">⚡</span>` : '';
+                    const badgeEnergia = imo.energiaRumo === 'Sim' ? `<span class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800 ml-1">⚡</span>` : '';
                     const btnManutencao = imo.manutencaoZap ? `<button onclick="acionarManutencaoWhatsApp('${imo.manutencaoZap}', '${(imo.manutencaoNome || '').replace(/'/g, "")}', '${(imo.empreendimento || '').replace(/'/g, "")}', '${endExibivel.replace(/'/g, "")}')" title="Chamar Manutenção" class="w-7 h-7 flex items-center justify-center bg-green-50 text-green-700 rounded-full border border-green-200 text-xs">🔧</button>` : '';
                     const linha2 = `${endExibivel}${imo.descricao ? ' — ' + imo.descricao : ''}`;
                     container.innerHTML += `
                         <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
                             <div class="flex justify-between items-start gap-2">
                                 <p class="text-xs font-bold text-blue-900 truncate min-w-0">
-                                    <span class="text-3xs font-bold px-1.5 py-0.5 rounded ${imo.status==='Vago'?'bg-amber-100 text-amber-800':'bg-green-100 text-green-800'}">${imo.status}</span>
+                                    <span class="text-[11px] font-bold px-1.5 py-0.5 rounded ${imo.status==='Vago'?'bg-amber-100 text-amber-800':'bg-green-100 text-green-800'}">${imo.status}</span>
                                     ${imo.empreendimento || 'Canaã'} · ${imo.tipo}${badgeEnergia}
                                 </p>
                                 <span class="text-sm font-black text-slate-900 flex-none">R$ ${imo.valor}</span>
                             </div>
-                            <p class="text-2xs text-slate-600 truncate mt-1">${linha2}</p>
+                            <p class="text-[13px] text-slate-600 truncate mt-1">${linha2}</p>
                             ${ftHtml}
                             <div class="mt-2 flex gap-1.5 flex-wrap items-center">
                                 <button onclick="editarImovel('${imo.id}')" title="Editar" class="w-7 h-7 flex items-center justify-center bg-blue-50 text-blue-700 rounded-full border border-blue-200 text-xs">📝</button>
@@ -1907,16 +1927,23 @@
         function processarMultiplosDocumentos(inputElement) {
             const files = inputElement.files;
             if (!files || files.length === 0) return;
-            const previewContainer = document.getElementById('con-documentos-preview');
 
-            const count = Math.min(files.length, 5);
-            if (files.length > 5) {
-                alert("⚠️ Máximo de 5 documentos por contrato. Apenas os 5 primeiros serão usados.");
+            const vagas = 5 - documentosCarregadosContrato.length;
+            if (vagas <= 0) {
+                alert("⚠️ Você já tem 5 documentos anexados (o máximo). Remova algum antes de adicionar novos.");
+                inputElement.value = '';
+                return;
             }
-            documentosCarregadosContrato = [];
-            previewContainer.innerHTML = '<p class="text-gray-400">🔄 Processando documentos...</p>';
+            const count = Math.min(files.length, vagas);
+            if (files.length > vagas) {
+                alert(`⚠️ Só há espaço para mais ${vagas} documento(s) (máximo de 5 no total). Os ${count} primeiro(s) selecionado(s) serão usados.`);
+            }
+
+            const previewContainer = document.getElementById('con-documentos-preview');
+            previewContainer.innerHTML += '<p class="text-gray-400" id="msg-processando-docs">🔄 Processando documentos...</p>';
 
             let processados = 0;
+            let falhas = 0;
             for (let i = 0; i < count; i++) {
                 const file = files[i];
                 const reader = new FileReader();
@@ -1924,15 +1951,45 @@
                     documentosCarregadosContrato.push({ nome: file.name, base64: e.target.result });
                     processados++;
                     if (processados === count) {
-                        previewContainer.innerHTML = documentosCarregadosContrato.map(d => `<p class="text-slate-600">📎 ${d.nome}</p>`).join('');
+                        const msg = document.getElementById('msg-processando-docs');
+                        if (msg) msg.remove();
+                        renderPreviewDocumentosContrato();
+                        if (falhas > 0) alert(`⚠️ ${falhas} documento(s) não puderam ser processados.`);
                     }
                 };
                 reader.onerror = function() {
                     processados++;
+                    falhas++;
                     devLog("ERRO_DOCUMENTOS", `Falha ao ler o arquivo ${file.name}.`);
+                    if (processados === count) {
+                        const msg = document.getElementById('msg-processando-docs');
+                        if (msg) msg.remove();
+                        renderPreviewDocumentosContrato();
+                        alert(`⚠️ ${falhas} documento(s) não puderam ser processados.`);
+                    }
                 };
                 reader.readAsDataURL(file);
             }
+            inputElement.value = ''; // permite escolher o mesmo arquivo de novo, se quiser
+        }
+        function renderPreviewDocumentosContrato() {
+            const previewContainer = document.getElementById('con-documentos-preview');
+            previewContainer.innerHTML = documentosCarregadosContrato.map((d, idx) => {
+                const nome = d.nome || (typeof d === 'string' ? 'Documento anexado' : 'Documento');
+                // Documentos ainda não salvos (base64) abrem numa nova aba a partir do
+                // próprio dado local; documentos já salvos (link do Drive) abrem pelo link.
+                const linkAbrir = typeof d === 'string' ? d : d.base64;
+                return `
+                    <div class="flex items-center justify-between bg-white border rounded px-2 py-1">
+                        <a href="${linkAbrir}" target="_blank" class="text-slate-700 underline truncate flex-1">📎 ${nome}</a>
+                        <button type="button" onclick="removerDocumentoContrato(${idx})" title="Remover" class="ml-2 text-red-600 font-bold text-[11px] flex-none">✕</button>
+                    </div>
+                `;
+            }).join('');
+        }
+        function removerDocumentoContrato(idx) {
+            documentosCarregadosContrato.splice(idx, 1);
+            renderPreviewDocumentosContrato();
         }
         function saveContrato(e) {
             e.preventDefault();
@@ -2073,16 +2130,7 @@
             document.getElementById('con-desconto-energia').value = con.descontoEnergia || 0;
             document.getElementById('con-vigente-desde').value = '';
             documentosCarregadosContrato = con.anexos || [];
-            const previewDocs = document.getElementById('con-documentos-preview');
-            previewDocs.innerHTML = documentosCarregadosContrato.length > 0
-                ? documentosCarregadosContrato.map(d => {
-                    const nome = d.nome || (typeof d === 'string' ? 'Documento anexado' : 'Documento');
-                    const link = typeof d === 'string' ? d : null;
-                    return link
-                        ? `<p class="text-slate-600">📎 <a href="${link}" target="_blank" class="underline">${nome}</a></p>`
-                        : `<p class="text-slate-600">📎 ${nome}</p>`;
-                }).join('')
-                : '';
+            renderPreviewDocumentosContrato();
             document.getElementById('form-contrato-titulo').innerText = "Renovar / Editar Contrato 📝";
             document.getElementById('form-contrato-wrapper').classList.remove('hidden');
             window.scrollTo({top: 0, behavior: 'smooth'});
@@ -2115,6 +2163,8 @@
             
             const ativos = contratos.filter(c => c.status === 'Ativo').length;
             document.getElementById('contratos-ativos-contador').innerText = ativos;
+            document.getElementById('contratos-suspensos-contador').innerText = contratos.filter(c => c.status === 'Suspenso').length;
+            document.getElementById('contratos-finalizados-contador').innerText = contratos.filter(c => c.status === 'Finalizado').length;
             document.getElementById('contratos-totais-contador').innerText = contratos.length;
 
             const pendentesRevisao = contratos.filter(contratoPrecisaRevisao).length;
@@ -2128,17 +2178,17 @@
                 const imo = imoveis.find(i => i.id === con.imovelId);
                 const precisaRevisao = contratoPrecisaRevisao(con);
                 const alertaTriangulo = precisaRevisao ? `<span title="Sem revisão há mais de 12 meses" class="text-red-600">🔺</span>` : '';
-                const linha2 = `${imo ? imo.empreendimento : '-'} · Vig: ${con.inicio} a ${con.fim} · Venc. dia ${con.vencimentoDia || 15}${con.formaPagamento ? ' · ' + con.formaPagamento : ''}`;
+                const linha2 = `${imo ? imo.empreendimento : '-'} · Vig: ${formatarDataBR(con.inicio)} a ${formatarDataBR(con.fim)} · Venc. dia ${con.vencimentoDia || 15}${con.formaPagamento ? ' · ' + con.formaPagamento : ''}`;
                 container.innerHTML += `
                     <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
                         <div class="flex justify-between items-start gap-2">
                             <p class="text-xs font-bold text-slate-900 truncate min-w-0">${alertaTriangulo} 👤 ${con.locatario}</p>
                             <span class="text-sm font-black flex-none ${con.status === 'Ativo'?'text-green-700':'text-red-600'}">R$ ${con.valor}</span>
                         </div>
-                        <p class="text-2xs text-gray-500 truncate mt-1">${linha2}</p>
+                        <p class="text-[13px] text-gray-500 truncate mt-1">${linha2}</p>
                         <div class="flex gap-1.5 mt-2 flex-wrap items-center">
                             <button onclick="editarContrato('${con.id}')" title="Reajustar / Renovar" class="w-7 h-7 flex items-center justify-center bg-blue-50 text-blue-700 rounded-full border border-blue-200 text-xs">📝</button>
-                            <button onclick="verHistoricoContrato('${con.id}')" title="Histórico" class="text-3xs bg-slate-50 text-slate-700 border border-slate-300 px-2 py-1 rounded-full font-bold">🕒 ${(con.historico || []).length}</button>
+                            <button onclick="verHistoricoContrato('${con.id}')" title="Histórico" class="text-[11px] bg-slate-50 text-slate-700 border border-slate-300 px-2 py-1 rounded-full font-bold">🕒 ${(con.historico || []).length}</button>
                             <button onclick="excluirContrato('${con.id}')" title="Excluir" class="w-7 h-7 flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-xs">🗑️</button>
                         </div>
                     </div>
@@ -2413,57 +2463,57 @@
                     container.innerHTML += `
                         <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-amber-500 space-y-2">
                             <div class="flex justify-between items-start">
-                                <div><p class="text-xs font-bold text-slate-900">${con.locatario}</p><p class="text-3xs text-gray-500">Ref: ${men.referencia}</p></div>
+                                <div><p class="text-xs font-bold text-slate-900">${con.locatario}</p><p class="text-[11px] text-gray-500">Ref: ${men.referencia}</p></div>
                                 <div class="flex items-center gap-1">
-                                    <span class="bg-amber-100 text-amber-800 text-3xs px-2 py-0.5 rounded font-black">Pendente</span>
-                                    <button onclick="excluirLancamentoMensal('${men.id}')" title="Excluir lançamento" class="w-6 h-6 flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-3xs">🗑️</button>
+                                    <span class="bg-amber-100 text-amber-800 text-[11px] px-2 py-0.5 rounded font-black">Pendente</span>
+                                    <button onclick="excluirLancamentoMensal('${men.id}')" title="Excluir lançamento" class="w-6 h-6 flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-[11px]">🗑️</button>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-1 text-2xs">
+                            <div class="grid grid-cols-2 gap-1 text-[13px]">
                                 <div>
-                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Forma de Recebimento</label>
+                                    <label class="block text-[11px] font-bold text-gray-400 uppercase">Forma de Recebimento</label>
                                     <select id="banco-${men.id}" class="w-full border p-1 rounded bg-gray-50"><option value="PIX">PIX</option><option value="Boleto">Boleto</option><option value="Depósito">Depósito</option></select>
                                 </div>
                                 <div>
-                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Dia Recebimento</label>
+                                    <label class="block text-[11px] font-bold text-gray-400 uppercase">Dia Recebimento</label>
                                     <input type="date" id="data-${men.id}" value="${dataPadraoVenc}" class="w-full border p-0.5 rounded bg-gray-50 text-center">
                                 </div>
                             </div>
-                            <div class="grid grid-cols-2 gap-1 text-2xs">
+                            <div class="grid grid-cols-2 gap-1 text-[13px]">
                                 <div>
-                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Valor Efetivo (R$)</label>
+                                    <label class="block text-[11px] font-bold text-gray-400 uppercase">Valor Efetivo (R$)</label>
                                     <input type="number" id="valor-${men.id}" value="${men.valorConfirmado}" class="w-full border p-1 rounded bg-gray-50 font-bold text-blue-900">
                                 </div>
                                 <div>
-                                    <label class="block text-4xs font-bold text-gray-400 uppercase">Observações Internas</label>
+                                    <label class="block text-[11px] font-bold text-gray-400 uppercase">Observações Internas</label>
                                     <input type="text" id="obs-${men.id}" placeholder="Ex: Desconto" class="w-full border p-1 rounded bg-gray-50">
                                 </div>
                             </div>
                             ${imoveis.find(i => i.id === con.imovelId)?.energiaRumo === 'Sim' ? `
                             <div>
-                                <label class="block text-4xs font-bold text-yellow-700 uppercase">⚡ Valor Energia (R$) — controle interno, não entra no recibo</label>
-                                <input type="number" id="energia-${men.id}" value="0" class="w-full border border-yellow-300 p-1 rounded bg-yellow-50 font-bold text-yellow-800 text-2xs">
+                                <label class="block text-[11px] font-bold text-yellow-700 uppercase">⚡ Valor Energia (R$) — controle interno, não entra no recibo</label>
+                                <input type="number" id="energia-${men.id}" value="0" class="w-full border border-yellow-300 p-1 rounded bg-yellow-50 font-bold text-yellow-800 text-[13px]">
                             </div>` : ''}
-                            <button onclick="liquidarMensalidade('${men.id}')" class="w-full bg-emerald-600 text-white text-2xs py-1.5 rounded font-bold shadow ${isOffline ? 'opacity-50 pointer-events-none' : ''}">Dar Baixa</button>
+                            <button onclick="liquidarMensalidade('${men.id}')" class="w-full bg-emerald-600 text-white text-[13px] py-1.5 rounded font-bold shadow ${isOffline ? 'opacity-50 pointer-events-none' : ''}">Dar Baixa</button>
                         </div>`;
                 } else {
                     totalRecebido += men.valorConfirmado;
-                    const log = men.envioLog ? `<p class="text-4xs text-blue-955 font-semibold">📬 Log: Notificado via ${men.envioLog.canal} (${men.envioLog.data})</p>` : `<p class="text-4xs text-gray-400">⚠️ Envio pendente</p>`;
-                    const txtObs = men.observacao ? `<p class="text-4xs text-amber-800 italic bg-amber-50 p-1 rounded mt-1">📝 Obs: ${men.observacao}</p>` : '';
-                    const txtEnergia = men.valorEnergia > 0 ? `<p class="text-4xs text-yellow-700 font-semibold">⚡ Energia (controle interno, fora do recibo): R$ ${men.valorEnergia.toFixed(2)}</p>` : '';
+                    const log = men.envioLog ? `<p class="text-[11px] text-blue-900 font-semibold">📬 Log: Notificado via ${men.envioLog.canal} (${men.envioLog.data})</p>` : `<p class="text-[11px] text-gray-400">⚠️ Envio pendente</p>`;
+                    const txtObs = men.observacao ? `<p class="text-[11px] text-amber-800 italic bg-amber-50 p-1 rounded mt-1">📝 Obs: ${men.observacao}</p>` : '';
+                    const txtEnergia = men.valorEnergia > 0 ? `<p class="text-[11px] text-yellow-700 font-semibold">⚡ Energia (controle interno, fora do recibo): R$ ${men.valorEnergia.toFixed(2)}</p>` : '';
                     container.innerHTML += `
                         <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-green-500">
                             <div class="flex justify-between items-center">
                                 <div>
                                     <p class="text-xs font-bold text-gray-900">${con.locatario}</p>
-                                    <p class="text-3xs text-gray-500">Ref: ${men.referencia} | R$ ${men.valorConfirmado.toFixed(2)} (${men.banco} - ${formatarDataBR(men.dataPgto)})</p>
+                                    <p class="text-[11px] text-gray-500">Ref: ${men.referencia} | R$ ${men.valorConfirmado.toFixed(2)} (${men.banco} - ${formatarDataBR(men.dataPgto)})</p>
                                     ${log}
                                     ${txtObs}
                                     ${txtEnergia}
                                 </div>
                                 <div class="flex flex-col gap-1">
-                                    <button onclick="abrirModalOpcoesRecibo('${men.id}', '${con.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-3xs px-3 py-2 rounded font-bold shadow transition active:scale-95">📄 Recibo</button>
-                                    <button onclick="estornarMensalidade('${men.id}')" class="bg-red-50 text-red-600 border border-red-200 text-4xs px-2 py-0.5 rounded font-medium ${isOffline ? 'opacity-50 pointer-events-none' : ''}">Estornar</button>
+                                    <button onclick="abrirModalOpcoesRecibo('${men.id}', '${con.id}')" class="bg-blue-600 hover:bg-blue-500 text-white text-[11px] px-3 py-2 rounded font-bold shadow transition active:scale-95">📄 Recibo</button>
+                                    <button onclick="estornarMensalidade('${men.id}')" class="bg-red-50 text-red-600 border border-red-200 text-[11px] px-2 py-0.5 rounded font-medium ${isOffline ? 'opacity-50 pointer-events-none' : ''}">Estornar</button>
                                 </div>
                             </div>
                         </div>`;
@@ -2852,12 +2902,12 @@
                     listaCobrancaAgrupada.push(`- Competência ${item.men.referencia}: R$ ${item.men.valorConfirmado.toLocaleString('pt-BR')}`);
                     locatarioCelular = item.con.whatsapp;
                     subItensHtml += `
-                        <div class="p-2 bg-gray-50 rounded-lg border border-gray-100 text-2xs space-y-1">
+                        <div class="p-2 bg-gray-50 rounded-lg border border-gray-100 text-[13px] space-y-1">
                             <div class="flex justify-between font-bold">
                                 <span class="text-slate-700">${item.con.locatario} (${item.men.referencia})</span>
                                 <span class="text-red-700">R$ ${item.men.valorConfirmado.toLocaleString('pt-BR')}</span>
                             </div>
-                            <p class="text-gray-500 text-4xs">Endereço: ${item.imo ? item.imo.enderecoRua : '-'}</p>
+                            <p class="text-gray-500 text-[11px]">Endereço: ${item.imo ? item.imo.enderecoRua : '-'}</p>
                         </div>
                     `;
                 });
@@ -2866,7 +2916,7 @@
                     <div class="bg-white p-3 rounded-xl shadow-sm border border-red-200">
                         <div class="flex justify-between items-center bg-red-50 p-1.5 rounded mb-2">
                             <h3 class="text-xs font-black text-red-900 uppercase tracking-wider">${nomeGrupo}</h3>
-                            <button onclick="dispararCobrancaWhatsAppDirect('${locatarioCelular}', '${nomeGrupo}', '${descConsolidada}', ${totalGrupo})" class="text-4xs bg-red-600 text-white px-2 py-1 rounded font-black shadow transition active:scale-90">📋 Cobrar Grupo</button>
+                            <button onclick="dispararCobrancaWhatsAppDirect('${locatarioCelular}', '${nomeGrupo}', '${descConsolidada}', ${totalGrupo})" class="text-[11px] bg-red-600 text-white px-2 py-1 rounded font-black shadow transition active:scale-90">📋 Cobrar Grupo</button>
                         </div>
                         <div class="space-y-1.5">${subItensHtml}</div>
                     </div>`;
@@ -2958,7 +3008,7 @@
                 extratoLinhas.forEach(linha => {
                     if(linha.tipo === 'entrada') {
                         tabelaExtratoHtml += `
-                            <div class="flex justify-between items-center py-2 border-b border-gray-100 text-3xs">
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 text-[11px]">
                                 <div>
                                     <span class="text-green-600 font-bold font-mono">[CRÉDITO]</span>
                                     <p class="text-slate-700 font-medium">${linha.descricao}</p>
@@ -2968,7 +3018,7 @@
                             </div>`;
                     } else {
                         tabelaExtratoHtml += `
-                            <div class="flex justify-between items-center py-2 border-b border-gray-100 text-3xs bg-red-50/30 px-1 rounded">
+                            <div class="flex justify-between items-center py-2 border-b border-gray-100 text-[11px] bg-red-50/30 px-1 rounded">
                                 <div>
                                     <span class="text-red-600 font-bold font-mono">[DÉBITO]</span>
                                     <p class="text-slate-700 font-medium">${linha.descricao}</p>
@@ -2984,15 +3034,15 @@
                         <div class="flex justify-between items-center border-b pb-2 mb-3">
                             <h3 class="text-sm font-black text-slate-900">👤 Sócio: ${socio}</h3>
                             <div class="text-right">
-                                <p class="text-4xs text-gray-400 uppercase font-bold">Saldo Pendente</p>
+                                <p class="text-[11px] text-gray-400 uppercase font-bold">Saldo Pendente</p>
                                 <span class="text-xs font-black ${saldoPendente > 0 ? 'text-red-600' : 'text-blue-600'}">R$ ${saldoPendente.toFixed(2)}</span>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 mb-3 text-4xs bg-slate-50 p-2 rounded-lg font-mono">
+                        <div class="grid grid-cols-2 gap-2 mb-3 text-[11px] bg-slate-50 p-2 rounded-lg font-mono">
                             <span class="text-green-700 font-bold">Total Lucros: R$ ${totalEntradas.toFixed(2)}</span>
                             <span class="text-red-700 font-bold text-right">Total Repassado: R$ ${totalSaidas.toFixed(2)}</span>
                         </div>
-                        <div class="space-y-1 max-h-64 overflow-y-auto pr-1">${tabelaExtratoHtml || '<p class="text-3xs text-center text-gray-400 py-4">Sem movimentações.</p>'}</div>
+                        <div class="space-y-1 max-h-64 overflow-y-auto pr-1">${tabelaExtratoHtml || '<p class="text-[11px] text-center text-gray-400 py-4">Sem movimentações.</p>'}</div>
                     </div>`;
             });
         }
@@ -3010,10 +3060,10 @@
                     <div class="bg-white p-3 rounded-xl border border-gray-200 flex gap-3 items-center">
                         <input type="checkbox" data-id="${imo.id}" class="vitrine-checkbox w-4 h-4 text-blue-600 rounded">
                         <div class="flex-1 min-w-0">
-                            <span class="text-4xs font-bold px-1.5 py-0.5 rounded ${imo.status==='Vago'?'bg-amber-100 text-amber-800':'bg-green-100 text-green-800'}">${imo.status}</span>
+                            <span class="text-[11px] font-bold px-1.5 py-0.5 rounded ${imo.status==='Vago'?'bg-amber-100 text-amber-800':'bg-green-100 text-green-800'}">${imo.status}</span>
                             <p class="text-xs font-bold mt-1 text-slate-900 truncate">${imo.empreendimento} - ${imo.tipo}</p>
-                            <p class="text-4xs text-gray-500 truncate">${imo.enderecoRua || ''}, ${imo.enderecoNum || ''}</p>
-                            <p class="text-3xs font-black text-blue-900 mt-1">Aluguel: R$ ${imo.valor.toLocaleString('pt-BR')}</p>
+                            <p class="text-[11px] text-gray-500 truncate">${imo.enderecoRua || ''}, ${imo.enderecoNum || ''}</p>
+                            <p class="text-[11px] font-black text-blue-900 mt-1">Aluguel: R$ ${imo.valor.toLocaleString('pt-BR')}</p>
                         </div>
                         ${fHtml}
                     </div>
@@ -3072,7 +3122,7 @@
                 <div class="max-w-md mx-auto p-4 space-y-6 bg-slate-900 min-h-screen text-white">
                     <div class="text-center py-4 border-b border-slate-800">
                         <h1 class="text-2xl font-black text-blue-400">RUMO</h1>
-                        <p class="text-3xs text-gray-400 uppercase tracking-widest mt-1">Vitrine de Imóveis Selecionados</p>
+                        <p class="text-[11px] text-gray-400 uppercase tracking-widest mt-1">Vitrine de Imóveis Selecionados</p>
                     </div>
                     <div id="external-showcase-container" class="space-y-4">
                         <p class="text-xs text-center text-slate-400 py-12 animate-pulse">🔄 Carregando vitrine...</p>
@@ -3145,21 +3195,21 @@
                         slideFotos += '</div>';
                     }
                     const badgeEnergia = imo.energiaRumo === 'Sim'
-                        ? `<div class="mt-2 bg-yellow-900/40 border border-yellow-700 rounded-lg p-2 text-3xs text-yellow-200">⚡ <strong>Energia Rumo incluída</strong> — desconto na conta de energia, pago direto à Rumo.</div>`
+                        ? `<div class="mt-2 bg-yellow-900/40 border border-yellow-700 rounded-lg p-2 text-[11px] text-yellow-200">⚡ <strong>Energia Rumo incluída</strong> — desconto na conta de energia, pago direto à Rumo.</div>`
                         : '';
 
                     listContainer.innerHTML += `
                         <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800">
-                            <span class="bg-blue-900 text-blue-100 text-4xs font-bold px-2 py-0.5 rounded">${imo.tipo}</span>
-                            <h3 class="text-md font-bold mt-2">${imo.empreendimento}</h3>
+                            <span class="bg-blue-900 text-blue-100 text-[11px] font-bold px-2 py-0.5 rounded">${imo.tipo}</span>
+                            <h3 class="text-base font-bold mt-2">${imo.empreendimento}</h3>
                             <p class="text-xs text-slate-400">📍 ${imo.enderecoRua || ''}, ${imo.enderecoNum || ''}${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}, ${imo.enderecoBairro || ''}, ${imo.enderecoCidade || ''}</p>
-                            <p class="text-3xs text-slate-500 mt-1">Tamanho: ${imo.tamanho}m² | Suítes: ${imo.suites} | WC: ${imo.banheiros}</p>
-                            <p class="text-3xs text-slate-500">Condomínio: R$ ${imo.condominio} | IPTU: R$ ${imo.iptu}</p>
-                            ${imo.descricao ? `<p class="text-3xs text-slate-300 mt-2 italic">${imo.descricao}</p>` : ''}
+                            <p class="text-[11px] text-slate-500 mt-1">Tamanho: ${imo.tamanho}m²</p>
+                            <p class="text-[11px] text-slate-500">Condomínio: R$ ${imo.condominio} | IPTU: R$ ${imo.iptu}</p>
+                            ${imo.descricao ? `<p class="text-[11px] text-slate-300 mt-2 italic">${imo.descricao}</p>` : ''}
                             ${badgeEnergia}
                             ${slideFotos}
                             <div class="mt-3 pt-3 border-t border-slate-900 flex justify-between items-baseline">
-                                <span class="text-3xs text-slate-400">Locação Integral</span>
+                                <span class="text-[11px] text-slate-400">Locação Integral</span>
                                 <span class="text-lg font-black text-blue-400">R$ ${imo.valor.toLocaleString('pt-BR')}/mês</span>
                             </div>
                         </div>
