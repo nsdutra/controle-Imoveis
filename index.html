@@ -1,7 +1,7 @@
 <!-- 
 ==================================================================
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
-   VERSÃO: v4.6.0 (Fotos/docs acumulativos, tipografia padronizada, campo descrição no banco, botão fechar)
+   VERSÃO: v4.7.0 (Correção crítica: duplicação de arquivos no Drive; assinatura real; ordenação; histórico)
    TOTAL DE LINHAS DE CÓDIGO: 1255 linhas
 ==================================================================
 -->
@@ -52,7 +52,7 @@
                 <div id="splash-error-detail" class="text-[11px] text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
             </div>
             <div class="text-[13px] text-slate-500 font-mono">
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v4.6.0</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v4.7.0</span>
             </div>
         </div>
     </div>
@@ -668,9 +668,7 @@
                         Belo Horizonte, <span id="pdf-data-emissao">-</span>.
                     </div>
                     <div style="margin-top: 20px; text-align: center; position: relative; height: 65px;">
-                        <div class="rubrica-digital" style="transform: rotate(-3deg); position: absolute; left: 0; right: 0; bottom: 18px; z-index: 10; opacity: 0.85;">
-                            R. Silva
-                        </div>
+                        <img src="data:image/png;base64,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" style="height: 55px; position: absolute; left: 50%; transform: translateX(-50%) rotate(-2deg); bottom: 12px; z-index: 10; opacity: 0.92;" alt="Assinatura Ruyter Carlos da Silva">
                         <div style="width: 220px; margin: 0 auto; border-top: 1px solid #1a365d; padding-top: 2px; position: absolute; left: 0; right: 0; bottom: 0; z-index: 5;">
                             <div style="font-size: 10px; font-weight: bold; color: #1a365d;">Ruyter Carlos da Silva</div>
                             <div style="font-size: 7.5px; color: #718096;">Sócio &ndash; RUMO (CNPJ 18.661.505/0001-62)</div>
@@ -1166,9 +1164,9 @@
         function renderPreviewFotosImovel() {
             const previewContainer = document.getElementById('form-images-preview-container');
             previewContainer.innerHTML = fotosCarregadasBase64.map((base64Data, idxFoto) => `
-                <div class="relative">
+                <div class="relative inline-block" style="width:40px; height:40px;">
                     <img src="${base64Data}" onclick="abrirLightboxGeral(fotosCarregadasBase64, ${idxFoto})" class="w-10 h-10 object-cover rounded border cursor-pointer active:scale-90 transition">
-                    <button type="button" onclick="removerFotoImovel(${idxFoto})" title="Remover" class="absolute -top-1.5 -right-1.5 w-4 h-4 bg-red-600 text-white rounded-full text-[11px] font-bold flex items-center justify-center leading-none">✕</button>
+                    <button type="button" onclick="removerFotoImovel(${idxFoto})" title="Remover" class="absolute flex items-center justify-center leading-none font-bold" style="top:-4px; right:-4px; width:14px; height:14px; font-size:9px; background:#dc2626; color:#fff; border-radius:9999px; border:1.5px solid #fff;">✕</button>
                 </div>
             `).join('');
         }
@@ -1379,6 +1377,18 @@
                     throw new Error((corpo && corpo.mensagem) ? corpo.mensagem : "O servidor retornou uma resposta sem confirmação de sucesso.");
                 }
                 devLog("ENVIO_NUVEM", `Gravação de '${rota}' confirmada com sucesso. Registros gravados: ${corpo.registros ?? '?'}`);
+
+                // CRÍTICO (correção do bug de duplicação de arquivos no Drive):
+                // depois de subir fotos/documentos, o servidor devolve o array com os
+                // links do Drive já resolvidos (em vez do base64 original). Se não
+                // atualizarmos a variável local aqui, o próximo saveAll() (nem que seja
+                // para marcar um recebimento, sem nada a ver com fotos) reenviaria o
+                // MESMO base64 de novo, e o Apps Script criaria um arquivo novo no
+                // Drive a cada vez — duplicando infinitamente até a página recarregar.
+                if (corpo.dadosAtualizados) {
+                    if (rota === "imoveis") imoveis = corpo.dadosAtualizados.map(normalizarImovel).filter(Boolean);
+                    if (rota === "contratos") contratos = corpo.dadosAtualizados.map(normalizarContrato).filter(Boolean);
+                }
 
                 // Mesmo com sucesso geral, o Code.gs pode reportar avisos específicos
                 // (ex: uma foto que falhou ao subir pro Drive). Antes esses casos eram
@@ -1888,7 +1898,7 @@
             if(selectFiltro) selectFiltro.value = selFilVal;
         }
         function copyResumo(end, tipo, val, suites, cond) {
-            const txt = `🏠 *RUMO IMÓVEIS - OPORTUNIDADE*\n📍 *Tipo:* ${tipo}\n📍 *Endereço:* ${end}\n📐 *Suítes:* ${suites}\n💰 *Valor Locação:* R$ ${val.toLocaleString('pt-BR')}\n📦 *Condomínio:* R$ ${cond}`;
+            const txt = `🏠 *RUMO IMÓVEIS - OPORTUNIDADE*\n📍 *Tipo:* ${tipo}\n📍 *Endereço:* ${end}\n💰 *Valor Locação:* R$ ${val.toLocaleString('pt-BR')}\n📦 *Condomínio:* R$ ${cond}`;
             navigator.clipboard.writeText(txt);
             alert("Resumo de locação copiado!");
         }
@@ -2057,11 +2067,17 @@
                         { campo: 'valor', rotulo: 'Valor do aluguel' },
                         { campo: 'status', rotulo: 'Status do contrato' },
                         { campo: 'vencimentoDia', rotulo: 'Dia de vencimento' },
+                        { campo: 'inicio', rotulo: 'Início da vigência' },
                         { campo: 'fim', rotulo: 'Data de término' },
                         { campo: 'desconto', rotulo: 'Desconto' },
                         { campo: 'reajusteAplicado', rotulo: 'Reajuste aplicado' },
+                        { campo: 'reajuste', rotulo: 'Índice de reajuste' },
                         { campo: 'iptu', rotulo: 'IPTU contratual' },
-                        { campo: 'locatario', rotulo: 'Locatário' }
+                        { campo: 'locatario', rotulo: 'Locatário' },
+                        { campo: 'contatoNome', rotulo: 'Pessoa de contato' },
+                        { campo: 'formaPagamento', rotulo: 'Forma de pagamento' },
+                        { campo: 'descontoEnergia', rotulo: 'Desconto de energia' },
+                        { campo: 'descricao', rotulo: 'Descrição' }
                     ];
                     const alteracoes = [];
                     camposMonitorados.forEach(({ campo, rotulo }) => {
@@ -2178,12 +2194,15 @@
                 const imo = imoveis.find(i => i.id === con.imovelId);
                 const precisaRevisao = contratoPrecisaRevisao(con);
                 const alertaTriangulo = precisaRevisao ? `<span title="Sem revisão há mais de 12 meses" class="text-red-600">🔺</span>` : '';
-                const linha2 = `${imo ? imo.empreendimento : '-'} · Vig: ${formatarDataBR(con.inicio)} a ${formatarDataBR(con.fim)} · Venc. dia ${con.vencimentoDia || 15}${con.formaPagamento ? ' · ' + con.formaPagamento : ''}`;
+                const badgeEnergia = (imo && imo.energiaRumo === 'Sim' && con.descontoEnergia > 0) ? `<span title="Energia Rumo com desconto" class="text-[11px]">⚡</span>` : '';
+                const badgeAnexos = (con.anexos && con.anexos.length > 0) ? `<span title="Contrato tem anexos" class="text-[11px]">📎</span>` : '';
+                const badgeStatus = `<span class="text-[11px] font-bold px-1.5 py-0.5 rounded ${con.status==='Ativo'?'bg-green-100 text-green-800':(con.status==='Suspenso'?'bg-amber-100 text-amber-800':'bg-red-100 text-red-800')}">${con.status}</span>`;
+                const linha2 = imo ? `${imo.empreendimento} - ${imo.enderecoRua || ''}, ${imo.enderecoNum || ''}${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}` : '-';
                 container.innerHTML += `
                     <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
                         <div class="flex justify-between items-start gap-2">
-                            <p class="text-xs font-bold text-slate-900 truncate min-w-0">${alertaTriangulo} 👤 ${con.locatario}</p>
-                            <span class="text-sm font-black flex-none ${con.status === 'Ativo'?'text-green-700':'text-red-600'}">R$ ${con.valor}</span>
+                            <p class="text-xs font-bold text-slate-900 truncate min-w-0">${badgeStatus} ${alertaTriangulo} 👤 ${con.locatario} ${badgeEnergia}${badgeAnexos}</p>
+                            <span class="text-sm font-black flex-none text-slate-900">R$ ${con.valor}</span>
                         </div>
                         <p class="text-[13px] text-gray-500 truncate mt-1">${linha2}</p>
                         <div class="flex gap-1.5 mt-2 flex-wrap items-center">
@@ -2449,7 +2468,7 @@
                 .sort((a, b) => {
                     const [ma, aa] = (a.referencia || '01/1970').split('/');
                     const [mb, ab] = (b.referencia || '01/1970').split('/');
-                    return (aa + ma).localeCompare(ab + mb);
+                    return (ab + mb).localeCompare(aa + ma); // decrescente: mais recente primeiro
                 });
             mensalidadesOrdenadas.forEach(men => {
                 const con = contratos.find(c => c.id === men.contratoId);
@@ -2471,27 +2490,27 @@
                             </div>
                             <div class="grid grid-cols-2 gap-1 text-[13px]">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-gray-400 uppercase">Forma de Recebimento</label>
+                                    <label class="block text-[11px] font-bold text-gray-500">Forma de Recebimento</label>
                                     <select id="banco-${men.id}" class="w-full border p-1 rounded bg-gray-50"><option value="PIX">PIX</option><option value="Boleto">Boleto</option><option value="Depósito">Depósito</option></select>
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-gray-400 uppercase">Dia Recebimento</label>
+                                    <label class="block text-[11px] font-bold text-gray-500">Dia Recebimento</label>
                                     <input type="date" id="data-${men.id}" value="${dataPadraoVenc}" class="w-full border p-0.5 rounded bg-gray-50 text-center">
                                 </div>
                             </div>
                             <div class="grid grid-cols-2 gap-1 text-[13px]">
                                 <div>
-                                    <label class="block text-[11px] font-bold text-gray-400 uppercase">Valor Efetivo (R$)</label>
+                                    <label class="block text-[11px] font-bold text-gray-500">Valor Efetivo (R$)</label>
                                     <input type="number" id="valor-${men.id}" value="${men.valorConfirmado}" class="w-full border p-1 rounded bg-gray-50 font-bold text-blue-900">
                                 </div>
                                 <div>
-                                    <label class="block text-[11px] font-bold text-gray-400 uppercase">Observações Internas</label>
+                                    <label class="block text-[11px] font-bold text-gray-500">Observações Internas</label>
                                     <input type="text" id="obs-${men.id}" placeholder="Ex: Desconto" class="w-full border p-1 rounded bg-gray-50">
                                 </div>
                             </div>
                             ${imoveis.find(i => i.id === con.imovelId)?.energiaRumo === 'Sim' ? `
-                            <div>
-                                <label class="block text-[11px] font-bold text-yellow-700 uppercase">⚡ Valor Energia (R$) — controle interno, não entra no recibo</label>
+                            <div class="w-1/2">
+                                <label class="block text-[11px] font-bold text-yellow-700">⚡ Valor Energia (controle interno)</label>
                                 <input type="number" id="energia-${men.id}" value="0" class="w-full border border-yellow-300 p-1 rounded bg-yellow-50 font-bold text-yellow-800 text-[13px]">
                             </div>` : ''}
                             <button onclick="liquidarMensalidade('${men.id}')" class="w-full bg-emerald-600 text-white text-[13px] py-1.5 rounded font-bold shadow ${isOffline ? 'opacity-50 pointer-events-none' : ''}">Dar Baixa</button>
@@ -2875,13 +2894,12 @@
                 container.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">Nenhum débito em aberto localizado.</p>`;
                 return;
             }
-            // Ordena por competência crescente antes de agrupar, para que a ordem
-            // dentro de cada grupo (e a ordem dos próprios grupos, quando agrupado
-            // por competência) siga sempre do mês mais antigo para o mais recente.
+            // Ordena por competência decrescente antes de agrupar (mês mais
+            // recente primeiro), conforme padrão definido para Mensal/Inadimplência.
             itensPendentes.sort((a, b) => {
                 const [ma, aa] = a.men.referencia.split('/');
                 const [mb, ab] = b.men.referencia.split('/');
-                return (aa + ma).localeCompare(ab + mb);
+                return (ab + mb).localeCompare(aa + ma);
             });
             let groups = {};
             itensPendentes.forEach(item => {
