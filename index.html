@@ -1,8 +1,8 @@
 <!-- 
 ==================================================================
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
-   VERSÃO: v5.6.0 (PWA: service worker mínimo para instalação correta no Android, novo ícone RU/MO)
-   TOTAL DE LINHAS DE CÓDIGO: 4616 linhas
+   VERSÃO: v5.7.0 (Câmera nativa direta para fotos de imóveis e documentos de contrato)
+   TOTAL DE LINHAS DE CÓDIGO: 4626 linhas
 ==================================================================
 -->
 <!DOCTYPE html>
@@ -67,7 +67,7 @@
                 <div id="splash-error-detail" class="text-[11px] text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
             </div>
             <div class="text-[13px] text-slate-500 font-mono">
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v5.6.0</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v5.7.0</span>
             </div>
         </div>
     </div>
@@ -271,8 +271,12 @@
                     <div class="bg-slate-50 p-3 rounded-xl border">
                         <div class="flex items-center justify-between">
                             <label class="block text-xs font-bold text-gray-600">Fotos do Imóvel (até 10)</label>
-                            <input type="file" id="imo-file-picker" accept="image/*" multiple class="hidden" onchange="processarMultiplasFotos(this)">
-                            <button type="button" onclick="document.getElementById('imo-file-picker').click()" title="Anexar fotos" class="w-9 h-9 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+                            <div class="flex gap-1.5">
+                                <input type="file" id="imo-camera-picker" accept="image/*" capture="environment" class="hidden" onchange="processarMultiplasFotos(this)">
+                                <button type="button" onclick="document.getElementById('imo-camera-picker').click()" title="Tirar foto agora" class="w-9 h-9 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
+                                <input type="file" id="imo-file-picker" accept="image/*" multiple class="hidden" onchange="processarMultiplasFotos(this)">
+                                <button type="button" onclick="document.getElementById('imo-file-picker').click()" title="Anexar da galeria" class="w-9 h-9 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+                            </div>
                         </div>
                         <div id="form-images-preview-container" class="grid grid-cols-5 gap-2 mt-2" style="grid-auto-rows: auto;"></div>
                     </div>
@@ -427,6 +431,8 @@
                     <div>
                         <div class="flex items-center justify-between">
                             <label class="text-[11px] font-bold text-gray-500">📄 Contrato</label>
+                            <input type="file" id="con-doc-camera-Contrato" accept="image/*" capture="environment" class="hidden" onchange="processarMultiplosDocumentos(this, 'Contrato')">
+                            <button type="button" onclick="document.getElementById('con-doc-camera-Contrato').click()" title="Tirar foto agora" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
                             <input type="file" id="con-doc-input-Contrato" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="processarMultiplosDocumentos(this, 'Contrato')" class="hidden">
                             <button type="button" onclick="document.getElementById('con-doc-input-Contrato').click()" title="Anexar" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
                         </div>
@@ -435,6 +441,8 @@
                     <div>
                         <div class="flex items-center justify-between">
                             <label class="text-[11px] font-bold text-gray-500">📋 Aditivo</label>
+                            <input type="file" id="con-doc-camera-Aditivo" accept="image/*" capture="environment" class="hidden" onchange="processarMultiplosDocumentos(this, 'Aditivo')">
+                            <button type="button" onclick="document.getElementById('con-doc-camera-Aditivo').click()" title="Tirar foto agora" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
                             <input type="file" id="con-doc-input-Aditivo" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="processarMultiplosDocumentos(this, 'Aditivo')" class="hidden">
                             <button type="button" onclick="document.getElementById('con-doc-input-Aditivo').click()" title="Anexar" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
                         </div>
@@ -443,6 +451,8 @@
                     <div>
                         <div class="flex items-center justify-between">
                             <label class="text-[11px] font-bold text-gray-500">📎 Outros</label>
+                            <input type="file" id="con-doc-camera-Outros" accept="image/*" capture="environment" class="hidden" onchange="processarMultiplosDocumentos(this, 'Outros')">
+                            <button type="button" onclick="document.getElementById('con-doc-camera-Outros').click()" title="Tirar foto agora" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
                             <input type="file" id="con-doc-input-Outros" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="processarMultiplosDocumentos(this, 'Outros')" class="hidden">
                             <button type="button" onclick="document.getElementById('con-doc-input-Outros').click()" title="Anexar" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
                         </div>
