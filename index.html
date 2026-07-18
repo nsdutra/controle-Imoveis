@@ -1,8 +1,8 @@
 <!-- 
 ==================================================================
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
-   VERSÃO: v5.3.1 (Correção crítica: identificação de sócio no repasse — sobrenome em comum)
-   TOTAL DE LINHAS DE CÓDIGO: 4512 linhas
+   VERSÃO: v5.4.0 (Correção crítica: conciliação duplicando pagamentos/repasses; ordenação; layout; Admin no DEV)
+   TOTAL DE LINHAS DE CÓDIGO: 4593 linhas
 ==================================================================
 -->
 <!DOCTYPE html>
@@ -53,7 +53,7 @@
                 <div id="splash-error-detail" class="text-[11px] text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
             </div>
             <div class="text-[13px] text-slate-500 font-mono">
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v5.3.1</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v5.4.0</span>
             </div>
         </div>
     </div>
@@ -74,7 +74,7 @@
             <button onclick="switchTab('tab-vitrine')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-vitrine">Vitrine</button>
             <button onclick="switchTab('tab-relatorios')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-relatorios">Métricas</button>
             <button onclick="switchTab('tab-socios')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-socios">Sócios</button>
-            <button onclick="switchTab('tab-administradoras')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-administradoras">Admin.</button>
+            <button onclick="switchTab('tab-administradoras')" class="hidden flex-none px-4 py-3 text-slate-300" id="btn-tab-administradoras">Admin.</button>
             <button onclick="switchTab('tab-developer')" class="hidden flex-none px-4 py-3 text-red-400 font-bold bg-slate-950 border-l border-red-900/50" id="btn-tab-developer">⚙️ DEV</button>
         </nav>
     </header>
@@ -493,6 +493,17 @@
 
             <div id="painel-pendencias-extrato-wrapper" class="hidden mb-4">
                 <h2 class="text-lg font-bold mb-2 text-red-700">📋 Pendências do Extrato Importado</h2>
+                <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200">
+                    <span class="text-[11px] font-bold uppercase text-slate-500 block mb-2">Filtrar Pendências</span>
+                    <div class="flex justify-between items-center gap-2">
+                        <select id="pex-filtro-tipo" onchange="renderPendenciasExtrato()" class="flex-1 p-1.5 border rounded text-[13px] bg-gray-50">
+                            <option value="todos">Todos os tipos</option>
+                            <option value="nao_identificado">Não identificados</option>
+                            <option value="confirmacao_dupla">Confirmação dupla</option>
+                        </select>
+                        <span id="pex-resumo" class="text-[13px] font-bold text-red-700 whitespace-nowrap">R$ 0,00 (0)</span>
+                    </div>
+                </div>
                 <div id="painel-pendencias-extrato" class="space-y-3"></div>
             </div>
 
@@ -507,6 +518,7 @@
                 </div>
             </div>
 
+            <h2 class="text-lg font-bold mb-2 text-blue-900">Fila de Recebimentos</h2>
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200">
                 <span class="text-[11px] font-bold uppercase text-slate-500 block mb-2">Filtrar Fila de Recebimentos</span>
                 <div class="grid grid-cols-3 gap-2">
@@ -530,8 +542,6 @@
                     </div>
                 </div>
             </div>
-
-            <h2 class="text-lg font-bold mb-2 text-blue-900">Fila de Recebimentos</h2>
             <div id="lista-mensalidades" class="space-y-3"></div>
         </section>
         <!-- ================= ABA: INADIMPLÊNCIA ================= -->
@@ -608,15 +618,24 @@
         <!-- ================= ABA: RELATÓRIOS/MÉTRICAS ================= -->
         <section id="tab-relatorios" class="tab-content">
             <h2 class="text-lg font-bold mb-3 text-blue-900">Filtros das Métricas</h2>
-            <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3">
-                <select id="filtro-imovel" onchange="renderRelatorios()" class="w-full p-2 border rounded text-sm bg-gray-50"><option value="todos">Todos os Imóveis</option></select>
-                <select id="filtro-periodo" onchange="renderRelatorios()" class="w-full p-2 border rounded text-sm bg-gray-50">
-                    <option value="todos">Todo o Período Histórico</option>
-                    <option value="ano-atual">Desde o início de 2026</option>
-                    <option value="1-mes">Último Mês</option>
-                    <option value="3-meses">Últimos 3 Meses</option>
-                    <option value="12-meses">Últimos 12 Meses</option>
-                </select>
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200">
+                <span class="text-[11px] font-bold uppercase text-slate-500 block mb-2">Filtrar Métricas</span>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-500">Imóvel</label>
+                        <select id="filtro-imovel" onchange="renderRelatorios()" class="w-full p-1.5 border rounded mt-0.5 text-[13px] bg-gray-50"><option value="todos">Todos os Imóveis</option></select>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-500">Período</label>
+                        <select id="filtro-periodo" onchange="renderRelatorios()" class="w-full p-1.5 border rounded mt-0.5 text-[13px] bg-gray-50">
+                            <option value="todos">Todo o Período Histórico</option>
+                            <option value="ano-atual">Desde o início de 2026</option>
+                            <option value="1-mes">Último Mês</option>
+                            <option value="3-meses">Últimos 3 Meses</option>
+                            <option value="12-meses">Últimos 12 Meses</option>
+                        </select>
+                    </div>
+                </div>
             </div>
             
             <div id="capture-relatorios-pdf" class="bg-transparent p-1">
@@ -641,7 +660,7 @@
             </div>
             <h2 class="text-sm font-bold mt-4 mb-2 text-blue-900">Detalhamento Mês a Mês (crescente)</h2>
             <div id="tabela-mensal-resultados" class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-x-auto text-[11px]"></div>
-            <button onclick="baixarRelatorioPdfLocal()" class="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow">
+            <button onclick="baixarRelatorioPdfLocal()" class="w-full mt-4 bg-slate-900 hover:bg-slate-800 text-white font-bold text-[13px] py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow">
                 📊 Exportar Relatório Analítico PDF
             </button>
         </section>
@@ -649,21 +668,22 @@
         <section id="tab-socios" class="tab-content">
             <h2 class="text-lg font-bold mb-3 text-blue-900">Prestação de Contas Societária</h2>
             
-            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-2 text-xs">
+            <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-2">
+                <span class="text-[11px] font-bold uppercase text-slate-500 block mb-2">Filtrar Prestação de Contas</span>
                 <div class="grid grid-cols-3 gap-1">
                     <div>
-                        <label class="font-bold text-gray-500 text-[11px] uppercase">Sócio</label>
-                        <select id="socio-filtro-nome" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                        <label class="block text-[11px] font-bold text-gray-500">Sócio</label>
+                        <select id="socio-filtro-nome" onchange="renderSociosDistribricao()" class="w-full p-1.5 border rounded mt-0.5 text-[13px] bg-gray-50"></select>
                     </div>
                     <div>
-                        <label class="font-bold text-gray-500 text-[11px] uppercase">Mês Ref</label>
-                        <select id="socio-filtro-mes" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50"></select>
+                        <label class="block text-[11px] font-bold text-gray-500">Mês Ref</label>
+                        <select id="socio-filtro-mes" onchange="renderSociosDistribricao()" class="w-full p-1.5 border rounded mt-0.5 text-[13px] bg-gray-50"></select>
                     </div>
                     <div>
-                        <label class="font-bold text-gray-500 text-[11px] uppercase">Ano Civil</label>
-                        <select id="socio-filtro-ano" onchange="renderSociosDistribricao()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
+                        <label class="block text-[11px] font-bold text-gray-500">Ano Civil</label>
+                        <select id="socio-filtro-ano" onchange="renderSociosDistribricao()" class="w-full p-1.5 border rounded mt-0.5 text-[13px] bg-gray-50">
                             <option value="todos">Todos</option>
-                            <option value="2026">2026</option>
+                            <option value="2026" selected>2026</option>
                             <option value="2027">2027</option>
                             <option value="2028">2028</option>
                         </select>
@@ -674,18 +694,18 @@
                 </button>
             </div>
             <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3 offline-disable">
-                <h3 class="text-xs font-black uppercase text-slate-500">Registrar Transferência / Repasse</h3>
+                <h3 class="text-[11px] font-bold uppercase text-slate-500">Registrar Transferência / Repasse</h3>
                 <div class="grid grid-cols-2 gap-2">
-                    <select id="rep-socio" class="w-full p-2 border rounded text-sm bg-gray-50"></select>
-                    <select id="rep-mes" class="w-full p-2 border rounded text-sm bg-gray-50"></select>
+                    <select id="rep-socio" class="w-full p-1.5 border rounded text-[13px] bg-gray-50"></select>
+                    <select id="rep-mes" class="w-full p-1.5 border rounded text-[13px] bg-gray-50"></select>
                 </div>
                 <div class="grid grid-cols-2 gap-2">
-                    <input type="number" id="rep-valor" placeholder="Valor (R$)" class="w-full p-2 border rounded text-sm font-bold">
-                    <input type="date" id="rep-data-transferencia" class="w-full p-2 border rounded text-sm text-center bg-gray-50">
+                    <input type="number" id="rep-valor" placeholder="Valor (R$)" class="w-full p-1.5 border rounded text-[13px] font-bold">
+                    <input type="date" id="rep-data-transferencia" class="w-full p-1.5 border rounded text-[13px] text-center bg-gray-50">
                 </div>
-                <button onclick="registrarRepasse()" class="w-full bg-slate-900 text-white py-2 rounded font-bold text-xs shadow">Confirmar e Liquidar para Sócio</button>
+                <button onclick="registrarRepasse()" class="w-full bg-slate-900 text-white py-2 rounded font-bold text-[13px] shadow">Confirmar e Liquidar para Sócio</button>
             </div>
-            <h3 class="text-xs font-black text-slate-500 uppercase mb-2 tracking-wide">📋 Extrato de Entradas e Saídas</h3>
+            <h3 class="text-[11px] font-bold uppercase text-slate-500 mb-2 tracking-wide">📋 Extrato de Entradas e Saídas</h3>
             <div id="lista-socios-prestacao" class="space-y-3"></div>
         </section>
         <!-- ================= ABA: ADMINISTRADORAS ================= -->
@@ -895,6 +915,7 @@
         function ativarModoDesenvolvedor() {
             isDevModeActive = true;
             document.getElementById('btn-tab-developer').classList.remove('hidden');
+            document.getElementById('btn-tab-administradoras').classList.remove('hidden');
             devLog("SISTEMA", "Modo desenvolvedor ativado por duplo clique no Header.");
             alert("⚙️ Central de Desenvolvedor Rumo ATIVADA com sucesso!");
         }
@@ -1104,6 +1125,7 @@
                 observacao: raw.observacao || raw.Observacao || '',
                 valorConfirmado: parseFloat(raw.valorConfirmado || raw.valor_pago || raw.valor || 0) || 0,
                 valorEnergia: parseFloat(raw.valorEnergia || raw.valor_energia || 0) || 0,
+                chaveTransacaoOrigem: raw.chaveTransacaoOrigem || raw.chave_transacao_origem || '',
                 envioLog: raw.envioLog || null
             };
         }
@@ -1808,9 +1830,9 @@
                 selectInadAlvo.value = valInadAlvo;
             }
             const selectSocioNome = document.getElementById('socio-filtro-nome');
-            const valSocioNome = selectSocioNome ? selectSocioNome.value : 'todos';
+            const valSocioNome = (selectSocioNome && selectSocioNome.value) ? selectSocioNome.value : 'todos';
             const selectSocioMes = document.getElementById('socio-filtro-mes');
-            const valSocioMes = selectSocioMes ? selectSocioMes.value : 'todos';
+            const valSocioMes = (selectSocioMes && selectSocioMes.value) ? selectSocioMes.value : 'todos';
             const selectRepMes = document.getElementById('rep-mes');
             let todosSocios = new Set(["Ruyter"]);
             imoveis.forEach(imo => { if(imo.divisao) Object.keys(imo.divisao).forEach(s => todosSocios.add(s)); });
@@ -2737,6 +2759,13 @@
                     if (fStatusCon !== 'todos' && con.status !== fStatusCon) return false;
                     return true;
                 })
+                .sort((a, b) => {
+                    const imoA = imoveis.find(i => i.id === a.imovelId);
+                    const imoB = imoveis.find(i => i.id === b.imovelId);
+                    const empA = imoA ? imoA.empreendimento : '';
+                    const empB = imoB ? imoB.empreendimento : '';
+                    return empA.localeCompare(empB) || (a.locatario || '').localeCompare(b.locatario || '');
+                })
                 .forEach(con => {
                 const imo = imoveis.find(i => i.id === con.imovelId);
                 const temAlerta = contratoPrecisaRevisao(con) || contratoVencido(con);
@@ -2971,6 +3000,7 @@
             if(idx !== -1) {
                 mensalidades[idx].status = 'Inadimplente';
                 mensalidades[idx].banco = '-';
+                mensalidades[idx].chaveTransacaoOrigem = '';
                 const con = contratos.find(c => c.id === mensalidades[idx].contratoId);
                 const partesRef = mensalidades[idx].referencia.split('/');
                 const diaVenc = con ? (con.vencimentoDia || 15) : 15;
@@ -3251,12 +3281,18 @@
             // mais uma nova tentativa de conciliação. Motivo: um item conciliado
             // (automática ou manualmente) pode ser estornado depois — e se o mesmo
             // extrato for reimportado, a conciliação precisa conseguir tentar de novo.
-            // A proteção real contra duplicidade está em outro lugar: mensalidades já
-            // com status 'Pago' nunca entram no pool de candidatas a conciliar, então
-            // um item já recebido nunca é alvo de uma nova conciliação.
+            //
+            // A proteção real contra duplicidade é rastrear, em cada mensalidade/
+            // repasse, qual transação exata (chave = data+valor+pagador) o gerou.
+            // Antes de conciliar uma transação, verificamos se ela já pagou algo que
+            // continua pago — se sim, essa transação já foi "usada" e não deve gerar
+            // outro lançamento (nem pendência), mesmo que essa mesma linha do extrato
+            // seja importada de novo.
             const chavesJaPendentes = new Set(pendenciasExtrato.filter(p => p.status === 'Pendente').map(p => `${p.data}|${p.valor.toFixed(2)}|${p.razaoSocial.toUpperCase()}`));
+            const chavesJaPagas = new Set(mensalidades.filter(m => m.status === 'Pago' && m.chaveTransacaoOrigem).map(m => m.chaveTransacaoOrigem));
+            const chavesJaRepassadas = new Set(repasses.filter(r => r.chaveTransacaoOrigem).map(r => r.chaveTransacaoOrigem));
             const novosFingerprints = [];
-            let qtdConciliados = 0, qtdRepasses = 0, qtdPendencias = 0, qtdIgnorados = 0, qtdJaPendentes = 0;
+            let qtdConciliados = 0, qtdRepasses = 0, qtdPendencias = 0, qtdIgnorados = 0, qtdJaPendentes = 0, qtdJaProcessadas = 0;
 
             // CORREÇÃO: antes de tentar conciliar qualquer coisa, garante que as
             // mensalidades das competências realmente cobertas pelo extrato já
@@ -3289,6 +3325,11 @@
                     const nomeSocioEntrada = SOCIOS_CONHECIDOS.find(s => nomesIguaisSocio(s, t.razaoSocial));
                     if (nomeSocioEntrada) { qtdIgnorados++; return; } // entrada de sócio não é aluguel
 
+                    // Essa transação já pagou uma mensalidade que continua paga —
+                    // não tenta de novo (evita reaplicar o mesmo pagamento a outra
+                    // competência quando o extrato é reimportado).
+                    if (chavesJaPagas.has(chave)) { qtdJaProcessadas++; return; }
+
                     // Ordem de tentativa para achar o contrato: 1º pelo nome do
                     // locatário, 2º pelo documento (CPF/CNPJ) do extrato.
                     const documentoLimpo = (t.documento || '').replace(/\D/g, '');
@@ -3313,17 +3354,18 @@
                     // final, não precisa de margem grande.
                     const dentroTolerancia = (esperado, recebido) => Math.abs(esperado - recebido) <= Math.max(esperado * 0.05, 2);
 
-                    // Prioriza a mensalidade da MESMA competência do pagamento (evita
-                    // cair num mês errado só porque o valor bateu por coincidência).
-                    // Só cai para outra competência pendente se não achar na exata.
-                    const matchMesExato = pendentesDoContrato.find(m => m.referencia === referenciaEsperada && dentroTolerancia(m.valorConfirmado, t.valor));
-                    const matchUnico = matchMesExato || pendentesDoContrato.find(m => dentroTolerancia(m.valorConfirmado, t.valor));
+                    // IMPORTANTE: só concilia automaticamente se achar a mensalidade da
+                    // COMPETÊNCIA EXATA esperada (não cai mais para "qualquer pendente
+                    // com valor parecido") — isso é o que causava um único pagamento
+                    // sendo aplicado a março E abril em reimportações sucessivas.
+                    const matchUnico = pendentesDoContrato.find(m => m.referencia === referenciaEsperada && dentroTolerancia(m.valorConfirmado, t.valor));
                     if (matchUnico) {
                         const idx = mensalidades.findIndex(m => m.id === matchUnico.id);
                         mensalidades[idx].status = 'Pago';
                         mensalidades[idx].banco = 'PIX/TED (extrato)';
                         mensalidades[idx].dataPgto = dataBR;
                         mensalidades[idx].valorConfirmado = t.valor;
+                        mensalidades[idx].chaveTransacaoOrigem = chave;
                         // Sobrescreve a observação (não acumula) — evita texto duplicado
                         // quando o mesmo item é conciliado, estornado e reconciliado.
                         mensalidades[idx].observacao = `Conciliado automaticamente via extrato — pagador: ${t.razaoSocial}`;
@@ -3371,6 +3413,9 @@
                     // SAÍDA — só interessa se for repasse para um dos 4 sócios conhecidos.
                     const nomeSocio = SOCIOS_CONHECIDOS.find(s => nomesIguaisSocio(s, t.razaoSocial));
                     if (nomeSocio) {
+                        // Essa transação já virou um repasse antes — não duplica ao
+                        // reimportar o mesmo extrato.
+                        if (chavesJaRepassadas.has(chave)) { qtdJaProcessadas++; return; }
                         // Usa apenas o primeiro nome do sócio ao lançar o repasse
                         // (ex: "RUYTER CARLOS DA SILVA" -> "Ruyter"), consistente com
                         // como os sócios são identificados no resto do sistema.
@@ -3379,7 +3424,7 @@
                         repasses.push({
                             id: 'rep_' + Date.now() + Math.random().toString(36).substr(2, 4),
                             socio: primeiroNomeFormatado, mes: referenciaDoMes, valor: Math.abs(t.valor),
-                            dataReal: dataBR, timestamp: Date.now()
+                            dataReal: dataBR, timestamp: Date.now(), chaveTransacaoOrigem: chave
                         });
                         qtdRepasses++;
                     } else {
@@ -3406,8 +3451,15 @@
             const wrapper = document.getElementById('painel-pendencias-extrato-wrapper');
             const container = document.getElementById('painel-pendencias-extrato');
             if (!wrapper || !container) return;
-            const pendentes = pendenciasExtrato.filter(p => p.status === 'Pendente');
-            wrapper.classList.toggle('hidden', pendentes.length === 0);
+            const fTipo = document.getElementById('pex-filtro-tipo')?.value || 'todos';
+            const pendentesTotal = pendenciasExtrato.filter(p => p.status === 'Pendente');
+            wrapper.classList.toggle('hidden', pendentesTotal.length === 0);
+            const pendentes = pendentesTotal.filter(p => fTipo === 'todos' || p.tipo === fTipo);
+            const resumo = document.getElementById('pex-resumo');
+            if (resumo) {
+                const somaPendentes = pendentes.reduce((acc, p) => acc + p.valor, 0);
+                resumo.innerText = `R$ ${somaPendentes.toLocaleString('pt-BR', {minimumFractionDigits:2})} (${pendentes.length})`;
+            }
             container.innerHTML = pendentes.map(p => {
                 const con = p.contratoIdSugerido ? contratos.find(c => c.id === p.contratoIdSugerido) : null;
                 if (p.tipo === 'confirmacao_dupla') {
@@ -3453,6 +3505,7 @@
             mensalidades[idxMen].banco = 'PIX/TED (extrato)';
             mensalidades[idxMen].dataPgto = formatarDataBR(pend.data);
             mensalidades[idxMen].valorConfirmado = pend.valor;
+            mensalidades[idxMen].chaveTransacaoOrigem = `${pend.data}|${pend.valor.toFixed(2)}|${pend.razaoSocial.toUpperCase()}`;
             mensalidades[idxMen].observacao = `Conciliado manualmente — pagador: ${pend.razaoSocial}`;
             pend.status = 'Resolvido';
             saveAll(true, "Recebimento vinculado com sucesso!");
@@ -3460,12 +3513,14 @@
         function confirmarPendenciaDupla(pendId) {
             const pend = pendenciasExtrato.find(p => p.id === pendId);
             if (!pend) return;
+            const chaveOrigem = `${pend.data}|${pend.valor.toFixed(2)}|${pend.razaoSocial.toUpperCase()}`;
             pend.mensalidadeIdsSugeridas.forEach(menId => {
                 const idxMen = mensalidades.findIndex(m => m.id === menId);
                 if (idxMen !== -1 && mensalidades[idxMen].status === 'Inadimplente') {
                     mensalidades[idxMen].status = 'Pago';
                     mensalidades[idxMen].banco = 'PIX/TED (extrato)';
                     mensalidades[idxMen].dataPgto = formatarDataBR(pend.data);
+                    mensalidades[idxMen].chaveTransacaoOrigem = chaveOrigem;
                     mensalidades[idxMen].observacao = `Conciliado via pagamento agrupado de 2 meses — pagador: ${pend.razaoSocial}`;
                 }
             });
@@ -3558,7 +3613,15 @@
 
             const hoje = new Date();
             container.innerHTML = competenciasOrdenadas.map((ref) => {
-                const itensGrupo = grupos[ref];
+                const itensGrupo = grupos[ref].slice().sort((a, b) => {
+                    const conA = contratos.find(c => c.id === a.contratoId);
+                    const conB = contratos.find(c => c.id === b.contratoId);
+                    const imoA = conA ? imoveis.find(i => i.id === conA.imovelId) : null;
+                    const imoB = conB ? imoveis.find(i => i.id === conB.imovelId) : null;
+                    const empA = imoA ? imoA.empreendimento : '';
+                    const empB = imoB ? imoB.empreendimento : '';
+                    return empA.localeCompare(empB) || (conA?.locatario || '').localeCompare(conB?.locatario || '');
+                });
                 let recebidoGrupo = 0, inadimplenteGrupo = 0;
                 let qtdRecebido = 0, qtdInadimplente = 0;
                 let htmlItens = '';
@@ -4030,9 +4093,15 @@
                 container.innerHTML = `<p class="text-xs text-center text-gray-400 py-4">Nenhum débito em aberto localizado.</p>`;
                 return;
             }
-            // Ordena por competência decrescente antes de agrupar (mês mais
-            // recente primeiro), conforme padrão definido para Mensal/Inadimplência.
+            // Ordena por empreendimento e locatário — dentro de cada locatário,
+            // mantém a competência mais recente primeiro.
             itensPendentes.sort((a, b) => {
+                const empA = a.imo ? a.imo.empreendimento : '';
+                const empB = b.imo ? b.imo.empreendimento : '';
+                const porEmpreendimento = empA.localeCompare(empB);
+                if (porEmpreendimento !== 0) return porEmpreendimento;
+                const porLocatario = (a.con.locatario || '').localeCompare(b.con.locatario || '');
+                if (porLocatario !== 0) return porLocatario;
                 const [ma, aa] = a.men.referencia.split('/');
                 const [mb, ab] = b.men.referencia.split('/');
                 return (ab + mb).localeCompare(aa + ma);
@@ -4084,6 +4153,13 @@
             const formatText = itensText.replace(/\\n/g, '\n');
             const txt = `⚠️ *RUMO NOTIFICAÇÃO DE CAIXA*\nRef: *${grupoTitle}*\n\nConstam em aberto os seguintes lançamentos pendentes:\n${formatText}\n\n*Total Consolidado: R$ ${valorTotal.toLocaleString('pt-BR')}*\n\nQualquer dúvida sobre a conciliação, estamos à disposição.`;
             window.open(`https://api.whatsapp.com/send?phone=55${celular}&text=${encodeURIComponent(txt)}`, '_blank');
+        }
+        function excluirRepasse(repId) {
+            const rep = repasses.find(r => r.id === repId);
+            if (!rep) return;
+            if (!confirm(`Confirma excluir o repasse de R$ ${rep.valor.toFixed(2)} para ${rep.socio} (Ref ${rep.mes})?`)) return;
+            repasses = repasses.filter(r => r.id !== repId);
+            saveAll(true, "Repasse excluído.");
         }
         function registrarRepasse() {
             const socio = document.getElementById('rep-socio').value;
@@ -4150,6 +4226,7 @@
                     totalSaidas += rep.valor;
                     extratoLinhas.push({
                         tipo: 'saida',
+                        id: rep.id,
                         descricao: `Transferência Bancária Efetuada`,
                         referencia: rep.mes,
                         dataVisual: formatarDataBR(rep.dataReal || rep.mes),
@@ -4176,6 +4253,7 @@
                                 <span class="text-green-700 font-bold font-mono text-xs">+ R$ ${linha.valor.toFixed(2)}</span>
                             </div>`;
                     } else {
+                        const btnExcluirRepasse = (fSocio !== 'todos' && linha.id) ? `<button onclick="excluirRepasse('${linha.id}')" title="Excluir repasse" class="ml-2 text-red-600 font-bold text-[13px]">🗑️</button>` : '';
                         tabelaExtratoHtml += `
                             <div class="flex justify-between items-center py-2 border-b border-gray-100 text-[11px] bg-red-50/30 px-1 rounded">
                                 <div>
@@ -4183,7 +4261,10 @@
                                     <p class="text-slate-700 font-medium">${linha.descricao}</p>
                                     <span class="text-gray-400">Ref: ${linha.referencia} | Transf: ${linha.dataVisual}</span>
                                 </div>
-                                <span class="text-red-700 font-bold font-mono text-xs">- R$ ${linha.valor.toFixed(2)}</span>
+                                <span class="flex items-center">
+                                    <span class="text-red-700 font-bold font-mono text-xs">- R$ ${linha.valor.toFixed(2)}</span>
+                                    ${btnExcluirRepasse}
+                                </span>
                             </div>`;
                     }
                 });
