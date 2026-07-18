@@ -1,8 +1,8 @@
 <!-- 
 ==================================================================
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
-   VERSÃO: v5.4.0 (Correção crítica: conciliação duplicando pagamentos/repasses; ordenação; layout; Admin no DEV)
-   TOTAL DE LINHAS DE CÓDIGO: 4593 linhas
+   VERSÃO: v5.5.0 (PWA: instalável como app no celular, mantendo o mesmo link/versão para desktop)
+   TOTAL DE LINHAS DE CÓDIGO: 4607 linhas
 ==================================================================
 -->
 <!DOCTYPE html>
@@ -10,6 +10,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- ===== PWA: permite "instalar" o app no celular (Android e iPhone) ===== -->
+    <!-- Isso não muda nada no desktop — é o mesmo index.html e o mesmo link. -->
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#0f172a">
+
+    <!-- Android/Chrome -->
+    <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+
+    <!-- iPhone/Safari (o iOS ignora o manifest.json para o ícone; precisa dessas tags) -->
+    <link rel="apple-touch-icon" href="icon-192.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="RUMO">
     <title>RUMO - Controle de Imóveis</title>
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
@@ -53,7 +67,7 @@
                 <div id="splash-error-detail" class="text-[11px] text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
             </div>
             <div class="text-[13px] text-slate-500 font-mono">
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v5.4.0</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v5.5.0</span>
             </div>
         </div>
     </div>
