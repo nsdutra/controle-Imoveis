@@ -2,7 +2,7 @@
   "name": "RUMO - Gestão Patrimonial",
   "short_name": "RUMO",
   "description": "Sistema de controle de imóveis, contratos e gestão patrimonial da RUMO.",
-  "start_url": "./index.html",
+  "start_url": ".",
   "scope": "./",
   "display": "standalone",
   "orientation": "portrait-primary",
