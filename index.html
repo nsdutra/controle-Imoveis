@@ -1,8 +1,8 @@
 <!-- 
 ==================================================================
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
-   VERSÃO: v5.7.0 (Câmera nativa direta para fotos de imóveis e documentos de contrato)
-   TOTAL DE LINHAS DE CÓDIGO: 4626 linhas
+   VERSÃO: v6.0.0 (Acesso automático por sócio aprovado, WhatsApp/Email/PDF por sócio, 10 ajustes de UX)
+   TOTAL DE LINHAS DE CÓDIGO: 4931 linhas
 ==================================================================
 -->
 <!DOCTYPE html>
@@ -63,11 +63,14 @@
                 <button id="btn-entrar" onclick="entrarNoSistema()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition transform active:scale-95 flex justify-center items-center gap-2">
                     <span>Acessar Sistema</span>
                 </button>
+                <button id="btn-solicitar-acesso-socio" onclick="solicitarAcessoSocio()" class="w-full bg-transparent hover:bg-slate-800 text-slate-400 font-semibold text-[13px] py-2 px-6 rounded-xl transition">
+                    👤 Sou sócio — solicitar acesso sem senha
+                </button>
                 <div id="splash-status" class="text-[13px] text-amber-400 font-semibold px-4 break-words"></div>
                 <div id="splash-error-detail" class="text-[11px] text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
             </div>
             <div class="text-[13px] text-slate-500 font-mono">
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v5.7.0</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v6.0.0</span>
             </div>
         </div>
     </div>
@@ -105,7 +108,7 @@
                 <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 text-center flex-1">
                     <p class="text-xs font-bold text-blue-900">Imóveis: <span id="imoveis-vagos-contador" class="text-sm font-black text-amber-700">0</span> vagos / <span id="imoveis-alugados-contador" class="text-sm font-black text-green-700">0</span> alugados / <span id="total-imoveis-contador" class="text-sm font-black">0</span> total</p>
                 </div>
-                <button onclick="abrirFormularioImovel()" class="offline-disable bg-blue-600 text-white font-black text-xl w-11 h-11 rounded-full shadow flex items-center justify-center active:scale-90 transition flex-none" title="Cadastrar novo imóvel">+</button>
+                <button onclick="abrirFormularioImovel()" class="offline-disable w-11 h-11 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow active:scale-90 transition" title="Cadastrar novo imóvel"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
             </div>
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 grid grid-cols-2 gap-2 text-xs">
                 <div>
@@ -190,20 +193,12 @@
                             <input type="text" id="imo-endereco-cidade" required class="w-full p-2 border rounded mt-1 text-sm">
                         </div>
                     </div>
-                    <div class="grid grid-cols-3 gap-2">
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600">Tamanho (m²)</label>
-                            <input type="number" id="imo-tamanho" required class="w-full p-2 border rounded mt-1 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600">Nº Suítes</label>
-                            <input type="number" id="imo-suites" value="0" class="w-full p-2 border rounded mt-1 text-sm">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-bold text-gray-600">Nº Banheiros</label>
-                            <input type="number" id="imo-banheiros" value="0" class="w-full p-2 border rounded mt-1 text-sm">
-                        </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">Tamanho (m²)</label>
+                        <input type="number" id="imo-tamanho" required class="w-full p-2 border rounded mt-1 text-sm">
                     </div>
+                    <input type="hidden" id="imo-suites" value="0">
+                    <input type="hidden" id="imo-banheiros" value="0">
                     <div>
                         <label class="block text-xs font-bold text-gray-600">Descrição do Imóvel</label>
                         <textarea id="imo-descricao" rows="2" class="w-full p-2 border rounded mt-1 text-sm" placeholder="Ex: 2 suítes, 1 vaga, área gourmet..."></textarea>
@@ -255,14 +250,14 @@
                     <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-black text-slate-700 uppercase">Sócios e Porcentagem (%)</span>
-                            <button type="button" onclick="adicionarSocioInput()" class="text-[11px] bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold border border-blue-200">+ Adicionar Sócio</button>
+                            <button type="button" onclick="adicionarSocioInput()" title="Adicionar sócio" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
                         </div>
                         <div id="proprietarios-divisao" class="space-y-2 text-xs"></div>
                     </div>
                     <div class="bg-slate-50 p-3 rounded-lg border border-slate-200 space-y-3">
                         <div class="flex justify-between items-center">
                             <span class="text-xs font-black text-slate-700 uppercase">Propriedade do Imóvel (%)</span>
-                            <button type="button" onclick="adicionarParteRumoInput()" class="text-[11px] bg-blue-100 text-blue-700 px-2 py-1 rounded font-bold border border-blue-200">+ Adicionar Proprietário</button>
+                            <button type="button" onclick="adicionarParteRumoInput()" title="Adicionar proprietário" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
                         </div>
                         <p class="text-[11px] text-gray-400">Registro de quem é dono do imóvel — não afeta aluguel nem repasses.</p>
                         <div id="proprietarios-parte-rumo" class="space-y-2 text-xs"></div>
@@ -272,10 +267,8 @@
                         <div class="flex items-center justify-between">
                             <label class="block text-xs font-bold text-gray-600">Fotos do Imóvel (até 10)</label>
                             <div class="flex gap-1.5">
-                                <input type="file" id="imo-camera-picker" accept="image/*" capture="environment" class="hidden" onchange="processarMultiplasFotos(this)">
-                                <button type="button" onclick="document.getElementById('imo-camera-picker').click()" title="Tirar foto agora" class="w-9 h-9 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
                                 <input type="file" id="imo-file-picker" accept="image/*" multiple class="hidden" onchange="processarMultiplasFotos(this)">
-                                <button type="button" onclick="document.getElementById('imo-file-picker').click()" title="Anexar da galeria" class="w-9 h-9 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
+                                <button type="button" onclick="document.getElementById('imo-file-picker').click()" title="Anexar fotos" class="w-9 h-9 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
                             </div>
                         </div>
                         <div id="form-images-preview-container" class="grid grid-cols-5 gap-2 mt-2" style="grid-auto-rows: auto;"></div>
@@ -293,7 +286,7 @@
                 <div class="bg-blue-50 p-3 rounded-xl border border-blue-200 text-center flex-1">
                     <p class="text-xs font-bold text-blue-900">Contratos: <span id="contratos-ativos-contador" class="text-sm font-black text-green-700">0</span> ativos / <span id="contratos-suspensos-contador" class="text-sm font-black text-amber-700">0</span> suspensos / <span id="contratos-finalizados-contador" class="text-sm font-black text-red-700">0</span> finalizados / <span id="contratos-totais-contador" class="text-sm font-black">0</span> total</p>
                 </div>
-                <button onclick="abrirFormularioContrato()" class="offline-disable bg-green-600 text-white font-black text-xl w-11 h-11 rounded-full shadow flex items-center justify-center active:scale-90 transition flex-none" title="Cadastrar novo contrato">+</button>
+                <button onclick="abrirFormularioContrato()" class="offline-disable w-11 h-11 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow active:scale-90 transition" title="Cadastrar novo contrato"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
             </div>
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 grid grid-cols-2 gap-2 text-xs">
                 <div>
@@ -388,7 +381,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-gray-600">Valor Vigente (R$)</label>
-                    <input type="number" id="con-valor" required oninput="atualizarValorLiquidoEsperado()" class="w-full p-2 border rounded mt-1 text-sm">
+                    <input type="number" step="0.01" id="con-valor" required oninput="atualizarValorLiquidoEsperado()" class="w-full p-2 border rounded mt-1 text-sm">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -431,8 +424,6 @@
                     <div>
                         <div class="flex items-center justify-between">
                             <label class="text-[11px] font-bold text-gray-500">📄 Contrato</label>
-                            <input type="file" id="con-doc-camera-Contrato" accept="image/*" capture="environment" class="hidden" onchange="processarMultiplosDocumentos(this, 'Contrato')">
-                            <button type="button" onclick="document.getElementById('con-doc-camera-Contrato').click()" title="Tirar foto agora" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
                             <input type="file" id="con-doc-input-Contrato" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="processarMultiplosDocumentos(this, 'Contrato')" class="hidden">
                             <button type="button" onclick="document.getElementById('con-doc-input-Contrato').click()" title="Anexar" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
                         </div>
@@ -441,8 +432,6 @@
                     <div>
                         <div class="flex items-center justify-between">
                             <label class="text-[11px] font-bold text-gray-500">📋 Aditivo</label>
-                            <input type="file" id="con-doc-camera-Aditivo" accept="image/*" capture="environment" class="hidden" onchange="processarMultiplosDocumentos(this, 'Aditivo')">
-                            <button type="button" onclick="document.getElementById('con-doc-camera-Aditivo').click()" title="Tirar foto agora" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
                             <input type="file" id="con-doc-input-Aditivo" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="processarMultiplosDocumentos(this, 'Aditivo')" class="hidden">
                             <button type="button" onclick="document.getElementById('con-doc-input-Aditivo').click()" title="Anexar" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
                         </div>
@@ -451,8 +440,6 @@
                     <div>
                         <div class="flex items-center justify-between">
                             <label class="text-[11px] font-bold text-gray-500">📎 Outros</label>
-                            <input type="file" id="con-doc-camera-Outros" accept="image/*" capture="environment" class="hidden" onchange="processarMultiplosDocumentos(this, 'Outros')">
-                            <button type="button" onclick="document.getElementById('con-doc-camera-Outros').click()" title="Tirar foto agora" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button>
                             <input type="file" id="con-doc-input-Outros" multiple accept=".pdf,.jpg,.jpeg,.png" onchange="processarMultiplosDocumentos(this, 'Outros')" class="hidden">
                             <button type="button" onclick="document.getElementById('con-doc-input-Outros').click()" title="Anexar" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow-sm"><svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg></button>
                         </div>
@@ -468,7 +455,7 @@
                     <div class="grid grid-cols-2 gap-2">
                         <div>
                             <label class="block text-[11px] font-bold text-gray-600">Novo Valor</label>
-                            <input type="number" id="con-valor-anterior" value="" oninput="calcularReajustePorNovoValor()" placeholder="Só se for reajustar" class="w-full p-1.5 border rounded mt-1 text-xs">
+                            <input type="number" step="0.01" id="con-valor-anterior" value="" oninput="calcularReajustePorNovoValor()" placeholder="Só se for reajustar" class="w-full p-1.5 border rounded mt-1 text-xs">
                         </div>
                         <div>
                             <label class="block text-[11px] font-bold text-gray-600">% Reajuste</label>
@@ -512,19 +499,32 @@
                 <h2 class="text-lg font-bold text-blue-900 flex-1">Faturamento Mensal</h2>
                 <input type="file" id="extrato-file-input" accept=".xlsx,.xls" class="hidden" onchange="processarExtratoImportado(this)">
                 <button onclick="document.getElementById('extrato-file-input').click()" class="offline-disable bg-slate-800 text-white font-black w-11 h-11 rounded-full shadow flex items-center justify-center active:scale-90 transition flex-none" title="Importar extrato bancário">📥</button>
-                <button onclick="alternarPainelGerarMes()" class="offline-disable bg-purple-600 text-white font-black text-xl w-11 h-11 rounded-full shadow flex items-center justify-center active:scale-90 transition flex-none" title="Gerar recebimento do mês">+</button>
+                <button onclick="alternarPainelGerarMes()" class="offline-disable w-11 h-11 flex-none flex items-center justify-center bg-white text-slate-700 border border-slate-300 rounded-full shadow active:scale-90 transition" title="Gerar recebimento do mês"><svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
             </div>
 
             <div id="painel-pendencias-extrato-wrapper" class="hidden mb-4">
                 <h2 class="text-lg font-bold mb-2 text-red-700">📋 Pendências do Extrato Importado</h2>
                 <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200">
                     <span class="text-[11px] font-bold uppercase text-slate-500 block mb-2">Filtrar Pendências</span>
-                    <div class="flex justify-between items-center gap-2">
-                        <select id="pex-filtro-tipo" onchange="renderPendenciasExtrato()" class="flex-1 p-1.5 border rounded text-[13px] bg-gray-50">
-                            <option value="todos">Todos os tipos</option>
-                            <option value="nao_identificado">Não identificados</option>
-                            <option value="confirmacao_dupla">Confirmação dupla</option>
-                        </select>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500">Locatário</label>
+                            <select id="pex-filtro-locatario" onchange="renderPendenciasExtrato()" class="w-full p-1.5 border rounded text-[13px] bg-gray-50"><option value="todos">Todos</option></select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500">Competência</label>
+                            <select id="pex-filtro-competencia" onchange="renderPendenciasExtrato()" class="w-full p-1.5 border rounded text-[13px] bg-gray-50"><option value="todos">Todas</option></select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500">Empreendimento</label>
+                            <select id="pex-filtro-empreendimento" onchange="renderPendenciasExtrato()" class="w-full p-1.5 border rounded text-[13px] bg-gray-50"><option value="todos">Todos</option></select>
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-bold text-gray-500">Imóvel</label>
+                            <select id="pex-filtro-imovel" onchange="renderPendenciasExtrato()" class="w-full p-1.5 border rounded text-[13px] bg-gray-50"><option value="todos">Todos</option></select>
+                        </div>
+                    </div>
+                    <div class="flex justify-end mt-2">
                         <span id="pex-resumo" class="text-[13px] font-bold text-red-700 whitespace-nowrap">R$ 0,00 (0)</span>
                     </div>
                 </div>
@@ -545,7 +545,13 @@
             <h2 class="text-lg font-bold mb-2 text-blue-900">Fila de Recebimentos</h2>
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200">
                 <span class="text-[11px] font-bold uppercase text-slate-500 block mb-2">Filtrar Fila de Recebimentos</span>
-                <div class="grid grid-cols-3 gap-2">
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-500">Locatário</label>
+                        <select id="men-filtro-locatario" onchange="renderMensalidades()" class="w-full p-1.5 border rounded text-[13px] bg-gray-50">
+                            <option value="todos">Todos</option>
+                        </select>
+                    </div>
                     <div>
                         <label class="block text-[11px] font-bold text-gray-500">Competência</label>
                         <select id="men-filtro-competencia" onchange="renderMensalidades()" class="w-full p-1.5 border rounded text-[13px] bg-gray-50">
@@ -553,8 +559,8 @@
                         </select>
                     </div>
                     <div>
-                        <label class="block text-[11px] font-bold text-gray-500">Locatário</label>
-                        <select id="men-filtro-locatario" onchange="renderMensalidades()" class="w-full p-1.5 border rounded text-[13px] bg-gray-50">
+                        <label class="block text-[11px] font-bold text-gray-500">Empreendimento</label>
+                        <select id="men-filtro-empreendimento" onchange="renderMensalidades()" class="w-full p-1.5 border rounded text-[13px] bg-gray-50">
                             <option value="todos">Todos</option>
                         </select>
                     </div>
@@ -694,11 +700,21 @@
             
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-2">
                 <span class="text-[11px] font-bold uppercase text-slate-500 block mb-2">Filtrar Prestação de Contas</span>
-                <div class="grid grid-cols-3 gap-1">
+                <div class="grid grid-cols-2 gap-1">
                     <div>
                         <label class="block text-[11px] font-bold text-gray-500">Sócio</label>
                         <select id="socio-filtro-nome" onchange="renderSociosDistribricao()" class="w-full p-1.5 border rounded mt-0.5 text-[13px] bg-gray-50"></select>
                     </div>
+                    <div>
+                        <label class="block text-[11px] font-bold text-gray-500">Tipo</label>
+                        <select id="socio-filtro-tipo" onchange="renderSociosDistribricao()" class="w-full p-1.5 border rounded mt-0.5 text-[13px] bg-gray-50">
+                            <option value="todos">Créditos e Débitos</option>
+                            <option value="credito">Só Créditos</option>
+                            <option value="debito">Só Débitos</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-1">
                     <div>
                         <label class="block text-[11px] font-bold text-gray-500">Mês Ref</label>
                         <select id="socio-filtro-mes" onchange="renderSociosDistribricao()" class="w-full p-1.5 border rounded mt-0.5 text-[13px] bg-gray-50"></select>
@@ -713,12 +729,9 @@
                         </select>
                     </div>
                 </div>
-                <button onclick="exportarRelatorioSocioPDF()" class="w-full mt-2 bg-blue-600 hover:bg-blue-500 text-white font-bold text-[13px] py-2 rounded-lg shadow transition active:scale-95">
-                    📄 Exportar Extrato Sócio PDF
-                </button>
             </div>
             <div class="bg-white p-4 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-3 offline-disable">
-                <h3 class="text-[11px] font-bold uppercase text-slate-500">Registrar Transferência / Repasse</h3>
+                <h3 class="text-[11px] font-bold uppercase text-slate-500">Registrar Retirada</h3>
                 <div class="grid grid-cols-2 gap-2">
                     <select id="rep-socio" class="w-full p-1.5 border rounded text-[13px] bg-gray-50"></select>
                     <select id="rep-mes" class="w-full p-1.5 border rounded text-[13px] bg-gray-50"></select>
@@ -727,7 +740,7 @@
                     <input type="number" id="rep-valor" placeholder="Valor (R$)" class="w-full p-1.5 border rounded text-[13px] font-bold">
                     <input type="date" id="rep-data-transferencia" class="w-full p-1.5 border rounded text-[13px] text-center bg-gray-50">
                 </div>
-                <button onclick="registrarRepasse()" class="w-full bg-slate-900 text-white py-2 rounded font-bold text-[13px] shadow">Confirmar e Liquidar para Sócio</button>
+                <button onclick="registrarRepasse()" class="w-full bg-slate-900 text-white py-2 rounded font-bold text-[13px] shadow">Confirmar Retirada para Sócio</button>
             </div>
             <h3 class="text-[11px] font-bold uppercase text-slate-500 mb-2 tracking-wide">📋 Extrato de Entradas e Saídas</h3>
             <div id="lista-socios-prestacao" class="space-y-3"></div>
@@ -741,8 +754,8 @@
             <div id="lista-administradoras" class="space-y-3 mb-6"></div>
 
             <div id="form-administradora-wrapper" class="hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-bold text-slate-900" id="form-administradora-titulo">Nova Administradora</h2>
+                <div class="flex justify-end items-center mb-4">
+                    <h2 class="hidden" id="form-administradora-titulo">Nova Administradora</h2>
                     <button onclick="cancelarEdicaoAdministradora()" class="text-xs text-red-600 font-bold">✕ Fechar</button>
                 </div>
                 <form id="form-administradora" onsubmit="saveAdministradora(event)" class="bg-white p-4 rounded-xl shadow-sm mb-6 space-y-3 border border-gray-200 offline-disable">
@@ -771,6 +784,11 @@
         <section id="tab-developer" class="tab-content">
             <h2 class="text-lg font-bold mb-3 text-red-500">⚙️ Central do Desenvolvedor</h2>
             <p class="text-[11px] text-gray-500 mb-4">Aba de depuração ativada. Use as ferramentas abaixo para monitorar a gravação de contratos e a integridade do banco.</p>
+
+            <div class="bg-white border-2 border-blue-200 p-3 rounded-xl mb-4">
+                <p class="text-xs font-black text-blue-900 mb-2">🔑 Solicitações de Acesso de Sócios</p>
+                <div id="lista-dispositivos-pendentes" class="space-y-2"></div>
+            </div>
 
             <div class="bg-red-50 border-2 border-red-300 p-3 rounded-xl mb-4">
                 <p class="text-xs font-black text-red-700 mb-1">⚠️ Importar Carga Inicial</p>
@@ -862,6 +880,68 @@
         let pendenciasExtrato = [];
         let gruposMensalAbertos = null; // null = ainda não inicializado (abre só o mês mais recente)
         let administradoras = [];
+        let dispositivosAprovados = [];
+        let socioLogado = null; // preenchido se este aparelho for um sócio aprovado
+        // Identificador deste aparelho/instalação — gerado uma vez e guardado
+        // localmente. Não identifica o hardware de verdade (nenhum navegador
+        // permite isso por privacidade); é só um código aleatório persistente
+        // nesta instalação do PWA, usado para o esquema de aprovação de acesso.
+        async function solicitarAcessoSocio() {
+            const nomeEscolhido = prompt(`Qual sócio é você? Digite exatamente um destes nomes:\n${NOMES_SOCIOS_PERFIL.join(', ')}`);
+            if (!nomeEscolhido) return;
+            const nomeNormalizado = NOMES_SOCIOS_PERFIL.find(n => n.toLowerCase() === nomeEscolhido.trim().toLowerCase());
+            if (!nomeNormalizado) {
+                alert(`⚠️ Nome não reconhecido. Digite exatamente um destes: ${NOMES_SOCIOS_PERFIL.join(', ')}`);
+                return;
+            }
+            const btn = document.getElementById('btn-solicitar-acesso-socio');
+            btn.disabled = true;
+            btn.innerText = "Enviando solicitação...";
+            try {
+                // Busca a lista atual de dispositivos (pode ser a primeira ação do
+                // usuário nesse aparelho, então talvez ainda não tenha sido buscada).
+                const response = await fetch(GOOGLE_API_URL);
+                const resData = await response.json();
+                const listaAtual = (resData.dados && resData.dados.dispositivosAprovados) || [];
+
+                const jaExiste = listaAtual.find(d => d.deviceId === deviceId);
+                if (jaExiste) {
+                    if (jaExiste.status === 'Aprovado') {
+                        alert("✅ Este aparelho já está aprovado! Toque em 'Acessar Sistema'.");
+                    } else {
+                        alert("⏳ Já existe uma solicitação para este aparelho, aguardando aprovação.");
+                    }
+                    return;
+                }
+
+                listaAtual.push({
+                    deviceId: deviceId,
+                    nomeSocio: nomeNormalizado,
+                    status: 'Pendente',
+                    solicitadoEm: new Date().toISOString(),
+                    aprovadoEm: ''
+                });
+                await enviarDadosParaGoogleSheets("dispositivosAprovados", listaAtual);
+                dispositivosAprovados = listaAtual;
+                alert(`✅ Solicitação enviada como "${nomeNormalizado}". Assim que for aprovada, este aparelho entra direto, sem senha.`);
+            } catch (err) {
+                alert("⚠️ Não foi possível enviar a solicitação. Verifique sua internet e tente novamente.");
+            }
+            btn.disabled = false;
+            btn.innerText = "👤 Sou sócio — solicitar acesso sem senha";
+        }
+        function obterOuCriarDeviceId() {
+            let id = localStorage.getItem('rumo_device_id');
+            if (!id) {
+                id = 'dev_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 12);
+                localStorage.setItem('rumo_device_id', id);
+            }
+            return id;
+        }
+        const deviceId = obterOuCriarDeviceId();
+        // Nomes curtos usados para o "perfil de sócio" (mesmo padrão usado nos
+        // repasses — primeiro nome apenas).
+        const NOMES_SOCIOS_PERFIL = ["Ruyter", "Renato", "Roberta", "Claudia", "Luciana"];
         let extratoFingerprints = [];
         // Sócios conhecidos para identificar repasses (PIX enviado) no extrato bancário.
         // Comparação sempre em maiúsculas/sem espaços extras.
@@ -937,6 +1017,10 @@
             ativarModoDesenvolvedor();
         }
         function ativarModoDesenvolvedor() {
+            if (socioLogado) {
+                alert("🔒 Perfis de sócio não têm acesso ao modo desenvolvedor.");
+                return;
+            }
             isDevModeActive = true;
             document.getElementById('btn-tab-developer').classList.remove('hidden');
             document.getElementById('btn-tab-administradoras').classList.remove('hidden');
@@ -1231,6 +1315,11 @@
         // (ISO com hora e "Z", "yyyy-MM-dd", ou já "dd/MM/yyyy") para exibição
         // sempre em dd/MM/yyyy. Antes, valores como "2026-07-14T00:00:00.000Z"
         // apareciam sem tratamento na tela após recarregar a página.
+        function formatarMoeda(valor) {
+            const n = parseFloat(valor);
+            if (isNaN(n)) return 'R$ 0,00';
+            return 'R$ ' + n.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
         function formatarDataBR(valor) {
             if (!valor) return '-';
             if (typeof valor === 'string') {
@@ -1467,6 +1556,7 @@
             renderPreviewFotosImovel();
         }
         function obterNomeUsuarioLocal() {
+            if (socioLogado) return socioLogado; // aparelho aprovado — não pergunta nada
             let nome = localStorage.getItem('rumo_usuario_nome');
             if (!nome) {
                 nome = prompt("Antes de começar, qual seu nome? (usado apenas para o log de acessos)") || 'Não identificado';
@@ -1528,6 +1618,16 @@
                     pendenciasExtrato = resData.dados.pendenciasExtrato || [];
                     extratoFingerprints = resData.dados.extratoFingerprints || [];
                     administradoras = (resData.dados.administradoras || []).map(normalizarAdministradora).filter(Boolean);
+                    dispositivosAprovados = resData.dados.dispositivosAprovados || [];
+                    // Checa se este aparelho já foi aprovado como um sócio específico.
+                    const dispositivoAtual = dispositivosAprovados.find(d => d.deviceId === deviceId && d.status === 'Aprovado');
+                    if (dispositivoAtual) {
+                        socioLogado = dispositivoAtual.nomeSocio;
+                        localStorage.setItem('rumo_device_previously_approved', '1');
+                    } else {
+                        socioLogado = null;
+                        localStorage.removeItem('rumo_device_previously_approved');
+                    }
                     logScreen(`Normalizados com sucesso: ${imoveis.length} imóveis, ${contratos.length} contratos.`);
                     localStorage.setItem('rumo_imoveis', JSON.stringify(imoveis));
                     localStorage.setItem('rumo_contratos', JSON.stringify(contratos));
@@ -1582,6 +1682,7 @@
                         renderVitrine();
                         renderPendenciasExtrato();
                         renderAdministradoras();
+                        renderDispositivosPendentes();
                         atualizarListaSelecaoSociosRepasse();
                         atualizarDropdownFiltrosDinamicos();
                         logScreen("=== COMPONENTES INICIALIZADOS COM SUCESSO ===");
@@ -1724,6 +1825,7 @@
             renderVitrine();
             renderPendenciasExtrato();
             renderAdministradoras();
+            renderDispositivosPendentes();
             atualizarListaSelecaoSociosRepasse();
             atualizarDropdownFiltrosDinamicos();
             if (!enviarParaNuvem) return;
@@ -2265,6 +2367,53 @@
             administradoras = administradoras.filter(a => a.id !== id);
             saveAll(true, "Administradora excluída.");
         }
+        function renderDispositivosPendentes() {
+            const container = document.getElementById('lista-dispositivos-pendentes');
+            if (!container) return;
+            if (dispositivosAprovados.length === 0) {
+                container.innerHTML = '<p class="text-[11px] text-gray-400">Nenhuma solicitação ainda.</p>';
+                return;
+            }
+            // Mostra pendentes primeiro, depois aprovados (para poder revogar).
+            const ordenados = dispositivosAprovados.slice().sort((a, b) => (a.status === 'Pendente' ? -1 : 1) - (b.status === 'Pendente' ? -1 : 1));
+            container.innerHTML = ordenados.map(d => {
+                const corBadge = d.status === 'Aprovado' ? 'bg-green-100 text-green-800' : (d.status === 'Recusado' ? 'bg-gray-200 text-gray-600' : 'bg-amber-100 text-amber-800');
+                const botoes = d.status === 'Pendente'
+                    ? `<button onclick="aprovarDispositivo('${d.deviceId}')" class="flex-1 bg-emerald-600 text-white text-[11px] py-1 rounded font-bold">✅ Aprovar</button>
+                       <button onclick="recusarDispositivo('${d.deviceId}')" class="flex-1 bg-red-50 text-red-600 border border-red-200 text-[11px] py-1 rounded font-bold">Recusar</button>`
+                    : (d.status === 'Aprovado'
+                        ? `<button onclick="revogarDispositivo('${d.deviceId}')" class="w-full bg-red-50 text-red-600 border border-red-200 text-[11px] py-1 rounded font-bold">Revogar acesso</button>`
+                        : '');
+                return `
+                    <div class="bg-slate-50 p-2 rounded-lg border border-slate-200 text-[11px] space-y-1">
+                        <div class="flex justify-between items-center">
+                            <span class="font-bold text-slate-800">👤 ${d.nomeSocio}</span>
+                            <span class="px-1.5 py-0.5 rounded font-bold ${corBadge}">${d.status}</span>
+                        </div>
+                        <p class="text-gray-400">Solicitado em ${d.solicitadoEm ? new Date(d.solicitadoEm).toLocaleString('pt-BR') : '-'}</p>
+                        <div class="flex gap-1.5">${botoes}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        function aprovarDispositivo(devId) {
+            const d = dispositivosAprovados.find(x => x.deviceId === devId);
+            if (!d) return;
+            d.status = 'Aprovado';
+            d.aprovadoEm = new Date().toISOString();
+            enviarDadosParaGoogleSheets("dispositivosAprovados", dispositivosAprovados).then(() => renderDispositivosPendentes());
+        }
+        function recusarDispositivo(devId) {
+            const d = dispositivosAprovados.find(x => x.deviceId === devId);
+            if (!d) return;
+            d.status = 'Recusado';
+            enviarDadosParaGoogleSheets("dispositivosAprovados", dispositivosAprovados).then(() => renderDispositivosPendentes());
+        }
+        function revogarDispositivo(devId) {
+            if (!confirm("Confirma revogar o acesso automático deste aparelho? Ele vai precisar da senha normal na próxima vez.")) return;
+            dispositivosAprovados = dispositivosAprovados.filter(x => x.deviceId !== devId);
+            enviarDadosParaGoogleSheets("dispositivosAprovados", dispositivosAprovados).then(() => renderDispositivosPendentes());
+        }
         function renderAdministradoras() {
             popularDropdownAdministradoras();
             const container = document.getElementById('lista-administradoras');
@@ -2328,7 +2477,7 @@
             const fEmpImo = document.getElementById('imoveis-filtro-emp')?.value || 'todos';
             const fStatusImo = document.getElementById('imoveis-filtro-status')?.value || 'todos';
 
-            imoveis.forEach((imo, index) => {
+            imoveis.slice().sort((a, b) => (a.empreendimento || '').localeCompare(b.empreendimento || '')).forEach((imo, index) => {
                 const passaFiltroImovel = (fEmpImo === 'todos' || imo.empreendimento === fEmpImo) &&
                                           (fStatusImo === 'todos' || imo.status === fStatusImo);
                 try {
@@ -2362,7 +2511,7 @@
                                     <span class="text-[11px] font-bold px-1.5 py-0.5 rounded ${imo.status==='Vago'?'bg-amber-100 text-amber-800':'bg-green-100 text-green-800'}">${imo.status}</span>
                                     ${imo.empreendimento || 'Canaã'} · ${imo.tipo}${badgeEnergia}
                                 </p>
-                                <span class="text-sm font-black text-slate-900 flex-none">R$ ${imo.valor}</span>
+                                <span class="text-sm font-black text-slate-900 flex-none">${formatarMoeda(imo.valor)}</span>
                             </div>
                             <p class="text-[13px] text-slate-600 truncate mt-1">${linha2}</p>
                             ${ftHtml}
@@ -2802,7 +2951,7 @@
                     <div class="bg-white p-3 rounded-xl shadow-sm border border-gray-200">
                         <div class="flex justify-between items-start gap-2">
                             <p class="text-xs font-bold text-slate-900 truncate min-w-0">${badgeStatus} ${alertaTriangulo} 👤 ${con.locatario} ${badgeEnergia}${badgeAnexos}</p>
-                            <span class="text-sm font-black flex-none text-slate-900">R$ ${con.valor}</span>
+                            <span class="text-sm font-black flex-none text-slate-900">${formatarMoeda(con.valor)}</span>
                         </div>
                         <p class="text-[13px] text-gray-500 truncate mt-1">${linha2}</p>
                         <div class="flex gap-1.5 mt-2 flex-wrap items-center">
@@ -3471,52 +3620,122 @@
                 (qtdJaPendentes > 0 ? `⏭️ ${qtdJaPendentes} já tinham uma pendência em aberto igual (não duplicados)` : '')
             );
         }
+        let gruposPendenciasAbertos = null;
         function renderPendenciasExtrato() {
             const wrapper = document.getElementById('painel-pendencias-extrato-wrapper');
             const container = document.getElementById('painel-pendencias-extrato');
             if (!wrapper || !container) return;
-            const fTipo = document.getElementById('pex-filtro-tipo')?.value || 'todos';
             const pendentesTotal = pendenciasExtrato.filter(p => p.status === 'Pendente');
             wrapper.classList.toggle('hidden', pendentesTotal.length === 0);
-            const pendentes = pendentesTotal.filter(p => fTipo === 'todos' || p.tipo === fTipo);
+
+            // Popular os 4 filtros a partir dos contratos sugeridos das próprias pendências.
+            const contratosSugeridos = pendentesTotal.map(p => p.contratoIdSugerido ? contratos.find(c => c.id === p.contratoIdSugerido) : null).filter(Boolean);
+            popularFiltroSelect('pex-filtro-locatario', contratosSugeridos.map(c => c.locatario));
+            popularFiltroSelect('pex-filtro-competencia', pendentesTotal.map(p => p.referenciaSugerida));
+            popularFiltroSelect('pex-filtro-empreendimento', contratosSugeridos.map(c => { const imo = imoveis.find(i => i.id === c.imovelId); return imo ? imo.empreendimento : null; }));
+            const selectPexImovel = document.getElementById('pex-filtro-imovel');
+            if (selectPexImovel) {
+                const valorAtualImovel = selectPexImovel.value || 'todos';
+                const imoveisUnicos = [...new Map(contratosSugeridos.map(c => imoveis.find(i => i.id === c.imovelId)).filter(Boolean).map(i => [i.id, i])).values()];
+                selectPexImovel.innerHTML = '<option value="todos">Todos</option>' + imoveisUnicos.map(i => `<option value="${i.id}">${i.empreendimento} - ${i.enderecoRua}</option>`).join('');
+                selectPexImovel.value = (valorAtualImovel === 'todos' || imoveisUnicos.some(i => i.id === valorAtualImovel)) ? valorAtualImovel : 'todos';
+            }
+
+            const fLocatario = document.getElementById('pex-filtro-locatario')?.value || 'todos';
+            const fCompetencia = document.getElementById('pex-filtro-competencia')?.value || 'todos';
+            const fEmpreendimento = document.getElementById('pex-filtro-empreendimento')?.value || 'todos';
+            const fImovel = document.getElementById('pex-filtro-imovel')?.value || 'todos';
+
+            const pendentes = pendentesTotal.filter(p => {
+                const con = p.contratoIdSugerido ? contratos.find(c => c.id === p.contratoIdSugerido) : null;
+                const imo = con ? imoveis.find(i => i.id === con.imovelId) : null;
+                if (fLocatario !== 'todos' && (!con || con.locatario !== fLocatario)) return false;
+                if (fCompetencia !== 'todos' && p.referenciaSugerida !== fCompetencia) return false;
+                if (fEmpreendimento !== 'todos' && (!imo || imo.empreendimento !== fEmpreendimento)) return false;
+                if (fImovel !== 'todos' && (!con || con.imovelId !== fImovel)) return false;
+                return true;
+            });
+
             const resumo = document.getElementById('pex-resumo');
             if (resumo) {
                 const somaPendentes = pendentes.reduce((acc, p) => acc + p.valor, 0);
                 resumo.innerText = `R$ ${somaPendentes.toLocaleString('pt-BR', {minimumFractionDigits:2})} (${pendentes.length})`;
             }
-            container.innerHTML = pendentes.map(p => {
-                const con = p.contratoIdSugerido ? contratos.find(c => c.id === p.contratoIdSugerido) : null;
-                if (p.tipo === 'confirmacao_dupla') {
+
+            // Agrupa por competência sugerida, igual à Fila de Recebimentos — cada
+            // grupo pode ser fechado/aberto, e mantém o estado entre ações.
+            const grupos = {};
+            pendentes.forEach(p => {
+                const ref = p.referenciaSugerida || 'Sem competência';
+                if (!grupos[ref]) grupos[ref] = [];
+                grupos[ref].push(p);
+            });
+            const competenciasOrdenadas = Object.keys(grupos).sort((a, b) => {
+                const [ma, aa] = (a.split('/')[0] ? a.split('/') : ['00','0000']), [mb, ab] = (b.split('/')[0] ? b.split('/') : ['00','0000']);
+                return (ab + mb).localeCompare(aa + ma);
+            });
+            if (gruposPendenciasAbertos === null) {
+                gruposPendenciasAbertos = new Set(competenciasOrdenadas.length > 0 ? [competenciasOrdenadas[0]] : []);
+            }
+
+            container.innerHTML = competenciasOrdenadas.map(ref => {
+                const itensGrupo = grupos[ref];
+                const htmlItens = itensGrupo.map(p => {
+                    const con = p.contratoIdSugerido ? contratos.find(c => c.id === p.contratoIdSugerido) : null;
+                    if (p.tipo === 'confirmacao_dupla') {
+                        return `
+                            <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-purple-500">
+                                <p class="text-xs font-bold text-slate-900">${p.razaoSocial}</p>
+                                <p class="text-[13px] text-gray-500">Recebido em ${formatarDataBR(p.data)}: R$ ${p.valor.toFixed(2)} — valor bate com <strong>2 mensalidades pendentes</strong> de ${con ? con.locatario : '-'}. Confirma que são os 2 meses?</p>
+                                <div class="flex gap-2 mt-2">
+                                    <button onclick="confirmarPendenciaDupla('${p.id}')" class="flex-1 bg-emerald-600 text-white text-[13px] py-1.5 rounded font-bold">✅ Sim, são os 2 meses</button>
+                                    <button onclick="descartarPendenciaExtrato('${p.id}')" class="flex-1 bg-slate-100 text-slate-700 text-[13px] py-1.5 rounded font-bold border">Descartar</button>
+                                </div>
+                            </div>`;
+                    }
+                    const opcoesMensalidades = mensalidades.filter(m => m.status === 'Inadimplente').map(m => {
+                        const c = contratos.find(c => c.id === m.contratoId);
+                        const imo = c ? imoveis.find(i => i.id === c.imovelId) : null;
+                        const local = imo ? `${imo.empreendimento} - ${imo.enderecoRua || ''}, ${imo.enderecoNum || ''}${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}` : '';
+                        return `<option value="${m.id}">${c ? c.locatario : '?'} — Ref ${m.referencia} — R$ ${m.valorConfirmado.toFixed(2)}${local ? ' — ' + local : ''}</option>`;
+                    }).join('');
                     return `
-                        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-purple-500">
-                            <p class="text-xs font-bold text-slate-900">${p.razaoSocial}</p>
-                            <p class="text-[13px] text-gray-500">Recebido em ${formatarDataBR(p.data)}: R$ ${p.valor.toFixed(2)} — valor bate com <strong>2 mensalidades pendentes</strong> de ${con ? con.locatario : '-'}. Confirma que são os 2 meses?</p>
+                        <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-amber-500">
+                            <p class="text-xs font-bold text-slate-900">${p.razaoSocial || '(sem nome)'}</p>
+                            <p class="text-[13px] text-gray-500">Recebido em ${formatarDataBR(p.data)}: <strong>R$ ${p.valor.toFixed(2)}</strong> — não identificado automaticamente.</p>
+                            <select id="vincular-${p.id}" class="w-full border p-1.5 rounded text-[13px] mt-2 bg-gray-50">
+                                <option value="">-- Vincular a uma mensalidade pendente --</option>
+                                ${opcoesMensalidades}
+                            </select>
                             <div class="flex gap-2 mt-2">
-                                <button onclick="confirmarPendenciaDupla('${p.id}')" class="flex-1 bg-emerald-600 text-white text-[13px] py-1.5 rounded font-bold">✅ Sim, são os 2 meses</button>
+                                <button onclick="vincularPendenciaExtrato('${p.id}')" class="flex-1 bg-blue-600 text-white text-[13px] py-1.5 rounded font-bold">Vincular</button>
                                 <button onclick="descartarPendenciaExtrato('${p.id}')" class="flex-1 bg-slate-100 text-slate-700 text-[13px] py-1.5 rounded font-bold border">Descartar</button>
                             </div>
                         </div>`;
-                }
-                const opcoesMensalidades = mensalidades.filter(m => m.status === 'Inadimplente').map(m => {
-                    const c = contratos.find(c => c.id === m.contratoId);
-                    const imo = c ? imoveis.find(i => i.id === c.imovelId) : null;
-                    const local = imo ? `${imo.empreendimento} - ${imo.enderecoRua || ''}, ${imo.enderecoNum || ''}${imo.enderecoComp ? ' - ' + imo.enderecoComp : ''}` : '';
-                    return `<option value="${m.id}">${c ? c.locatario : '?'} — Ref ${m.referencia} — R$ ${m.valorConfirmado.toFixed(2)}${local ? ' — ' + local : ''}</option>`;
                 }).join('');
+
+                const grupoId = 'grupo-pex-' + ref.replace('/', '-');
+                const aberto = gruposPendenciasAbertos.has(ref);
                 return `
-                    <div class="bg-white p-3 rounded-xl shadow-sm border-l-4 border-amber-500">
-                        <p class="text-xs font-bold text-slate-900">${p.razaoSocial || '(sem nome)'}</p>
-                        <p class="text-[13px] text-gray-500">Recebido em ${formatarDataBR(p.data)}: <strong>R$ ${p.valor.toFixed(2)}</strong> — não identificado automaticamente.</p>
-                        <select id="vincular-${p.id}" class="w-full border p-1.5 rounded text-[13px] mt-2 bg-gray-50">
-                            <option value="">-- Vincular a uma mensalidade pendente --</option>
-                            ${opcoesMensalidades}
-                        </select>
-                        <div class="flex gap-2 mt-2">
-                            <button onclick="vincularPendenciaExtrato('${p.id}')" class="flex-1 bg-blue-600 text-white text-[13px] py-1.5 rounded font-bold">Vincular</button>
-                            <button onclick="descartarPendenciaExtrato('${p.id}')" class="flex-1 bg-slate-100 text-slate-700 text-[13px] py-1.5 rounded font-bold border">Descartar</button>
-                        </div>
-                    </div>`;
+                    <div class="mb-3">
+                        <button type="button" onclick="alternarGrupoPendencias('${ref}')" class="w-full bg-red-700 text-white p-3 rounded-xl flex justify-between items-center shadow">
+                            <span class="font-bold text-sm">📅 ${ref} <span id="${grupoId}-seta">${aberto ? '▲' : '▼'}</span></span>
+                            <span class="text-[11px] bg-red-900/40 px-2 py-0.5 rounded">${itensGrupo.length} item(ns)</span>
+                        </button>
+                        <div id="${grupoId}" class="${aberto ? '' : 'hidden'} space-y-2 mt-2">${htmlItens}</div>
+                    </div>
+                `;
             }).join('');
+        }
+        function alternarGrupoPendencias(ref) {
+            const grupoId = 'grupo-pex-' + ref.replace('/', '-');
+            const div = document.getElementById(grupoId);
+            const seta = document.getElementById(`${grupoId}-seta`);
+            if (!div) return;
+            div.classList.toggle('hidden');
+            const aberto = !div.classList.contains('hidden');
+            if (seta) seta.innerText = aberto ? '▲' : '▼';
+            if (aberto) gruposPendenciasAbertos.add(ref); else gruposPendenciasAbertos.delete(ref);
         }
         function vincularPendenciaExtrato(pendId) {
             const select = document.getElementById(`vincular-${pendId}`);
@@ -3576,6 +3795,7 @@
             const selComp = document.getElementById('men-filtro-competencia');
             const selLoc = document.getElementById('men-filtro-locatario');
             const selImo = document.getElementById('men-filtro-imovel');
+            const selEmp = document.getElementById('men-filtro-empreendimento');
             if (!selComp || !selLoc || !selImo) return;
 
             const valComp = selComp.value || 'todos';
@@ -3593,6 +3813,8 @@
 
             selImo.innerHTML = '<option value="todos">Todos</option>' + imoveis.map(i => `<option value="${i.id}">${i.empreendimento} - ${i.enderecoRua}</option>`).join('');
 
+            if (selEmp) popularFiltroSelect('men-filtro-empreendimento', imoveis.map(i => i.empreendimento));
+
             // Restaura a seleção anterior (o padrão inicial já é "todos" via option acima).
             selComp.value = competencias.includes(valComp) ? valComp : 'todos';
             selLoc.value = locatarios.includes(valLoc) ? valLoc : 'todos';
@@ -3606,6 +3828,7 @@
             const fComp = document.getElementById('men-filtro-competencia')?.value || 'todos';
             const fLoc = document.getElementById('men-filtro-locatario')?.value || 'todos';
             const fImo = document.getElementById('men-filtro-imovel')?.value || 'todos';
+            const fEmp = document.getElementById('men-filtro-empreendimento')?.value || 'todos';
             
             const filtradas = mensalidades.filter(men => {
                 if (fComp !== 'todos' && men.referencia !== fComp) return false;
@@ -3613,6 +3836,10 @@
                 if (!con) return false;
                 if (fLoc !== 'todos' && con.locatario !== fLoc) return false;
                 if (fImo !== 'todos' && con.imovelId !== fImo) return false;
+                if (fEmp !== 'todos') {
+                    const imo = imoveis.find(i => i.id === con.imovelId);
+                    if (!imo || imo.empreendimento !== fEmp) return false;
+                }
                 return true;
             });
 
@@ -3930,11 +4157,11 @@
             pdf.text(`R$ ${(potTotal - fatTotal).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`, 140, currentY);
             pdf.save(`Demonstrativo_Analitico_Rumo_${Date.now()}.pdf`);
         }
-        function exportarRelatorioSocioPDF() {
+        function exportarRelatorioSocioPDF(socioParam) {
             const { jsPDF } = window.jspdf;
             const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
             
-            const socioSelecionado = document.getElementById('socio-filtro-nome').value;
+            const socioSelecionado = socioParam || document.getElementById('socio-filtro-nome').value;
             if (socioSelecionado === "todos") {
                 alert("⚠️ Selecione um sócio específico para gerar o extrato.");
                 return;
@@ -4211,6 +4438,7 @@
             const fSocio = document.getElementById('socio-filtro-nome').value;
             const fMes = document.getElementById('socio-filtro-mes').value;
             const fAno = document.getElementById('socio-filtro-ano').value;
+            const fTipo = document.getElementById('socio-filtro-tipo')?.value || 'todos';
             let todosOsSociosHistorico = new Set(["Ruyter"]);
             imoveis.forEach(imo => {
                 if(imo.divisao) Object.keys(imo.divisao).forEach(s => todosOsSociosHistorico.add(s));
@@ -4220,7 +4448,7 @@
                 let extratoLinhas = [];
                 let totalEntradas = 0;
                 let totalSaidas = 0;
-                mensalidades.filter(m => m.status === 'Pago').forEach(men => {
+                if (fTipo !== 'debito') mensalidades.filter(m => m.status === 'Pago').forEach(men => {
                     const partesRef = men.referencia.split('/'); 
                     if(fMes !== 'todos' && men.referencia !== fMes) return;
                     if(fAno !== 'todos' && partesRef[1] !== fAno) return;
@@ -4243,7 +4471,7 @@
                         });
                     }
                 });
-                repasses.filter(r => r.socio === socio).forEach(rep => {
+                if (fTipo !== 'credito') repasses.filter(r => r.socio === socio).forEach(rep => {
                     const partesRef = rep.mes.split('/');
                     if(fMes !== 'todos' && rep.mes !== fMes) return;
                     if(fAno !== 'todos' && partesRef[1] !== fAno) return;
@@ -4251,7 +4479,7 @@
                     extratoLinhas.push({
                         tipo: 'saida',
                         id: rep.id,
-                        descricao: `Transferência Bancária Efetuada`,
+                        descricao: `Retirada Efetuada`,
                         referencia: rep.mes,
                         dataVisual: formatarDataBR(rep.dataReal || rep.mes),
                         valor: rep.valor,
@@ -4292,19 +4520,91 @@
                             </div>`;
                     }
                 });
-                const saldoPendente = totalEntradas - totalSaidas;
+                function calcularExtratoSocio(socio) {
+            const fMes = document.getElementById('socio-filtro-mes').value;
+            const fAno = document.getElementById('socio-filtro-ano').value;
+            const fTipo = document.getElementById('socio-filtro-tipo')?.value || 'todos';
+            let extratoLinhas = [];
+            let totalEntradas = 0;
+            let totalSaidas = 0;
+            if (fTipo !== 'debito') mensalidades.filter(m => m.status === 'Pago').forEach(men => {
+                const partesRef = men.referencia.split('/');
+                if(fMes !== 'todos' && men.referencia !== fMes) return;
+                if(fAno !== 'todos' && partesRef[1] !== fAno) return;
+                const con = contratos.find(c => c.id === men.contratoId);
+                if(!con) return;
+                const imo = imoveis.find(i => i.id === con.imovelId);
+                if(!imo || !imo.divisao) return;
+                const pctSocio = imo.divisao[socio] || 0;
+                if(pctSocio > 0) {
+                    const cotaParte = men.valorConfirmado * (pctSocio / 100);
+                    totalEntradas += cotaParte;
+                    extratoLinhas.push({ tipo: 'entrada', descricao: `Cota Aluguel - ${con.locatario} (${imo.empreendimento})`, referencia: men.referencia, dataVisual: formatarDataBR(men.dataPgto), valor: cotaParte, ordenador: partesRef[1] + partesRef[0] });
+                }
+            });
+            if (fTipo !== 'credito') repasses.filter(r => r.socio === socio).forEach(rep => {
+                const partesRef = rep.mes.split('/');
+                if(fMes !== 'todos' && rep.mes !== fMes) return;
+                if(fAno !== 'todos' && partesRef[1] !== fAno) return;
+                totalSaidas += rep.valor;
+                extratoLinhas.push({ tipo: 'saida', id: rep.id, descricao: `Retirada Efetuada`, referencia: rep.mes, dataVisual: formatarDataBR(rep.dataReal || rep.mes), valor: rep.valor, ordenador: partesRef[1] + partesRef[0] });
+            });
+            extratoLinhas.sort((a, b) => a.ordenador.localeCompare(b.ordenador));
+            return { extratoLinhas, totalEntradas, totalSaidas, saldo: totalEntradas - totalSaidas };
+        }
+        function montarTextoResumoSocio(socio) {
+            const { extratoLinhas, totalEntradas, totalSaidas, saldo } = calcularExtratoSocio(socio);
+            const fMes = document.getElementById('socio-filtro-mes').value;
+            const fAno = document.getElementById('socio-filtro-ano').value;
+            let txt = `📊 *Resumo — Sócio ${socio}*\n`;
+            txt += `Período: ${fMes === 'todos' ? 'Todos os meses' : fMes}${fAno !== 'todos' ? ' / ' + fAno : ''}\n\n`;
+            extratoLinhas.forEach(l => {
+                txt += `${l.tipo === 'entrada' ? '➕' : '➖'} ${l.descricao} (Ref ${l.referencia}): R$ ${l.valor.toFixed(2)}\n`;
+            });
+            txt += `\nTotal Aluguéis: R$ ${totalEntradas.toFixed(2)}\nTotal Retirado: R$ ${totalSaidas.toFixed(2)}\n*Saldo: R$ ${saldo.toFixed(2)}*`;
+            return txt;
+        }
+        function enviarResumoSocioZap(socio) {
+            const telefone = obterContatoSocio(socio, 'zap');
+            if (!telefone) return;
+            window.open(`https://api.whatsapp.com/send?phone=55${telefone}&text=${encodeURIComponent(montarTextoResumoSocio(socio))}`, '_blank');
+        }
+        function enviarResumoSocioEmail(socio) {
+            const email = obterContatoSocio(socio, 'email');
+            if (!email) return;
+            const corpo = montarTextoResumoSocio(socio).replace(/\*/g, '');
+            window.location.href = `mailto:${email}?subject=${encodeURIComponent('Resumo de repasses - ' + socio)}&body=${encodeURIComponent(corpo)}`;
+        }
+        function obterContatoSocio(socio, tipo) {
+            const chave = `rumo_contato_${tipo}_${socio.toLowerCase()}`;
+            let valor = localStorage.getItem(chave);
+            if (!valor) {
+                valor = prompt(`${tipo === 'zap' ? 'WhatsApp' : 'E-mail'} de ${socio} (só números com DDD, se WhatsApp):`);
+                if (!valor) return null;
+                localStorage.setItem(chave, valor.trim());
+            }
+            return valor;
+        }
+        const saldoPendente = totalEntradas - totalSaidas;
                 container.innerHTML += `
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-200">
                         <div class="flex justify-between items-center border-b pb-2 mb-3">
                             <h3 class="text-sm font-black text-slate-900">👤 Sócio: ${socio}</h3>
+                            <div class="flex items-center gap-1.5">
+                                <button onclick="enviarResumoSocioZap('${socio}')" title="Enviar por WhatsApp" class="w-7 h-7 flex items-center justify-center bg-green-50 text-green-700 rounded-full border border-green-200 text-xs">💬</button>
+                                <button onclick="enviarResumoSocioEmail('${socio}')" title="Enviar por E-mail" class="w-7 h-7 flex items-center justify-center bg-blue-50 text-blue-700 rounded-full border border-blue-200 text-xs">✉️</button>
+                                <button onclick="exportarRelatorioSocioPDF('${socio}')" title="Gerar PDF" class="w-7 h-7 flex items-center justify-center bg-slate-100 text-slate-700 rounded-full border border-slate-300 text-xs">📄</button>
+                            </div>
+                        </div>
+                        <div class="flex justify-end mb-2">
                             <div class="text-right">
-                                <p class="text-[11px] text-gray-400 uppercase font-bold">Saldo Pendente</p>
+                                <p class="text-[11px] text-gray-400 uppercase font-bold">Saldo</p>
                                 <span class="text-xs font-black ${saldoPendente > 0 ? 'text-red-600' : 'text-blue-600'}">R$ ${saldoPendente.toFixed(2)}</span>
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2 mb-3 text-[11px] bg-slate-50 p-2 rounded-lg font-mono">
-                            <span class="text-green-700 font-bold">Total Lucros: R$ ${totalEntradas.toFixed(2)}</span>
-                            <span class="text-red-700 font-bold text-right">Total Repassado: R$ ${totalSaidas.toFixed(2)}</span>
+                            <span class="text-green-700 font-bold">Total Aluguéis: R$ ${totalEntradas.toFixed(2)}</span>
+                            <span class="text-red-700 font-bold text-right">Total Retirado: R$ ${totalSaidas.toFixed(2)}</span>
                         </div>
                         <div class="space-y-1 max-h-64 overflow-y-auto pr-1">${tabelaExtratoHtml || '<p class="text-[11px] text-center text-gray-400 py-4">Sem movimentações.</p>'}</div>
                     </div>`;
@@ -4538,6 +4838,11 @@
                 navigator.serviceWorker.register('sw.js').catch(function(err) {
                     console.warn('Falha ao registrar service worker:', err.message);
                 });
+            }
+            // Se este aparelho já foi aprovado como sócio numa sessão anterior,
+            // entra direto — sem senha, sem toque nenhum.
+            if (localStorage.getItem('rumo_device_previously_approved') === '1') {
+                entrarNoSistema();
             }
         };
         function obterMesesFiltro(opcao) {
