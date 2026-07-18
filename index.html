@@ -1,8 +1,8 @@
 <!-- 
 ==================================================================
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
-   VERSÃO: v5.5.0 (PWA: instalável como app no celular, mantendo o mesmo link/versão para desktop)
-   TOTAL DE LINHAS DE CÓDIGO: 4607 linhas
+   VERSÃO: v5.6.0 (PWA: service worker mínimo para instalação correta no Android, novo ícone RU/MO)
+   TOTAL DE LINHAS DE CÓDIGO: 4616 linhas
 ==================================================================
 -->
 <!DOCTYPE html>
@@ -67,7 +67,7 @@
                 <div id="splash-error-detail" class="text-[11px] text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
             </div>
             <div class="text-[13px] text-slate-500 font-mono">
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v5.5.0</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v5.6.0</span>
             </div>
         </div>
     </div>
@@ -4520,6 +4520,15 @@
         }
         window.onload = function() {
             verificarFiltroVitrineExterna();
+            // Registra o Service Worker (necessário em algumas versões do
+            // Chrome/Android para o app aparecer como "instalável" de verdade,
+            // com ícone próprio e tela cheia — sem isso, o Android cai no
+            // atalho genérico do navegador).
+            if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.register('sw.js').catch(function(err) {
+                    console.warn('Falha ao registrar service worker:', err.message);
+                });
+            }
         };
         function obterMesesFiltro(opcao) {
             const d = new Date(2026, 6, 13);
