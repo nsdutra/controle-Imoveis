@@ -4,9 +4,17 @@
 
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
 
-   VERSÃO: v7.1.0 (Fase 5: DEV Expandido - Acessos, Gerenciador de Links, E-mails)
-
-   TOTAL DE LINHAS DE CÓDIGO: 10134 linhas
+   VERSÃO: v7.3.0
+   LINHAS: 10494
+   DATA: 2026-07-20
+   NOVIDADES:
+     - Rotas DEV totalmente implementadas (chamadas ao backend v7.3.0)
+     - CRUD funcional de síndicos e manutencistas
+     - Timezone Brasília no log de acessos
+     - Cabeçalho e tela inicial com versão atualizada
+     - Botão de navegação da aba Serviços (estava faltando)
+     - Correção de chamadas GET→POST em Acessos e Links
+     - Correção de gravaSync inexistente → enviarDadosParaGoogleSheets
 
 ==================================================================
 
@@ -132,7 +140,7 @@
 
             <div class="text-[13px] text-slate-500 font-mono">
 
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.1.0</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.0</span>
 
             </div>
 
@@ -148,7 +156,7 @@
 
             <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" onclick="agendarCliqueLogo()" ondblclick="cancelarCliqueLogoEAbrirDev()">
 
-                <span class="text-lg font-black tracking-wider text-blue-400">RUMO <span class="text-[11px] font-mono text-slate-500 align-middle">v7.1.0</span></span>
+                <span class="text-lg font-black tracking-wider text-blue-400">RUMO <span class="text-[11px] font-mono text-slate-500 align-middle">v7.3.0</span></span>
 
                 <span id="header-offline-tag" class="hidden text-[11px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
 
@@ -173,6 +181,8 @@
             <button onclick="switchTab('tab-relatorios')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-relatorios">Métricas</button>
 
             <button onclick="switchTab('tab-socios')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-socios">Sócios</button>
+
+            <button onclick="switchTab('tab-servicos')" class="flex-none px-4 py-3 text-slate-300" id="btn-tab-servicos">Serviços</button>
 
             <button onclick="switchTab('tab-administradoras')" class="hidden flex-none px-4 py-3 text-slate-300" id="btn-tab-administradoras">Admin.</button>
 
@@ -199,10 +209,6 @@
         <!-- ================= ABA: IMÓVEIS ================= -->
 
         <section id="tab-imoveis" class="tab-content active">
-            
-            <div class="mb-3 text-xs text-slate-500 font-mono text-center">
-                ✓ RUMO v7.1.0 | Fases 1-5 Completas | jan/2024
-            </div>
 
             <div class="flex items-center gap-3 mb-4">
 
@@ -1834,6 +1840,15 @@
 
         let dispositivosAprovados = [];
 
+        // v7.3.0 — Novos dados para Fases 1-5
+        let sindicos = [];
+
+        let manutencistas = [];
+
+        let socios = [];
+
+        let emailConfiguracao = [];
+
         let socioLogado = null; // preenchido se este aparelho for um sócio aprovado
 
         // Identificador deste aparelho/instalação — gerado uma vez e guardado
@@ -3339,6 +3354,31 @@
                     administradoras = (resData.dados.administradoras || []).map(normalizarAdministradora).filter(Boolean);
 
                     dispositivosAprovados = resData.dados.dispositivosAprovados || [];
+
+                    // v7.3.0 — Carrega dados novos
+                    sindicos = resData.dados.sindicos || [];
+                    manutencistas = resData.dados.manutencistas || [];
+                    emailConfiguracao = resData.dados.emailConfiguracao || [];
+
+                    // Sócios: se aba socios estiver vazia, deriva de dispositivosAprovados
+                    const sociosAba = resData.dados.socios || [];
+                    if (sociosAba.length > 0) {
+                        socios = sociosAba;
+                    } else {
+                        // Deriva sócios únicos dos dispositivos aprovados
+                        const nomesUnicos = [...new Set(dispositivosAprovados
+                            .filter(d => d.status === 'Aprovado' && d.nomeSocio)
+                            .map(d => d.nomeSocio))];
+                        socios = nomesUnicos.map(nome => {
+                            const disp = dispositivosAprovados.find(d => d.nomeSocio === nome);
+                            return {
+                                nome: nome,
+                                email: disp?.email || '',
+                                whatsapp: disp?.whatsapp || '',
+                                dataAdesao: disp?.aprovadoEm || ''
+                            };
+                        });
+                    }
 
                     // Checa se este aparelho já foi aprovado como um sócio específico.
 
@@ -9942,31 +9982,34 @@
             const lista = document.getElementById('dev-acessos-lista');
             if (!lista) return;
 
-            try {
-                // Fazer fetch do backend para obter acessos com conversão para Brasília
-                fetch(GOOGLE_API_URL + "?acessos=true")
-                    .then(r => r.json())
-                    .then(dados => {
-                        if (dados && dados.acessos && Array.isArray(dados.acessos)) {
-                            if (dados.acessos.length === 0) {
-                                lista.innerHTML = '<p class="p-2 text-gray-500">Nenhum acesso registrado.</p>';
-                            } else {
-                                let html = '<table class="w-full text-[10px]"><tr class="border-b"><th class="p-1 text-left">Data/Hora</th><th class="p-1 text-left">Tipo</th><th class="p-1 text-left">Usuário</th></tr>';
-                                dados.acessos.slice(-50).reverse().forEach(acs => {
-                                    const hora = acs.dataHoraBrasilia || acs.dataHora || '-';
-                                    html += `<tr class="border-b"><td class="p-1">${hora}</td><td class="p-1">${acs.tipo}</td><td class="p-1">${acs.usuario}</td></tr>`;
-                                });
-                                html += '</table>';
-                                lista.innerHTML = html;
-                            }
+            lista.innerHTML = '<p class="p-2 text-gray-500">Carregando acessos...</p>';
+
+            fetch(GOOGLE_API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ rota: "dev_acessos" })
+            })
+                .then(r => r.json())
+                .then(dados => {
+                    if (dados && dados.status === "sucesso" && Array.isArray(dados.acessos)) {
+                        if (dados.acessos.length === 0) {
+                            lista.innerHTML = '<p class="p-2 text-gray-500">Nenhum acesso registrado.</p>';
+                        } else {
+                            let html = '<table class="w-full text-[10px]"><tr class="border-b"><th class="p-1 text-left">Data/Hora (Brasília)</th><th class="p-1 text-left">Tipo</th><th class="p-1 text-left">Usuário</th></tr>';
+                            dados.acessos.slice(0, 50).forEach(acs => {
+                                const hora = acs.dataHoraBrasilia || acs.dataHora || '-';
+                                html += `<tr class="border-b"><td class="p-1">${hora}</td><td class="p-1">${acs.tipo || ''}</td><td class="p-1">${acs.usuario || ''}</td></tr>`;
+                            });
+                            html += '</table>';
+                            lista.innerHTML = html;
                         }
-                    })
-                    .catch(err => {
-                        lista.innerHTML = '<p class="p-2 text-red-500">Erro ao carregar acessos.</p>';
-                    });
-            } catch (err) {
-                lista.innerHTML = '<p class="p-2 text-red-500">Erro: ' + err.message + '</p>';
-            }
+                    } else {
+                        lista.innerHTML = '<p class="p-2 text-red-500">Erro: ' + (dados?.mensagem || 'Resposta inválida') + '</p>';
+                    }
+                })
+                .catch(err => {
+                    lista.innerHTML = '<p class="p-2 text-red-500">Erro ao carregar: ' + err.message + '</p>';
+                });
         }
 
         function dev_limparAcessos() {
@@ -9997,31 +10040,35 @@
             const lista = document.getElementById('dev-links-lista');
             if (!lista) return;
 
-            try {
-                fetch(GOOGLE_API_URL + "?links=true")
-                    .then(r => r.json())
-                    .then(dados => {
-                        if (dados && dados.links && Array.isArray(dados.links)) {
-                            if (dados.links.length === 0) {
-                                lista.innerHTML = '<p class="p-2 text-gray-500">Nenhum link de vitrine criado.</p>';
-                            } else {
-                                let html = '<table class="w-full text-[10px]"><tr class="border-b"><th class="p-1 text-left">Token</th><th class="p-1 text-left">Imóveis</th><th class="p-1 text-left">Criado</th><th class="p-1">Ação</th></tr>';
-                                dados.links.slice().reverse().forEach(link => {
-                                    const data = link.dataHoraBrasilia || link.criadoEm || '-';
-                                    const qtd = (link.ids || '').split(',').length;
-                                    html += `<tr class="border-b"><td class="p-1">${link.token}</td><td class="p-1">${qtd}</td><td class="p-1 text-[9px]">${data}</td><td class="p-1"><button onclick="dev_apagarLinkEspecifico('${link.token}')" class="text-red-600 text-[9px]">🗑️</button></td></tr>`;
-                                });
-                                html += '</table>';
-                                lista.innerHTML = html;
-                            }
+            lista.innerHTML = '<p class="p-2 text-gray-500">Carregando links...</p>';
+
+            fetch(GOOGLE_API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ rota: "dev_links" })
+            })
+                .then(r => r.json())
+                .then(dados => {
+                    if (dados && dados.status === "sucesso" && Array.isArray(dados.links)) {
+                        if (dados.links.length === 0) {
+                            lista.innerHTML = '<p class="p-2 text-gray-500">Nenhum link de vitrine criado.</p>';
+                        } else {
+                            let html = '<table class="w-full text-[10px]"><tr class="border-b"><th class="p-1 text-left">Token</th><th class="p-1 text-left">Imóveis</th><th class="p-1 text-left">Criado (Brasília)</th><th class="p-1">Ação</th></tr>';
+                            dados.links.forEach(link => {
+                                const data = link.criadoEmBrasilia || link.criadoEm || '-';
+                                const qtd = link.qtdImoveis || 0;
+                                html += `<tr class="border-b"><td class="p-1 font-mono">${link.token}</td><td class="p-1 text-center">${qtd}</td><td class="p-1 text-[9px]">${data}</td><td class="p-1"><button onclick="dev_apagarLinkEspecifico('${link.token}')" class="text-red-600 text-[9px]">🗑️</button></td></tr>`;
+                            });
+                            html += '</table>';
+                            lista.innerHTML = html;
                         }
-                    })
-                    .catch(err => {
-                        lista.innerHTML = '<p class="p-2 text-red-500">Erro ao carregar links.</p>';
-                    });
-            } catch (err) {
-                lista.innerHTML = '<p class="p-2 text-red-500">Erro: ' + err.message + '</p>';
-            }
+                    } else {
+                        lista.innerHTML = '<p class="p-2 text-red-500">Erro: ' + (dados?.mensagem || 'Resposta inválida') + '</p>';
+                    }
+                })
+                .catch(err => {
+                    lista.innerHTML = '<p class="p-2 text-red-500">Erro ao carregar: ' + err.message + '</p>';
+                });
         }
 
         function dev_apagarLinkEspecifico(token) {
@@ -10249,15 +10296,31 @@
                 return;
             }
 
-            gravaSync("sindicos", sindicos.filter(s => s.id !== id).concat([sindico]));
-            fecharModal("form-sindico");
-            carregarSindicos();
+            // Atualiza array local, depois envia para backend
+            sindicos = sindicos.filter(s => s.id !== id).concat([sindico]);
+            enviarDadosParaGoogleSheets("sindicos", sindicos).then(sucesso => {
+                if (sucesso) {
+                    fecharModal("form-sindico");
+                    carregarSindicos();
+                    devLog("SINDICO_SALVO", "Síndico " + sindico.nome + " salvo com sucesso.");
+                } else {
+                    alert("⚠️ Erro ao salvar síndico na nuvem.");
+                }
+            });
         }
 
         function deletarSindico(id) {
-            if (!confirm("Tem certeza?")) return;
-            gravaSync("sindicos", sindicos.filter(s => s.id !== id));
-            carregarSindicos();
+            if (!confirm("Tem certeza que deseja remover este síndico?")) return;
+            sindicos = sindicos.filter(s => s.id !== id);
+            enviarDadosParaGoogleSheets("sindicos", sindicos).then(sucesso => {
+                if (sucesso) {
+                    fecharModal("form-sindico");
+                    carregarSindicos();
+                    devLog("SINDICO_REMOVIDO", "Síndico ID " + id + " removido.");
+                } else {
+                    alert("⚠️ Erro ao remover.");
+                }
+            });
         }
 
         function carregarSindicos() {
@@ -10319,15 +10382,30 @@
                 return;
             }
 
-            gravaSync("manutencistas", manutencistas.filter(m => m.id !== id).concat([manut]));
-            fecharModal("form-manutencista");
-            carregarManutencistas();
+            manutencistas = manutencistas.filter(m => m.id !== id).concat([manut]);
+            enviarDadosParaGoogleSheets("manutencistas", manutencistas).then(sucesso => {
+                if (sucesso) {
+                    fecharModal("form-manutencista");
+                    carregarManutencistas();
+                    devLog("MANUTENCISTA_SALVO", "Manutencista " + manut.nome + " salvo com sucesso.");
+                } else {
+                    alert("⚠️ Erro ao salvar manutencista.");
+                }
+            });
         }
 
         function deletarManutencista(id) {
-            if (!confirm("Tem certeza?")) return;
-            gravaSync("manutencistas", manutencistas.filter(m => m.id !== id));
-            carregarManutencistas();
+            if (!confirm("Tem certeza que deseja remover este manutencista?")) return;
+            manutencistas = manutencistas.filter(m => m.id !== id);
+            enviarDadosParaGoogleSheets("manutencistas", manutencistas).then(sucesso => {
+                if (sucesso) {
+                    fecharModal("form-manutencista");
+                    carregarManutencistas();
+                    devLog("MANUTENCISTA_REMOVIDO", "Manutencista ID " + id + " removido.");
+                } else {
+                    alert("⚠️ Erro ao remover.");
+                }
+            });
         }
 
         function carregarManutencistas() {
