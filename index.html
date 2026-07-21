@@ -4,17 +4,21 @@
 
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
 
-   VERSÃO: v7.3.0
-   LINHAS: 10494
+   VERSÃO: v7.3.1
+   LINHAS: 10506
    DATA: 2026-07-20
    NOVIDADES:
-     - Rotas DEV totalmente implementadas (chamadas ao backend v7.3.0)
+     - Rotas DEV totalmente implementadas (chamadas ao backend v7.3.0 — inalterado nesta versão)
      - CRUD funcional de síndicos e manutencistas
      - Timezone Brasília no log de acessos
-     - Cabeçalho e tela inicial com versão atualizada
+     - Cabeçalho e tela inicial com versão atualizada (badge visível)
      - Botão de navegação da aba Serviços (estava faltando)
      - Correção de chamadas GET→POST em Acessos e Links
      - Correção de gravaSync inexistente → enviarDadosParaGoogleSheets
+     - CORRIGIDO: tab-servicos estava aninhada dentro de tab-developer
+       (por isso aparecia em branco — herdava o "hidden" do pai)
+     - CORRIGIDO: dev_inicializar() e inicializarServicos() nunca eram
+       chamadas — agora disparam ao trocar de aba via switchTab()
 
 ==================================================================
 
@@ -140,7 +144,7 @@
 
             <div class="text-[13px] text-slate-500 font-mono">
 
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.0</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.1</span>
 
             </div>
 
@@ -156,7 +160,7 @@
 
             <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" onclick="agendarCliqueLogo()" ondblclick="cancelarCliqueLogoEAbrirDev()">
 
-                <span class="text-lg font-black tracking-wider text-blue-400">RUMO <span class="text-[11px] font-mono text-slate-500 align-middle">v7.3.0</span></span>
+                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.3.1</span>
 
                 <span id="header-offline-tag" class="hidden text-[11px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
 
@@ -1642,6 +1646,10 @@
                     💾 Salvar Configurações
                 </button>
             </div>
+
+        </section>
+        <!-- ↑ Fecha tab-developer. A aba Serviços abaixo é independente, não aninhada. -->
+
         <section id="tab-servicos" class="tab-content hidden">
 
             <h2 class="text-lg font-bold mb-4 text-slate-200">👥 Serviços Imobiliários</h2>
@@ -1686,7 +1694,6 @@
             </div>
 
         </section>
-</section>
 
     </main>
 
@@ -1840,7 +1847,7 @@
 
         let dispositivosAprovados = [];
 
-        // v7.3.0 — Novos dados para Fases 1-5
+        // v7.3.1 — Novos dados para Fases 1-5
         let sindicos = [];
 
         let manutencistas = [];
@@ -3355,7 +3362,7 @@
 
                     dispositivosAprovados = resData.dados.dispositivosAprovados || [];
 
-                    // v7.3.0 — Carrega dados novos
+                    // v7.3.1 — Carrega dados novos
                     sindicos = resData.dados.sindicos || [];
                     manutencistas = resData.dados.manutencistas || [];
                     emailConfiguracao = resData.dados.emailConfiguracao || [];
@@ -3981,6 +3988,14 @@
             document.getElementById('btn-' + tabId).classList.add('bg-slate-800', 'border-b-2', 'border-blue-400');
 
             devLog("NAVEGACAO", `Usuário acessou a aba: ${tabId}`);
+
+            // v7.3.1 — Carrega dados sob demanda ao abrir as abas DEV e Serviços
+            if (tabId === 'tab-developer' && typeof dev_inicializar === 'function') {
+                dev_inicializar();
+            }
+            if (tabId === 'tab-servicos' && typeof inicializarServicos === 'function') {
+                inicializarServicos();
+            }
 
         }
 
