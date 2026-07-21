@@ -4,10 +4,38 @@
 
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
 
-   VERSÃO: v7.3.2
-   LINHAS: 10616
+   VERSÃO: v7.3.3
+   LINHAS: 10759
    DATA: 2026-07-21
-   NOVIDADES (v7.3.2):
+   NOVIDADES (v7.3.3):
+     - Contratos: badge de energia (⚡) agora no mesmo estilo usado em
+       Imóveis, e reposicionado para ANTES do nome do locatário (título)
+     - Contratos: "Desconto Energia" subiu para ao lado de "Valor
+       Vigente"; "Administradora Terceirizada" ocupou o lugar antigo
+       do desconto (saiu da seção avançada de Reajuste/Alteração)
+     - Imóveis: seção "Manutenção" virou "Manutencista" (somente
+       leitura) e só aparece se houver manutencista vinculado ao
+       empreendimento; nova seção "Síndico" (mesmo comportamento)
+       aparece ANTES dela. Trocar/atualizar só é possível em Serviços
+     - CORRIGIDO: sindicoId/manutencistaId nunca eram calculados —
+       agora há cascata automática (recalcularVinculosSindicos/
+       recalcularVinculosManutencistas) ligando imóvel ↔ empreendimento
+     - CORRIGIDO: ao editar e salvar um imóvel, sindicoId/manutencistaId
+       eram perdidos silenciosamente (objeto reconstruído do zero)
+     - Síndico: removido o campo "Tipo de Documento" — agora é um único
+       campo (CPF ou CNPJ), com validação real de dígito verificador
+       (mesmo padrão de Contratos), não apenas contagem de dígitos
+     - Síndico: campo de vigência (data de início) por empreendimento,
+       que não aparecia, agora é exibido ao lado de cada checkbox
+     - DEV: box de log agora tem borda e espaçamento consistentes com
+       os demais cards da aba (estava com borda mais fina e sem margem)
+     - Títulos de todas as abas padronizados (tamanho/cor/posição/fonte)
+       seguindo o padrão de "Faturamento Mensal": text-lg font-bold
+       text-blue-900
+     - Números-resumo do topo de Imóveis e Contratos agora refletem os
+       filtros ativos (empreendimento/status), não mais o total geral
+
+   HISTÓRICO (v7.3.2):
      - Aba Serviços (Síndicos/Manutencistas/Administradoras) padronizada
        visualmente com Imóveis e Administradoras: mesmo botão circular
        branco com ícone "+", mesmo estilo de card na lista
@@ -19,19 +47,6 @@
        (backend v7.3.1) e renderizam instantaneamente, sem round-trip
        extra ao servidor — mesmo padrão de Imóveis/Contratos
      - saveAll() agora também persiste síndicos e manutencistas na nuvem
-
-   HISTÓRICO (v7.3.1):
-     - Rotas DEV totalmente implementadas (chamadas ao backend v7.3.1)
-     - CRUD funcional de síndicos e manutencistas
-     - Timezone Brasília no log de acessos
-     - Cabeçalho e tela inicial com versão atualizada (badge visível)
-     - Botão de navegação da aba Serviços (estava faltando)
-     - Correção de chamadas GET→POST em Acessos e Links
-     - Correção de gravaSync inexistente → enviarDadosParaGoogleSheets
-     - CORRIGIDO: tab-servicos estava aninhada dentro de tab-developer
-       (por isso aparecia em branco — herdava o "hidden" do pai)
-     - CORRIGIDO: dev_inicializar() e inicializarServicos() nunca eram
-       chamadas — agora disparam ao trocar de aba via switchTab()
 
 ==================================================================
 
@@ -157,7 +172,7 @@
 
             <div class="text-[13px] text-slate-500 font-mono">
 
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.2</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.3</span>
 
             </div>
 
@@ -173,7 +188,7 @@
 
             <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" onclick="agendarCliqueLogo()" ondblclick="cancelarCliqueLogoEAbrirDev()">
 
-                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.3.2</span>
+                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.3.3</span>
 
                 <span id="header-offline-tag" class="hidden text-[11px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
 
@@ -483,29 +498,23 @@
 
                     </div>
 
-                    <div class="bg-slate-50 p-3 rounded-lg border border-slate-200">
+                    <div id="imo-sindico-secao" class="hidden bg-slate-50 p-3 rounded-lg border border-slate-200">
 
-                        <span class="text-xs font-black text-slate-700 uppercase block mb-2">Contato de Manutenção</span>
+                        <span class="text-xs font-black text-slate-700 uppercase block mb-2">Síndico</span>
 
-                        <div class="grid grid-cols-2 gap-2">
+                        <p id="imo-sindico-display" class="text-xs text-slate-700"></p>
 
-                            <div>
+                        <p class="text-[11px] text-gray-400 mt-1">Para trocar ou atualizar o síndico, acesse a aba Serviços.</p>
 
-                                <label class="block text-[11px] font-bold text-gray-600">Nome</label>
+                    </div>
 
-                                <input type="text" id="imo-manutencao-nome" class="w-full p-1.5 border rounded mt-1 text-xs">
+                    <div id="imo-manutencao-secao" class="hidden bg-slate-50 p-3 rounded-lg border border-slate-200">
 
-                            </div>
+                        <span class="text-xs font-black text-slate-700 uppercase block mb-2">Manutencista</span>
 
-                            <div>
+                        <p id="imo-manutencao-display" class="text-xs text-slate-700"></p>
 
-                                <label class="block text-[11px] font-bold text-gray-600">WhatsApp</label>
-
-                                <input type="text" id="imo-manutencao-zap" class="w-full p-1.5 border rounded mt-1 text-xs" placeholder="Só números, com DDD">
-
-                            </div>
-
-                        </div>
+                        <p class="text-[11px] text-gray-400 mt-1">Para trocar ou atualizar o manutencista, acesse a aba Serviços.</p>
 
                     </div>
 
@@ -567,7 +576,7 @@
 
             </div>
 
-            <h2 class="text-lg font-bold mb-3 text-blue-900">Lista Patrimonial</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-4">Lista Patrimonial</h2>
 
             <div id="lista-imoveis" class="space-y-3 mb-6"></div>
 
@@ -769,11 +778,25 @@
 
                 </div>
 
-                <div>
+                <div class="grid grid-cols-2 gap-2">
 
-                    <label class="block text-xs font-bold text-gray-600">Valor Vigente (R$)</label>
+                    <div>
 
-                    <input type="number" step="0.01" id="con-valor" required oninput="atualizarValorLiquidoEsperado()" class="w-full p-2 border rounded mt-1 text-sm">
+                        <label class="block text-xs font-bold text-gray-600">Valor Vigente (R$)</label>
+
+                        <input type="number" step="0.01" id="con-valor" required oninput="atualizarValorLiquidoEsperado()" class="w-full p-2 border rounded mt-1 text-sm">
+
+                    </div>
+
+                    <div>
+
+                        <label class="block text-xs font-bold text-gray-600">Desconto Energia (%)</label>
+
+                        <input type="number" id="con-desconto-energia" value="0" class="w-full p-2 border rounded mt-1 text-sm">
+
+                        <p class="text-[10px] text-gray-400 mt-0.5">Auto se Energia Rumo.</p>
+
+                    </div>
 
                 </div>
 
@@ -839,11 +862,15 @@
 
                 <div>
 
-                    <label class="block text-[11px] font-bold text-gray-600">Desconto Energia (%)</label>
+                    <label class="block text-xs font-bold text-gray-600">Administradora Terceirizada</label>
 
-                    <input type="number" id="con-desconto-energia" value="0" class="w-full p-1.5 border rounded mt-1 text-xs">
+                    <select id="con-administradora" onchange="atualizarValorLiquidoEsperado()" class="w-full p-2 border rounded mt-1 text-sm bg-gray-50">
 
-                    <p class="text-[11px] text-gray-400 mt-0.5">Sugerido automaticamente se o imóvel tem Energia Rumo.</p>
+                        <option value="">-- Nenhuma (gestão direta Rumo) --</option>
+
+                    </select>
+
+                    <p id="con-valor-liquido-info" class="text-[11px] text-gray-400 mt-0.5"></p>
 
                 </div>
 
@@ -953,20 +980,6 @@
 
                     <div>
 
-                        <label class="block text-[11px] font-bold text-gray-600">Administradora Terceirizada</label>
-
-                        <select id="con-administradora" onchange="atualizarValorLiquidoEsperado()" class="w-full p-1.5 border rounded mt-1 text-xs bg-gray-50">
-
-                            <option value="">-- Nenhuma (gestão direta Rumo) --</option>
-
-                        </select>
-
-                        <p id="con-valor-liquido-info" class="text-[11px] text-gray-400 mt-0.5"></p>
-
-                    </div>
-
-                    <div>
-
                         <label class="block text-[11px] font-bold text-gray-600">Descrição do Contrato</label>
 
                         <textarea id="con-descricao" rows="2" class="w-full p-1.5 border rounded mt-1 text-xs" placeholder="Observações gerais sobre este contrato..."></textarea>
@@ -983,7 +996,7 @@
 
             <p id="banner-revisao-contratos" class="hidden bg-red-50 border border-red-200 text-red-700 text-[13px] font-bold p-2 rounded-lg mb-3"></p>
 
-            <h2 class="text-lg font-bold mb-3 text-blue-900">Contratos de Locação Ativos</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-4">Contratos de Locação Ativos</h2>
 
             <div id="lista-contratos" class="space-y-3 mb-6"></div>
 
@@ -1155,7 +1168,7 @@
 
         <section id="tab-inadimplencia" class="tab-content">
 
-            <h2 class="text-lg font-bold mb-3 text-red-900">Painel de Inadimplência</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-4">Painel de Inadimplência</h2>
 
             
 
@@ -1229,7 +1242,7 @@
 
         <section id="tab-vitrine" class="tab-content">
 
-            <h2 class="text-lg font-bold text-slate-900 mb-3">Vitrine Imobiliária</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-4">Vitrine Imobiliária</h2>
 
             <p class="text-[11px] text-gray-500 mb-3">Selecione os imóveis do portfólio para criar um card de divulgação customizado e compartilhá-lo via link ou WhatsApp.</p>
 
@@ -1297,7 +1310,7 @@
 
         <section id="tab-relatorios" class="tab-content">
 
-            <h2 class="text-lg font-bold mb-3 text-blue-900">Filtros das Métricas</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-4">Filtros das Métricas</h2>
 
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200">
 
@@ -1395,7 +1408,7 @@
 
         <section id="tab-socios" class="tab-content">
 
-            <h2 class="text-lg font-bold mb-3 text-blue-900">Prestação de Contas Societária</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-4">Prestação de Contas Societária</h2>
 
             
 
@@ -1497,7 +1510,7 @@
 
         <section id="tab-developer" class="tab-content">
 
-            <h2 class="text-lg font-bold mb-3 text-red-500">⚙️ Central do Desenvolvedor</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-4">⚙️ Central do Desenvolvedor</h2>
 
             <p class="text-[11px] text-gray-500 mb-4">Aba de depuração ativada. Use as ferramentas abaixo para monitorar a gravação de contratos e a integridade do banco.</p>
 
@@ -1529,7 +1542,7 @@
 
             </div>
 
-            <div class="bg-slate-950 p-4 rounded-xl border border-slate-800 text-slate-300 font-mono text-[11px] space-y-2 max-h-96 overflow-y-auto" id="dev-detailed-log-box">
+            <div class="bg-slate-950 p-4 rounded-xl border-2 border-slate-700 text-slate-300 font-mono text-[11px] space-y-2 max-h-96 overflow-y-auto mb-4" id="dev-detailed-log-box">
 
                 <p class="text-red-400">// Central de Logs activa. Iniciando captura de escopos...</p>
 
@@ -1595,7 +1608,7 @@
 
         <section id="tab-servicos" class="tab-content hidden">
 
-            <h2 class="text-xl font-black mb-5 text-slate-800">Serviços</h2>
+            <h2 class="text-lg font-bold text-blue-900 mb-4">Serviços</h2>
 
             <!-- ==================== SÍNDICOS / GESTORAS ==================== -->
 
@@ -1629,29 +1642,11 @@
 
                     </div>
 
-                    <div class="grid grid-cols-2 gap-2">
+                    <div>
 
-                        <div>
+                        <label class="block text-xs font-bold text-gray-600">Documento (CPF ou CNPJ)</label>
 
-                            <label class="block text-xs font-bold text-gray-600">Tipo de Documento</label>
-
-                            <select id="sind-doctipo" class="w-full p-2 border rounded mt-1 text-sm">
-
-                                <option value="CPF">CPF</option>
-
-                                <option value="CNPJ">CNPJ</option>
-
-                            </select>
-
-                        </div>
-
-                        <div>
-
-                            <label class="block text-xs font-bold text-gray-600">Documento</label>
-
-                            <input type="text" id="sind-documento" oninput="formatarMascaraDocumentoGenerico(this)" placeholder="Só digitar os números" class="w-full p-2 border rounded mt-1 text-sm">
-
-                        </div>
+                        <input type="text" id="sind-documento" oninput="formatarMascaraDocumentoGenerico(this)" placeholder="Só digitar os números" class="w-full p-2 border rounded mt-1 text-sm">
 
                     </div>
 
@@ -3620,6 +3615,12 @@
 
                     try {
 
+                        // v7.3.3 — Garante que os vínculos de síndico/manutencista
+                        // estejam corretos já na primeira renderização.
+                        recalcularVinculosSindicos();
+
+                        recalcularVinculosManutencistas();
+
                         renderSocioInputs();
 
                         renderParteRumoInputs();
@@ -4612,10 +4613,6 @@
 
                 codigoIPTU: document.getElementById('imo-iptu-codigo').value.trim(),
 
-                manutencaoNome: document.getElementById('imo-manutencao-nome').value.trim(),
-
-                manutencaoZap: document.getElementById('imo-manutencao-zap').value.trim().replace(/\D/g, ''),
-
                 descricao: document.getElementById('imo-descricao').value.trim(),
 
                 energiaRumo: document.getElementById('imo-energia-rumo').value,
@@ -4630,7 +4627,15 @@
 
                 divisao: divisao,
 
-                status: id ? imoveis.find(i => i.id === id).status : 'Vago'
+                status: id ? imoveis.find(i => i.id === id).status : 'Vago',
+
+                // v7.3.3 — sindicoId/manutencistaId são calculados por cascata
+                // (a partir do empreendimento) em recalcularVinculosSindicos() e
+                // recalcularVinculosManutencistas(); aqui apenas preservamos o
+                // valor já calculado para não perdê-lo ao salvar o imóvel.
+                sindicoId: id ? (imoveis.find(i => i.id === id).sindicoId || '') : '',
+
+                manutencistaId: id ? (imoveis.find(i => i.id === id).manutencistaId || '') : ''
 
             };
 
@@ -4667,6 +4672,12 @@
             document.getElementById('imo-endereco-cidade').value = cidadeSalva;
 
             cancelarEdicaoImovel();
+
+            // v7.3.3 — Recalcula os vínculos, pois o empreendimento salvo pode já
+            // ter síndico/manutencista cadastrados em Serviços.
+            recalcularVinculosSindicos();
+
+            recalcularVinculosManutencistas();
 
             saveAll(true, "Imóvel salvo com sucesso!");
 
@@ -4706,9 +4717,9 @@
 
             document.getElementById('imo-iptu-codigo').value = imo.codigoIPTU || '';
 
-            document.getElementById('imo-manutencao-nome').value = imo.manutencaoNome || '';
+            exibirSindicoVinculado(imo);
 
-            document.getElementById('imo-manutencao-zap').value = imo.manutencaoZap || '';
+            exibirManutencistaVinculado(imo);
 
             document.getElementById('imo-descricao').value = imo.descricao || '';
 
@@ -4786,8 +4797,66 @@
 
             renderParteRumoInputs(100);
 
+            document.getElementById('imo-sindico-secao').classList.add('hidden');
+
+            document.getElementById('imo-manutencao-secao').classList.add('hidden');
+
             document.getElementById('form-imovel-wrapper').classList.add('hidden');
 
+        }
+
+        // v7.3.3 — Exibe (somente leitura) o síndico vinculado ao imóvel, se
+        // houver. A seção fica oculta quando não há síndico cadastrado para o
+        // empreendimento — trocar/atualizar só é permitido em Serviços.
+        function exibirSindicoVinculado(imo) {
+            const secao = document.getElementById('imo-sindico-secao');
+            const display = document.getElementById('imo-sindico-display');
+            const sind = sindicos.find(s => s.id === imo.sindicoId);
+
+            if (!sind) {
+                secao.classList.add('hidden');
+                return;
+            }
+
+            display.innerHTML = `<strong>${sind.nome}</strong>${sind.whatsapp ? ' · ' + sind.whatsapp : ''}`;
+            secao.classList.remove('hidden');
+        }
+
+        // v7.3.3 — Exibe (somente leitura) o manutencista vinculado ao imóvel,
+        // se houver. A seção fica oculta quando não há manutencista cadastrado
+        // para o empreendimento — trocar/atualizar só é permitido em Serviços.
+        function exibirManutencistaVinculado(imo) {
+            const secao = document.getElementById('imo-manutencao-secao');
+            const display = document.getElementById('imo-manutencao-display');
+            const man = manutencistas.find(m => m.id === imo.manutencistaId);
+
+            if (!man) {
+                secao.classList.add('hidden');
+                return;
+            }
+
+            display.innerHTML = `<strong>${man.nome}</strong>${man.whatsapp ? ' · ' + man.whatsapp : ''}`;
+            secao.classList.remove('hidden');
+        }
+
+        // v7.3.3 — Cascata: recalcula qual manutencista/síndico atende cada
+        // imóvel, com base no empreendimento e nos empreendimentos atendidos
+        // cadastrados em Serviços. Roda após salvar imóvel, síndico ou
+        // manutencista, e também uma vez no carregamento inicial dos dados.
+        function recalcularVinculosManutencistas() {
+            imoveis.forEach(imo => {
+                const man = manutencistas.find(m => (m.empreendimentos || []).includes(imo.empreendimento));
+                imo.manutencistaId = man ? man.id : '';
+            });
+        }
+
+        function recalcularVinculosSindicos() {
+            imoveis.forEach(imo => {
+                const sind = sindicos.find(s => (s.empreendimentos || []).some(e =>
+                    (typeof e === 'string' ? e : e.empreendimentoId) === imo.empreendimento
+                ));
+                imo.sindicoId = sind ? sind.id : '';
+            });
         }
 
         function acionarManutencaoWhatsApp(zap, nomeManutencao, empreendimento, endereco) {
@@ -5236,12 +5305,6 @@
 
             logScreen(`Disparada renderImoveis(). Array possui ${imoveis.length} registros em memória.`);
 
-            document.getElementById('total-imoveis-contador').innerText = imoveis.length;
-
-            document.getElementById('imoveis-vagos-contador').innerText = imoveis.filter(i => i.status === 'Vago').length;
-
-            document.getElementById('imoveis-alugados-contador').innerText = imoveis.filter(i => i.status === 'Alugado').length;
-
             const selectCon = document.getElementById('con-imovel');
 
             const selConVal = selectCon ? selectCon.value : '';
@@ -5259,6 +5322,19 @@
             const fEmpImo = document.getElementById('imoveis-filtro-emp')?.value || 'todos';
 
             const fStatusImo = document.getElementById('imoveis-filtro-status')?.value || 'todos';
+
+            // v7.3.3 — Os números-resumo agora refletem os filtros ativos
+            // (empreendimento/status), e não mais o total geral de imóveis.
+            const imoveisFiltradosParaContagem = imoveis.filter(imo =>
+                (fEmpImo === 'todos' || imo.empreendimento === fEmpImo) &&
+                (fStatusImo === 'todos' || imo.status === fStatusImo)
+            );
+
+            document.getElementById('total-imoveis-contador').innerText = imoveisFiltradosParaContagem.length;
+
+            document.getElementById('imoveis-vagos-contador').innerText = imoveisFiltradosParaContagem.filter(i => i.status === 'Vago').length;
+
+            document.getElementById('imoveis-alugados-contador').innerText = imoveisFiltradosParaContagem.filter(i => i.status === 'Alugado').length;
 
             imoveis.slice().sort((a, b) => (a.empreendimento || '').localeCompare(b.empreendimento || '')).forEach((imo, index) => {
 
@@ -5306,7 +5382,9 @@
 
                     const badgeEnergia = imo.energiaRumo === 'Sim' ? `<span class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800 ml-1">⚡</span>` : '';
 
-                    const btnManutencao = imo.manutencaoZap ? `<button onclick="acionarManutencaoWhatsApp('${imo.manutencaoZap}', '${(imo.manutencaoNome || '').replace(/'/g, "")}', '${(imo.empreendimento || '').replace(/'/g, "")}', '${endExibivel.replace(/'/g, "")}')" title="Chamar Manutenção" class="w-7 h-7 flex items-center justify-center bg-green-50 text-green-700 rounded-full border border-green-200 text-xs">🔧</button>` : '';
+                    const manVinculado = manutencistas.find(m => m.id === imo.manutencistaId);
+
+                    const btnManutencao = (manVinculado && manVinculado.whatsapp) ? `<button onclick="acionarManutencaoWhatsApp('${manVinculado.whatsapp}', '${(manVinculado.nome || '').replace(/'/g, "")}', '${(imo.empreendimento || '').replace(/'/g, "")}', '${endExibivel.replace(/'/g, "")}')" title="Chamar Manutenção" class="w-7 h-7 flex items-center justify-center bg-green-50 text-green-700 rounded-full border border-green-200 text-xs">🔧</button>` : '';
 
                     const btnZapIptu = imo.codigoIPTU ? `<button onclick="acionarZapIptuImovel('${imo.id}')" title="Enviar código do IPTU para o locatário" class="w-7 h-7 flex items-center justify-center bg-green-50 text-green-700 rounded-full border border-green-200 text-xs">💬</button>` : '';
 
@@ -6102,17 +6180,32 @@
 
             container.innerHTML = '';
 
-            
+            popularFiltroSelect('contratos-filtro-emp', imoveis.map(i => i.empreendimento));
 
-            const ativos = contratos.filter(c => c.status === 'Ativo').length;
+            const fEmpCon = document.getElementById('contratos-filtro-emp')?.value || 'todos';
+
+            const fStatusCon = document.getElementById('contratos-filtro-status')?.value || 'todos';
+
+            const passaFiltroContrato = (con) => {
+                const imoDoContrato = imoveis.find(i => i.id === con.imovelId);
+                if (fEmpCon !== 'todos' && (!imoDoContrato || imoDoContrato.empreendimento !== fEmpCon)) return false;
+                if (fStatusCon !== 'todos' && con.status !== fStatusCon) return false;
+                return true;
+            };
+
+            // v7.3.3 — Os números-resumo agora refletem os filtros ativos
+            // (empreendimento/status), e não mais o total geral de contratos.
+            const contratosFiltradosParaContagem = contratos.filter(passaFiltroContrato);
+
+            const ativos = contratosFiltradosParaContagem.filter(c => c.status === 'Ativo').length;
 
             document.getElementById('contratos-ativos-contador').innerText = ativos;
 
-            document.getElementById('contratos-suspensos-contador').innerText = contratos.filter(c => c.status === 'Suspenso').length;
+            document.getElementById('contratos-suspensos-contador').innerText = contratosFiltradosParaContagem.filter(c => c.status === 'Suspenso').length;
 
-            document.getElementById('contratos-finalizados-contador').innerText = contratos.filter(c => c.status === 'Finalizado').length;
+            document.getElementById('contratos-finalizados-contador').innerText = contratosFiltradosParaContagem.filter(c => c.status === 'Finalizado').length;
 
-            document.getElementById('contratos-totais-contador').innerText = contratos.length;
+            document.getElementById('contratos-totais-contador').innerText = contratosFiltradosParaContagem.length;
 
             const pendentesRevisao = contratos.filter(contratoPrecisaRevisao).length;
 
@@ -6128,25 +6221,9 @@
 
             }
 
-            popularFiltroSelect('contratos-filtro-emp', imoveis.map(i => i.empreendimento));
-
-            const fEmpCon = document.getElementById('contratos-filtro-emp')?.value || 'todos';
-
-            const fStatusCon = document.getElementById('contratos-filtro-status')?.value || 'todos';
-
             contratos
 
-                .filter(con => {
-
-                    const imoDoContrato = imoveis.find(i => i.id === con.imovelId);
-
-                    if (fEmpCon !== 'todos' && (!imoDoContrato || imoDoContrato.empreendimento !== fEmpCon)) return false;
-
-                    if (fStatusCon !== 'todos' && con.status !== fStatusCon) return false;
-
-                    return true;
-
-                })
+                .filter(passaFiltroContrato)
 
                 .sort((a, b) => {
 
@@ -6170,7 +6247,7 @@
 
                 const alertaTriangulo = temAlerta ? `<span title="Ver alertas deste contrato" onclick="verAlertasContrato('${con.id}')" class="text-red-600 cursor-pointer text-sm">🔺</span>` : '';
 
-                const badgeEnergia = (imo && imo.energiaRumo === 'Sim' && con.descontoEnergia > 0) ? `<span title="Energia Rumo com desconto" class="text-[11px]">⚡</span>` : '';
+                const badgeEnergia = (imo && imo.energiaRumo === 'Sim' && con.descontoEnergia > 0) ? `<span title="Energia Rumo com desconto" class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800">⚡</span>` : '';
 
                 const badgeAnexos = (con.anexos && con.anexos.length > 0) ? `<span title="Contrato tem anexos" class="text-[11px]">📎</span>` : '';
 
@@ -6184,7 +6261,7 @@
 
                         <div class="flex justify-between items-start gap-2">
 
-                            <p class="text-xs font-bold text-slate-900 truncate min-w-0">${badgeStatus} ${alertaTriangulo} 👤 ${con.locatario} ${badgeEnergia}${badgeAnexos}</p>
+                            <p class="text-xs font-bold text-slate-900 truncate min-w-0">${badgeStatus} ${alertaTriangulo} ${badgeEnergia} 👤 ${con.locatario} ${badgeAnexos}</p>
 
                             <span class="text-sm font-black flex-none text-slate-900">${formatarMoeda(con.valor)}</span>
 
@@ -10395,10 +10472,60 @@
             return Array.from(container.querySelectorAll('.check-empreendimento:checked')).map(chk => chk.value);
         }
 
+        // v7.3.3 — Síndico tem vigência (data de início) por empreendimento;
+        // manutencista não. Por isso o síndico usa um renderer próprio, com
+        // campo de data ao lado de cada checkbox.
+        function popularChecksEmpreendimentosSindico(containerId, empreendimentosSelecionados) {
+            const container = document.getElementById(containerId);
+            if (!container) return;
+
+            const unicos = [...new Set(imoveis.map(i => i.empreendimento).filter(Boolean))];
+
+            if (unicos.length === 0) {
+                container.innerHTML = '<p class="text-[11px] text-gray-400">Nenhum empreendimento cadastrado em Imóveis ainda.</p>';
+                return;
+            }
+
+            const hoje = new Date().toISOString().split('T')[0];
+
+            container.innerHTML = unicos.map(emp => {
+                const existente = (empreendimentosSelecionados || []).find(e =>
+                    (typeof e === 'string' ? e : e.empreendimentoId) === emp
+                );
+                const marcado = !!existente;
+                const dataInicio = (existente && typeof existente === 'object' && existente.dataInicio) ? existente.dataInicio : hoje;
+
+                return `
+                    <div class="flex items-center gap-2 text-xs py-0.5">
+                        <label class="flex items-center gap-2 flex-1">
+                            <input type="checkbox" class="check-empreendimento-sindico" value="${emp}" ${marcado ? 'checked' : ''}>
+                            <span>${emp}</span>
+                        </label>
+                        <input type="date" class="check-empreendimento-sindico-vigencia text-[10px] p-1 border rounded" data-emp="${emp}" value="${dataInicio}" title="Vigência a partir de">
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function lerChecksEmpreendimentosSindico(containerId) {
+            const container = document.getElementById(containerId);
+            if (!container) return [];
+
+            return Array.from(container.querySelectorAll('.check-empreendimento-sindico:checked')).map(chk => {
+                const emp = chk.value;
+                const dataInput = container.querySelector(`.check-empreendimento-sindico-vigencia[data-emp="${emp}"]`);
+                return {
+                    empreendimentoId: emp,
+                    dataInicio: dataInput ? dataInput.value : new Date().toISOString().split('T')[0],
+                    dataFim: ''
+                };
+            });
+        }
+
         function abrirFormSindico() {
             cancelarEdicaoSindico();
             document.getElementById('form-sindico-wrapper').classList.remove('hidden');
-            popularChecksEmpreendimentos('sind-empreendimentos-checks', []);
+            popularChecksEmpreendimentosSindico('sind-empreendimentos-checks', []);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -10415,7 +10542,6 @@
 
             document.getElementById('sind-id').value = sind.id;
             document.getElementById('sind-nome').value = sind.nome || '';
-            document.getElementById('sind-doctipo').value = sind.docTipo || 'CPF';
             document.getElementById('sind-documento').value = sind.documento || '';
             document.getElementById('sind-contato').value = sind.nomeContato || '';
             document.getElementById('sind-whatsapp').value = sind.whatsapp || '';
@@ -10423,7 +10549,7 @@
 
             document.getElementById('form-sindico-titulo').innerText = 'Editar Síndico';
             document.getElementById('form-sindico-wrapper').classList.remove('hidden');
-            popularChecksEmpreendimentos('sind-empreendimentos-checks', sind.empreendimentos || []);
+            popularChecksEmpreendimentosSindico('sind-empreendimentos-checks', sind.empreendimentos || []);
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
 
@@ -10431,17 +10557,32 @@
             e.preventDefault();
 
             const id = document.getElementById('sind-id').value;
-            const empreendimentosMarcados = lerChecksEmpreendimentos('sind-empreendimentos-checks');
+            const documento = document.getElementById('sind-documento').value.trim();
+            const digitos = documento.replace(/\D/g, '');
+
+            if (digitos.length > 0) {
+                const tipo = digitos.length > 11 ? 'CNPJ' : 'CPF';
+                if (tipo === 'CPF' && !validarCPF(documento)) {
+                    alert("⚠️ O documento informado não é um CPF válido.");
+                    return;
+                }
+                if (tipo === 'CNPJ' && !validarCNPJ(documento)) {
+                    alert("⚠️ O documento informado não é um CNPJ válido.");
+                    return;
+                }
+            }
+
+            const empreendimentosMarcados = lerChecksEmpreendimentosSindico('sind-empreendimentos-checks');
 
             const dados = {
                 id: id || 'sind_' + Date.now() + Math.random().toString(36).substr(2, 4),
                 nome: document.getElementById('sind-nome').value.trim(),
-                docTipo: document.getElementById('sind-doctipo').value,
-                documento: document.getElementById('sind-documento').value.trim(),
+                docTipo: digitos.length > 11 ? 'CNPJ' : 'CPF',
+                documento: documento,
                 nomeContato: document.getElementById('sind-contato').value.trim(),
                 whatsapp: document.getElementById('sind-whatsapp').value.trim(),
                 email: document.getElementById('sind-email').value.trim(),
-                empreendimentos: empreendimentosMarcados.map(emp => ({ empreendimentoId: emp, dataInicio: new Date().toISOString().split('T')[0], dataFim: '' }))
+                empreendimentos: empreendimentosMarcados
             };
 
             if (id) {
@@ -10452,6 +10593,7 @@
             }
 
             cancelarEdicaoSindico();
+            recalcularVinculosSindicos();
             saveAll(true, "Síndico salvo com sucesso!");
         }
 
@@ -10544,6 +10686,7 @@
             }
 
             cancelarEdicaoManutencista();
+            recalcularVinculosManutencistas();
             saveAll(true, "Manutencista salvo com sucesso!");
         }
 
