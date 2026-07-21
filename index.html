@@ -5,7 +5,7 @@
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
 
    VERSÃO: v7.3.3
-   LINHAS: 10759
+   LINHAS: 10827
    DATA: 2026-07-21
    NOVIDADES (v7.3.3):
      - Contratos: badge de energia (⚡) agora no mesmo estilo usado em
@@ -1364,11 +1364,11 @@
 
                     </div>
 
-                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-500">
+                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-gray-400">
 
-                        <p class="text-[13px] text-gray-500 font-bold uppercase">Recebido</p>
+                        <p class="text-[13px] text-gray-500 font-bold uppercase">Imóveis</p>
 
-                        <p class="text-lg font-black text-green-700 mt-1" id="rel-faturamento">R$ 0</p>
+                        <p class="text-[13px] font-semibold text-slate-700 mt-2" id="rel-contagem">-</p>
 
                     </div>
 
@@ -1380,13 +1380,43 @@
 
                     </div>
 
-                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-gray-400">
+                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500">
 
-                        <p class="text-[13px] text-gray-500 font-bold uppercase">Imóveis</p>
+                        <p class="text-[13px] text-gray-500 font-bold uppercase">Previsto</p>
 
-                        <p class="text-[13px] font-semibold text-slate-700 mt-2" id="rel-contagem">-</p>
+                        <p class="text-lg font-black text-blue-700 mt-1" id="rel-previsto">R$ 0</p>
 
                     </div>
+
+                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-500">
+
+                        <p class="text-[13px] text-gray-500 font-bold uppercase">Recebido</p>
+
+                        <p class="text-lg font-black text-green-700 mt-1" id="rel-faturamento">R$ 0</p>
+
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-red-500">
+
+                        <p class="text-[13px] text-gray-500 font-bold uppercase">Inadimplente</p>
+
+                        <p class="text-lg font-black text-red-700 mt-1" id="rel-inadimplente">R$ 0</p>
+
+                    </div>
+
+                </div>
+
+                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 mt-3 text-[11px] text-slate-600 space-y-1">
+
+                    <p><strong class="text-purple-700">Potencial</strong> = soma do aluguel-alvo de todos os imóveis.</p>
+
+                    <p><strong class="text-blue-700">Previsto</strong> = soma do valor vigente dos contratos ativos.</p>
+
+                    <p><strong class="text-green-700">Recebido</strong> = mensalidades pagas no período.</p>
+
+                    <p><strong class="text-red-700">Inadimplente</strong> = mensalidades em aberto no período.</p>
+
+                    <p><strong>% Potencial</strong> = Previsto ÷ Potencial. <strong>% Inadimplência</strong> = Inadimplente ÷ Previsto.</p>
 
                 </div>
 
@@ -1534,17 +1564,23 @@
 
             </div>
 
-            <div class="flex gap-2 mb-4">
+            <div class="bg-slate-950 border-2 border-slate-700 p-3 rounded-xl mb-4">
 
-                <button onclick="copiarLogsDoDesenvolvedor()" class="flex-1 bg-red-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition">📋 Copiar Logs de Erro</button>
+                <p class="text-xs font-black text-slate-300 mb-2">📋 Log do Sistema</p>
 
-                <button onclick="limparLogsDoDesenvolvedor()" class="bg-slate-800 text-slate-300 font-bold text-xs py-2.5 px-4 rounded-lg border border-slate-700 active:scale-95 transition">Limpar</button>
+                <div class="flex gap-2 mb-3">
 
-            </div>
+                    <button onclick="copiarLogsDoDesenvolvedor()" class="flex-1 bg-red-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition">📋 Copiar Logs de Erro</button>
 
-            <div class="bg-slate-950 p-4 rounded-xl border-2 border-slate-700 text-slate-300 font-mono text-[11px] space-y-2 max-h-96 overflow-y-auto mb-4" id="dev-detailed-log-box">
+                    <button onclick="limparLogsDoDesenvolvedor()" class="bg-slate-800 text-slate-300 font-bold text-xs py-2.5 px-4 rounded-lg border border-slate-700 active:scale-95 transition">Limpar</button>
 
-                <p class="text-red-400">// Central de Logs activa. Iniciando captura de escopos...</p>
+                </div>
+
+                <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 text-slate-300 font-mono text-[11px] space-y-2 max-h-96 overflow-y-auto" id="dev-detailed-log-box">
+
+                    <p class="text-red-400">// Central de Logs activa. Iniciando captura de escopos...</p>
+
+                </div>
 
             </div>
 
@@ -10070,9 +10106,23 @@
 
             const taxa = total > 0 ? ((alugados / total) * 100).toFixed(1) : 0;
 
-            let fat = 0, pot = 0;
+            // v7.3.3 — Potencial/Previsto/Recebido/Inadimplente, com as mesmas
+            // definições usadas no e-mail Dia 05:
+            //   Potencial = soma do aluguel-alvo ("valor") dos imóveis filtrados
+            //   Previsto  = soma do valor vigente dos contratos ATIVOS (dos
+            //               imóveis filtrados) — ambos constantes no período
+            //   Recebido/Inadimplente = por competência, a partir das mensalidades
+            const potencialNovo = imoveisFiltrados.reduce((s, i) => s + (Number(i.valor) || 0), 0);
 
-            const porMes = {}; // { "MM/AAAA": { potencial, arrecadado } }
+            const idsImoveisFiltrados = new Set(imoveisFiltrados.map(i => i.id));
+
+            const previstoNovo = contratos
+                .filter(c => c.status === 'Ativo' && idsImoveisFiltrados.has(c.imovelId))
+                .reduce((s, c) => s + (Number(c.valor) || 0), 0);
+
+            let fat = 0, inadTotal = 0;
+
+            const porMes = {}; // { "MM/AAAA": { arrecadado, inadimplente } }
 
             mensalidades.forEach(men => {
 
@@ -10090,15 +10140,15 @@
 
                 if(dMen >= lim) {
 
-                    pot += men.valorConfirmado;
-
                     if(men.status === 'Pago') fat += men.valorConfirmado;
 
-                    if (!porMes[men.referencia]) porMes[men.referencia] = { potencial: 0, arrecadado: 0 };
+                    if(men.status === 'Inadimplente') inadTotal += men.valorConfirmado;
 
-                    porMes[men.referencia].potencial += men.valorConfirmado;
+                    if (!porMes[men.referencia]) porMes[men.referencia] = { arrecadado: 0, inadimplente: 0 };
 
                     if (men.status === 'Pago') porMes[men.referencia].arrecadado += men.valorConfirmado;
+
+                    if (men.status === 'Inadimplente') porMes[men.referencia].inadimplente += men.valorConfirmado;
 
                 }
 
@@ -10108,7 +10158,11 @@
 
             document.getElementById('rel-faturamento').innerText = 'R$ ' + fat.toLocaleString('pt-BR', {minimumFractionDigits:2});
 
-            document.getElementById('rel-potencial').innerText = 'R$ ' + pot.toLocaleString('pt-BR', {minimumFractionDigits:2});
+            document.getElementById('rel-potencial').innerText = 'R$ ' + potencialNovo.toLocaleString('pt-BR', {minimumFractionDigits:2});
+
+            document.getElementById('rel-previsto').innerText = 'R$ ' + previstoNovo.toLocaleString('pt-BR', {minimumFractionDigits:2});
+
+            document.getElementById('rel-inadimplente').innerText = 'R$ ' + inadTotal.toLocaleString('pt-BR', {minimumFractionDigits:2});
 
             document.getElementById('rel-contagem').innerText = `Alugados: ${alugados} | Vagos: ${total - alugados}`;
 
@@ -10136,7 +10190,9 @@
 
                         const d = porMes[ref];
 
-                        const pctOcup = d.potencial > 0 ? ((d.arrecadado / d.potencial) * 100).toFixed(0) : 0;
+                        const pctPotencial = potencialNovo > 0 ? ((previstoNovo / potencialNovo) * 100).toFixed(0) : 0;
+
+                        const pctInadimplencia = previstoNovo > 0 ? ((d.inadimplente / previstoNovo) * 100).toFixed(0) : 0;
 
                         return `
 
@@ -10144,11 +10200,17 @@
 
                                 <td class="p-2 font-bold text-slate-700">${ref}</td>
 
-                                <td class="p-2 text-right text-purple-700">R$ ${d.potencial.toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+                                <td class="p-2 text-right text-purple-700">R$ ${potencialNovo.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
 
-                                <td class="p-2 text-right text-green-700">R$ ${d.arrecadado.toLocaleString('pt-BR', {minimumFractionDigits:2})}</td>
+                                <td class="p-2 text-right text-blue-700">R$ ${previstoNovo.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
 
-                                <td class="p-2 text-right font-bold ${pctOcup >= 90 ? 'text-green-700' : 'text-amber-700'}">${pctOcup}%</td>
+                                <td class="p-2 text-right text-green-700">R$ ${d.arrecadado.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
+
+                                <td class="p-2 text-right text-red-700">R$ ${d.inadimplente.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
+
+                                <td class="p-2 text-center font-bold text-purple-700">${pctPotencial}%</td>
+
+                                <td class="p-2 text-center font-bold ${pctInadimplencia > 10 ? 'text-red-700' : 'text-amber-700'}">${pctInadimplencia}%</td>
 
                             </tr>`;
 
@@ -10166,9 +10228,15 @@
 
                                     <th class="p-2 text-right">Potencial</th>
 
-                                    <th class="p-2 text-right">Arrecadado</th>
+                                    <th class="p-2 text-right">Previsto</th>
 
-                                    <th class="p-2 text-right">% Recebido</th>
+                                    <th class="p-2 text-right">Recebido</th>
+
+                                    <th class="p-2 text-right">Inadimplente</th>
+
+                                    <th class="p-2 text-center">% Potencial</th>
+
+                                    <th class="p-2 text-center">% Inadimplência</th>
 
                                 </tr>
 
