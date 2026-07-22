@@ -1,13 +1,12 @@
 {
-  "name": "RUMO - Gestão Patrimonial",
+  "name": "RUMO Imóveis",
   "short_name": "RUMO",
-  "description": "Sistema de controle de imóveis, contratos e gestão patrimonial da RUMO.",
+  "description": "RUMO — Gestão de Imóveis e Patrimônio",
   "start_url": ".",
-  "scope": "./",
   "display": "standalone",
-  "orientation": "portrait-primary",
   "background_color": "#0f172a",
-  "theme_color": "#0f172a",
+  "theme_color": "#1e40af",
+  "orientation": "portrait",
   "icons": [
     {
       "src": "icon-192.png",
@@ -20,6 +19,12 @@
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "icon-maskable-512.png",
