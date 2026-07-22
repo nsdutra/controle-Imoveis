@@ -4,9 +4,18 @@
 
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
 
-   VERSÃO: v7.3.7
-   LINHAS: 10831
+   VERSÃO: v7.3.8
+   LINHAS: 10911
    DATA: 2026-07-22
+   NOVIDADES (v7.3.8):
+     - Nova seção "🤖 Envio Automático de E-mails" na aba DEV, com botão
+       de liga/desliga (status verificado ao abrir a aba)
+     - Resto do trabalho desta rodada foi no backend (Code.gs): correção
+       importante dos Repasses aos Sócios (agora usa dados reais de
+       retirada, não mais um cálculo teórico) e o sistema de triggers
+       automáticos. Ver changelog completo no Code-V7.3.8.gs. Ícones do
+       Android também corrigidos (arquivos separados, fora do HTML)
+
    NOVIDADES (v7.3.7):
      - Rótulos "Dia 05" trocados para "Dia 15" (dropdown de teste em DEV
        e checkbox de config. por sócio) — identificador interno de rota
@@ -222,7 +231,7 @@
 
             <div class="text-[13px] text-slate-500 font-mono">
 
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.7</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.8</span>
 
             </div>
 
@@ -238,7 +247,7 @@
 
             <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" onclick="agendarCliqueLogo()" ondblclick="cancelarCliqueLogoEAbrirDev()">
 
-                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.3.7</span>
+                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.3.8</span>
 
                 <span id="header-offline-tag" class="hidden text-[11px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
 
@@ -1565,6 +1574,16 @@
                         🚀 Disparar E-mail de Teste
                     </button>
                 </div>
+            </div>
+
+            <!-- ============ NOVA SEÇÃO: ENVIO AUTOMÁTICO ============ -->
+            <div class="bg-teal-50 border-2 border-teal-300 p-3 rounded-xl mb-4">
+                <p class="text-xs font-black text-teal-700 mb-2">🤖 Envio Automático de E-mails</p>
+                <p class="text-[11px] text-teal-800 mb-2">Quando ativado, envia automaticamente todo Dia 01 (Lembrete) e Dia 15 (Resultado), às 08h, para os sócios cadastrados que optaram por receber cada um.</p>
+                <div id="dev-envio-auto-status" class="text-center text-xs font-bold py-2 rounded-lg mb-2 bg-gray-100 text-gray-500">Verificando status...</div>
+                <button id="dev-envio-auto-btn" onclick="dev_toggleEnvioAutomatico()" class="w-full bg-teal-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition">
+                    Carregando...
+                </button>
             </div>
 
             <!-- ============ NOVA SEÇÃO: ACESSOS ============ -->
@@ -10258,6 +10277,66 @@
             });
         }
 
+        // v7.3.8 — Envio automático: consulta o status atual (chamado ao abrir
+        // a aba DEV) e atualiza o botão/badge conforme ligado/desligado.
+        function dev_atualizarUiEnvioAutomatico(ativo) {
+            const status = document.getElementById('dev-envio-auto-status');
+            const btn = document.getElementById('dev-envio-auto-btn');
+            if (!status || !btn) return;
+
+            if (ativo) {
+                status.className = "text-center text-xs font-bold py-2 rounded-lg mb-2 bg-green-100 text-green-700";
+                status.innerText = "🟢 ATIVO — próximo envio automático nos dias 01 e 15, às 08h";
+                btn.className = "w-full bg-red-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition";
+                btn.innerText = "🔴 Desativar Envio Automático";
+            } else {
+                status.className = "text-center text-xs font-bold py-2 rounded-lg mb-2 bg-gray-100 text-gray-500";
+                status.innerText = "⚪ INATIVO — nenhum e-mail será enviado automaticamente";
+                btn.className = "w-full bg-teal-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition";
+                btn.innerText = "🟢 Ativar Envio Automático";
+            }
+        }
+
+        function dev_verificarStatusEnvioAutomatico() {
+            fetch(GOOGLE_API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ rota: "dev_status_envio_automatico" })
+            }).then(async (resp) => {
+                const corpo = await resp.json();
+                if (corpo && corpo.status === "sucesso") {
+                    dev_atualizarUiEnvioAutomatico(corpo.ativo);
+                }
+            }).catch(() => {
+                const btn = document.getElementById('dev-envio-auto-btn');
+                if (btn) btn.innerText = "⚠️ Erro ao verificar status";
+            });
+        }
+
+        function dev_toggleEnvioAutomatico() {
+            const btn = document.getElementById('dev-envio-auto-btn');
+            if (btn) btn.disabled = true;
+
+            fetch(GOOGLE_API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ rota: "dev_toggle_envio_automatico" })
+            }).then(async (resp) => {
+                const corpo = await resp.json();
+                if (corpo && corpo.status === "sucesso") {
+                    dev_atualizarUiEnvioAutomatico(corpo.ativo);
+                    devLog("ENVIO_AUTOMATICO", corpo.mensagem);
+                } else {
+                    alert("⚠️ Erro: " + (corpo?.mensagem || "Desconhecido"));
+                }
+            }).catch((err) => {
+                alert("❌ Falha de conexão.");
+                devLog("ERRO_ENVIO_AUTOMATICO", err.message);
+            }).finally(() => {
+                if (btn) btn.disabled = false;
+            });
+        }
+
         // SEÇÃO 2: LOG DE ACESSOS (COM HORÁRIO BRASÍLIA)
         // v7.3.2 — Renderização instantânea a partir do array já carregado no
         // início (mesmo padrão de renderImoveis/renderContratos), sem round-trip.
@@ -10503,6 +10582,7 @@
             dev_carregarAcessos();
             dev_carregarLinks();
             dev_renderCadastroSocios();
+            dev_verificarStatusEnvioAutomatico();
         }
 
 
