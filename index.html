@@ -4,9 +4,20 @@
 
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
 
-   VERSÃO: v7.3.5
-   LINHAS: 10808
+   VERSÃO: v7.3.6
+   LINHAS: 10819
    DATA: 2026-07-22
+   NOVIDADES (v7.3.6):
+     - CORRIGIDO: tabela de Métricas não removia decimais de fato
+       (minimumFractionDigits:0 só define o mínimo, não o máximo) —
+       trocado por Math.round() antes do toLocaleString() nas colunas
+       Potencial/Previsto/Recebido/Inadimplente
+     - Resto do trabalho desta rodada foi no backend (Code.gs):
+       personalização de nome nos e-mails, correções de competência/
+       formatação, e as duas seções grandes que faltavam (Inadimplência
+       agrupada e Repasses aos Sócios). Ver changelog completo no
+       Code-V7.3.6.gs
+
    NOVIDADES (v7.3.5):
      - CORRIGIDO: filtro de empreendimento na Vitrine era uma lista
        hardcoded no HTML (não dinâmica) — por isso "Belo Horizonte"
@@ -199,7 +210,7 @@
 
             <div class="text-[13px] text-slate-500 font-mono">
 
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.5</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.6</span>
 
             </div>
 
@@ -215,7 +226,7 @@
 
             <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" onclick="agendarCliqueLogo()" ondblclick="cancelarCliqueLogoEAbrirDev()">
 
-                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.3.5</span>
+                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.3.6</span>
 
                 <span id="header-offline-tag" class="hidden text-[11px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
 
@@ -10140,13 +10151,13 @@
 
                                 <td class="p-1 font-bold text-slate-700">${ref}</td>
 
-                                <td class="p-1 text-right text-purple-700">${potencialNovo.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
+                                <td class="p-1 text-right text-purple-700">${Math.round(potencialNovo).toLocaleString('pt-BR')}</td>
 
-                                <td class="p-1 text-right text-blue-700">${previstoNovo.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
+                                <td class="p-1 text-right text-blue-700">${Math.round(previstoNovo).toLocaleString('pt-BR')}</td>
 
-                                <td class="p-1 text-right text-green-700">${d.arrecadado.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
+                                <td class="p-1 text-right text-green-700">${Math.round(d.arrecadado).toLocaleString('pt-BR')}</td>
 
-                                <td class="p-1 text-right text-red-700">${d.inadimplente.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
+                                <td class="p-1 text-right text-red-700">${Math.round(d.inadimplente).toLocaleString('pt-BR')}</td>
 
                                 <td class="p-1 text-center font-bold text-purple-700">${pctPotencial}%</td>
 
