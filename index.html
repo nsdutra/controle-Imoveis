@@ -4,9 +4,21 @@
 
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
 
-   VERSÃO: v7.3.6
-   LINHAS: 10819
+   VERSÃO: v7.3.7
+   LINHAS: 10831
    DATA: 2026-07-22
+   NOVIDADES (v7.3.7):
+     - Rótulos "Dia 05" trocados para "Dia 15" (dropdown de teste em DEV
+       e checkbox de config. por sócio) — identificador interno de rota
+       continua "dia05", sem risco de quebra
+     - Ícone de alerta (🔺) em contratos: maior, com fundo vermelho e
+       leve pulsação, mais fácil de notar num card com vários badges
+     - Resto do trabalho desta rodada foi no backend (Code.gs): correção
+       importante de estilos de e-mail (classes Tailwind que não tinham
+       efeito nenhum em cliente de e-mail real), totais da tabela de
+       competências, inadimplências e repasses. Ver changelog completo
+       no Code-V7.3.7.gs
+
    NOVIDADES (v7.3.6):
      - CORRIGIDO: tabela de Métricas não removia decimais de fato
        (minimumFractionDigits:0 só define o mínimo, não o máximo) —
@@ -210,7 +222,7 @@
 
             <div class="text-[13px] text-slate-500 font-mono">
 
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.6</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.7</span>
 
             </div>
 
@@ -226,7 +238,7 @@
 
             <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" onclick="agendarCliqueLogo()" ondblclick="cancelarCliqueLogoEAbrirDev()">
 
-                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.3.6</span>
+                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.3.7</span>
 
                 <span id="header-offline-tag" class="hidden text-[11px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
 
@@ -1545,7 +1557,7 @@
                 <div class="space-y-2">
                     <select id="dev-email-tipo" class="w-full p-2 border rounded bg-white text-sm">
                         <option value="">-- Selecione o tipo de e-mail --</option>
-                        <option value="dia05">📊 Email Dia 05 (Resultado de Operações)</option>
+                        <option value="dia05">📊 Email Dia 15 (Resultado de Operações)</option>
                         <option value="dia01">📌 Email Dia 01 (Lembrete Mensal)</option>
                     </select>
                     <input type="email" id="dev-email-destino" placeholder="E-mail de destino (teste)" class="w-full p-2 border rounded text-sm">
@@ -6238,7 +6250,7 @@
 
                 const temAlerta = contratoPrecisaRevisao(con) || contratoVencido(con);
 
-                const alertaTriangulo = temAlerta ? `<span title="Ver alertas deste contrato" onclick="verAlertasContrato('${con.id}')" class="text-red-600 cursor-pointer text-sm">🔺</span>` : '';
+                const alertaTriangulo = temAlerta ? `<span title="Ver alertas deste contrato" onclick="verAlertasContrato('${con.id}')" class="text-base font-bold px-1.5 py-0.5 rounded bg-red-100 text-red-700 cursor-pointer animate-pulse">🔺</span>` : '';
 
                 const badgeEnergia = (imo && imo.energiaRumo === 'Sim' && con.descontoEnergia > 0) ? `<span title="Energia Rumo com desconto" class="text-[11px] font-bold px-1.5 py-0.5 rounded bg-yellow-100 text-yellow-800">⚡</span>` : '';
 
@@ -10404,7 +10416,7 @@
                         <div class="flex gap-3 pt-1">
                             <label class="flex items-center gap-1">
                                 <input type="checkbox" class="socio-dia05 w-3.5 h-3.5" ${dia05 ? 'checked' : ''}>
-                                <span>Recebe Dia 05</span>
+                                <span>Recebe Dia 15</span>
                             </label>
                             <label class="flex items-center gap-1">
                                 <input type="checkbox" class="socio-dia01 w-3.5 h-3.5" ${dia01 ? 'checked' : ''}>
