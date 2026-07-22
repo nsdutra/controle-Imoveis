@@ -4,9 +4,28 @@
 
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
 
-   VERSÃO: v7.3.4
-   LINHAS: 10835
+   VERSÃO: v7.3.5
+   LINHAS: 10808
    DATA: 2026-07-22
+   NOVIDADES (v7.3.5):
+     - CORRIGIDO: filtro de empreendimento na Vitrine era uma lista
+       hardcoded no HTML (não dinâmica) — por isso "Belo Horizonte"
+       nunca aparecia; agora usa popularFiltroSelect() como as demais
+     - Botão "Compartilhar Link da Vitrine" movido para o topo da aba
+     - Mensagem de energia ajustada de "incluída" para "disponível"
+     - Métricas: removidos os boxes-resumo e a legenda em caixa
+       separada — ficam só os filtros e a tabela; tabela mais estreita
+       (cabe sem scroll horizontal), sem "R$" repetido em cada célula,
+       "% Inadimplência" renomeada para "% INAD", legenda movida para
+       nota em itálico no rodapé da tabela
+     - DEV: "Configurar E-mails por Sócio" virou "Cadastro Sócios" —
+       CRUD completo (adicionar, editar nome/e-mail/whatsapp inline,
+       marcar quais e-mails recebe, excluir com confirmação)
+     - DEV: log do sistema com borda e fundo branco, consistente com
+       os demais cards da aba (era fundo escuro, sem borda visível)
+     - Tamanho de fonte das tabelas de Acessos/Links padronizado para
+       11px (estava em 9px/10px, menor que o resto do app)
+
    NOVIDADES (v7.3.4):
      - Nenhuma mudança estrutural no HTML nesta versão — o trabalho desta
        rodada foi 100% no backend (Code.gs): reescrita completa dos
@@ -180,7 +199,7 @@
 
             <div class="text-[13px] text-slate-500 font-mono">
 
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.4</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.5</span>
 
             </div>
 
@@ -196,7 +215,7 @@
 
             <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" onclick="agendarCliqueLogo()" ondblclick="cancelarCliqueLogoEAbrirDev()">
 
-                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.3.4</span>
+                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.3.5</span>
 
                 <span id="header-offline-tag" class="hidden text-[11px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
 
@@ -1254,6 +1273,12 @@
 
             <p class="text-[11px] text-gray-500 mb-3">Selecione os imóveis do portfólio para criar um card de divulgação customizado e compartilhá-lo via link ou WhatsApp.</p>
 
+            <button onclick="gerarLinkVitrine()" class="w-full mb-4 bg-green-600 hover:bg-green-500 text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow">
+
+                🟢 Compartilhar Link da Vitrine
+
+            </button>
+
             <div class="bg-white p-3 rounded-xl shadow-sm mb-4 border border-gray-200 space-y-2 text-xs">
 
                 <div class="grid grid-cols-2 gap-2">
@@ -1265,18 +1290,6 @@
                         <select id="vitrine-filtro-emp" onchange="renderVitrine()" class="w-full p-1 border rounded mt-0.5 bg-gray-50">
 
                             <option value="todos">Todos</option>
-
-                            <option value="Canaã">Canaã</option>
-
-                            <option value="Golden">Golden</option>
-
-                            <option value="Guarda Mor">Guarda Mor</option>
-
-                            <option value="Mirante">Mirante</option>
-
-                            <option value="Patrocínio">Patrocínio</option>
-
-                            <option value="Torres da Serra">Torres da Serra</option>
 
                         </select>
 
@@ -1303,14 +1316,6 @@
             </div>
 
             <div id="lista-vitrine" class="space-y-3"></div>
-
-            
-
-            <button onclick="gerarLinkVitrine()" class="w-full mt-4 bg-green-600 hover:bg-green-500 text-white font-bold text-xs py-3 rounded-xl flex items-center justify-center gap-2 transition active:scale-95 shadow">
-
-                🟢 Compartilhar Link da Vitrine
-
-            </button>
 
         </section>
 
@@ -1359,76 +1364,6 @@
             </div>
 
             
-
-            <div id="capture-relatorios-pdf" class="bg-transparent p-1">
-
-                <div class="grid grid-cols-2 gap-3">
-
-                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500">
-
-                        <p class="text-[13px] text-gray-500 font-bold uppercase">Ocupação</p>
-
-                        <p class="text-xl font-black text-slate-900 mt-1" id="rel-taxa">0%</p>
-
-                    </div>
-
-                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-gray-400">
-
-                        <p class="text-[13px] text-gray-500 font-bold uppercase">Imóveis</p>
-
-                        <p class="text-[13px] font-semibold text-slate-700 mt-2" id="rel-contagem">-</p>
-
-                    </div>
-
-                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-purple-500">
-
-                        <p class="text-[13px] text-gray-500 font-bold uppercase">Potencial</p>
-
-                        <p class="text-lg font-black text-purple-700 mt-1" id="rel-potencial">R$ 0</p>
-
-                    </div>
-
-                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-blue-500">
-
-                        <p class="text-[13px] text-gray-500 font-bold uppercase">Previsto</p>
-
-                        <p class="text-lg font-black text-blue-700 mt-1" id="rel-previsto">R$ 0</p>
-
-                    </div>
-
-                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-green-500">
-
-                        <p class="text-[13px] text-gray-500 font-bold uppercase">Recebido</p>
-
-                        <p class="text-lg font-black text-green-700 mt-1" id="rel-faturamento">R$ 0</p>
-
-                    </div>
-
-                    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-red-500">
-
-                        <p class="text-[13px] text-gray-500 font-bold uppercase">Inadimplente</p>
-
-                        <p class="text-lg font-black text-red-700 mt-1" id="rel-inadimplente">R$ 0</p>
-
-                    </div>
-
-                </div>
-
-                <div class="bg-slate-50 border border-slate-200 rounded-lg p-3 mt-3 text-[11px] text-slate-600 space-y-1">
-
-                    <p><strong class="text-purple-700">Potencial</strong> = soma do aluguel-alvo de todos os imóveis.</p>
-
-                    <p><strong class="text-blue-700">Previsto</strong> = soma do valor vigente dos contratos ativos.</p>
-
-                    <p><strong class="text-green-700">Recebido</strong> = mensalidades pagas no período.</p>
-
-                    <p><strong class="text-red-700">Inadimplente</strong> = mensalidades em aberto no período.</p>
-
-                    <p><strong>% Potencial</strong> = Previsto ÷ Potencial. <strong>% Inadimplência</strong> = Inadimplente ÷ Previsto.</p>
-
-                </div>
-
-            </div>
 
             <h2 class="text-sm font-bold mt-4 mb-2 text-blue-900">Detalhamento Mês a Mês (crescente)</h2>
 
@@ -1572,21 +1507,21 @@
 
             </div>
 
-            <div class="bg-slate-950 border-2 border-slate-700 p-3 rounded-xl mb-4">
+            <div class="bg-red-50 border-2 border-red-300 p-3 rounded-xl mb-4">
 
-                <p class="text-xs font-black text-slate-300 mb-2">📋 Log do Sistema</p>
+                <p class="text-xs font-black text-red-700 mb-2">📋 Log do Sistema</p>
 
                 <div class="flex gap-2 mb-3">
 
                     <button onclick="copiarLogsDoDesenvolvedor()" class="flex-1 bg-red-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition">📋 Copiar Logs de Erro</button>
 
-                    <button onclick="limparLogsDoDesenvolvedor()" class="bg-slate-800 text-slate-300 font-bold text-xs py-2.5 px-4 rounded-lg border border-slate-700 active:scale-95 transition">Limpar</button>
+                    <button onclick="limparLogsDoDesenvolvedor()" class="bg-white text-red-700 font-bold text-xs py-2.5 px-4 rounded-lg border border-red-300 active:scale-95 transition">Limpar</button>
 
                 </div>
 
-                <div class="bg-slate-900 p-3 rounded-lg border border-slate-800 text-slate-300 font-mono text-[11px] space-y-2 max-h-96 overflow-y-auto" id="dev-detailed-log-box">
+                <div class="bg-white p-3 rounded-lg border border-red-200 text-slate-700 font-mono text-[11px] space-y-2 max-h-96 overflow-y-auto" id="dev-detailed-log-box">
 
-                    <p class="text-red-400">// Central de Logs activa. Iniciando captura de escopos...</p>
+                    <p class="text-red-600">// Central de Logs activa. Iniciando captura de escopos...</p>
 
                 </div>
 
@@ -1636,14 +1571,17 @@
                 </div>
             </div>
 
-            <!-- ============ NOVA SEÇÃO: CONFIGURAÇÃO DE E-MAILS POR SÓCIO ============ -->
+            <!-- ============ NOVA SEÇÃO: CADASTRO DE SÓCIOS ============ -->
             <div class="bg-indigo-50 border-2 border-indigo-300 p-3 rounded-xl mb-4">
-                <p class="text-xs font-black text-indigo-700 mb-2">👥 Configurar E-mails por Sócio</p>
-                <div id="dev-email-config-lista" class="space-y-2 max-h-56 overflow-y-auto mb-2">
-                    <p class="text-[11px] text-gray-500 p-2">Carregando configurações...</p>
+                <div class="flex items-center gap-2 mb-2">
+                    <p class="text-xs font-black text-indigo-700 flex-1">👥 Cadastro Sócios</p>
+                    <button onclick="dev_adicionarNovoSocio()" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-indigo-700 border border-indigo-300 rounded-full shadow active:scale-90 transition" title="Novo sócio"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
+                </div>
+                <div id="dev-email-config-lista" class="space-y-2 max-h-72 overflow-y-auto mb-2">
+                    <p class="text-[11px] text-gray-500 p-2">Carregando sócios...</p>
                 </div>
                 <button onclick="dev_salvarConfigEmailSocios()" class="w-full bg-indigo-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition">
-                    💾 Salvar Configurações
+                    💾 Salvar Alterações
                 </button>
             </div>
 
@@ -2242,11 +2180,11 @@
 
                 try {
 
-                    payloadStr = `<pre class="bg-slate-900 p-1.5 rounded text-[11px] mt-1 border border-slate-800 text-amber-400 overflow-x-auto">${JSON.stringify(objectPayload, null, 2)}</pre>`;
+                    payloadStr = `<pre class="bg-slate-50 p-1.5 rounded text-[11px] mt-1 border border-slate-200 text-amber-700 overflow-x-auto">${JSON.stringify(objectPayload, null, 2)}</pre>`;
 
                 } catch(e) {
 
-                    payloadStr = `<span class="text-red-500">[Falha stringify: ${e.message}]</span>`;
+                    payloadStr = `<span class="text-red-600">[Falha stringify: ${e.message}]</span>`;
 
                 }
 
@@ -2254,13 +2192,13 @@
 
             const entryHtml = `
 
-                <div class="border-b border-slate-900 pb-1.5">
+                <div class="border-b border-gray-200 pb-1.5">
 
-                    <span class="text-red-400 font-bold">[${time}]</span> 
+                    <span class="text-red-600 font-bold">[${time}]</span> 
 
-                    <span class="bg-slate-800 text-slate-100 px-1 py-0.2 rounded font-black text-[11px] uppercase tracking-wider">${origin}</span> 
+                    <span class="bg-slate-200 text-slate-800 px-1 py-0.2 rounded font-black text-[11px] uppercase tracking-wider">${origin}</span> 
 
-                    <span class="text-slate-200 ml-1">${message}</span>
+                    <span class="text-slate-700 ml-1">${message}</span>
 
                     ${payloadStr}
 
@@ -2466,7 +2404,7 @@
 
             devLogEntries = [];
 
-            if(container) container.innerHTML = '<p class="text-red-400">// Central de Logs reiniciada.</p>';
+            if(container) container.innerHTML = '<p class="text-red-600">// Central de Logs reiniciada.</p>';
 
         }
 
@@ -9625,6 +9563,8 @@
 
             container.innerHTML = '';
 
+            popularFiltroSelect('vitrine-filtro-emp', imoveis.map(i => i.empreendimento));
+
             const fEmp = document.getElementById('vitrine-filtro-emp').value;
 
             const fStat = document.getElementById('vitrine-filtro-status').value;
@@ -9657,7 +9597,7 @@
 
                 const badgeEnergia = imo.energiaRumo === 'Sim'
 
-                    ? `<div class="mt-1 bg-yellow-50 border border-yellow-200 rounded px-2 py-1 text-[11px] text-yellow-800">⚡ Energia Rumo incluída</div>`
+                    ? `<div class="mt-1 bg-yellow-50 border border-yellow-200 rounded px-2 py-1 text-[11px] text-yellow-800">⚡ Energia Rumo disponível</div>`
 
                     : '';
 
@@ -9940,7 +9880,7 @@
 
                     const badgeEnergia = imo.energiaRumo === 'Sim'
 
-                        ? `<div class="mt-2 bg-yellow-900/40 border border-yellow-700 rounded-lg p-2 text-[11px] text-yellow-200">⚡ <strong>Energia Rumo incluída</strong> — desconto na conta de energia, pago direto à Rumo.</div>`
+                        ? `<div class="mt-2 bg-yellow-900/40 border border-yellow-700 rounded-lg p-2 text-[11px] text-yellow-200">⚡ <strong>Energia Rumo disponível</strong> — desconto na conta de energia, pago direto à Rumo.</div>`
 
                         : '';
 
@@ -10162,17 +10102,9 @@
 
             });
 
-            document.getElementById('rel-taxa').innerText = taxa + '%';
-
-            document.getElementById('rel-faturamento').innerText = 'R$ ' + fat.toLocaleString('pt-BR', {minimumFractionDigits:2});
-
-            document.getElementById('rel-potencial').innerText = 'R$ ' + potencialNovo.toLocaleString('pt-BR', {minimumFractionDigits:2});
-
-            document.getElementById('rel-previsto').innerText = 'R$ ' + previstoNovo.toLocaleString('pt-BR', {minimumFractionDigits:2});
-
-            document.getElementById('rel-inadimplente').innerText = 'R$ ' + inadTotal.toLocaleString('pt-BR', {minimumFractionDigits:2});
-
-            document.getElementById('rel-contagem').innerText = `Alugados: ${alugados} | Vagos: ${total - alugados}`;
+            // v7.3.5 — Boxes-resumo removidos (só filtros + tabela ficam na tela);
+            // taxa/fat/potencialNovo/previstoNovo/inadTotal continuam calculados
+            // aqui pois alimentam as colunas e o rodapé de totais da tabela.
 
             // Tabela mês a mês, sempre em ordem CRESCENTE de competência.
 
@@ -10206,19 +10138,19 @@
 
                             <tr class="border-t border-gray-100">
 
-                                <td class="p-2 font-bold text-slate-700">${ref}</td>
+                                <td class="p-1 font-bold text-slate-700">${ref}</td>
 
-                                <td class="p-2 text-right text-purple-700">R$ ${potencialNovo.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
+                                <td class="p-1 text-right text-purple-700">${potencialNovo.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
 
-                                <td class="p-2 text-right text-blue-700">R$ ${previstoNovo.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
+                                <td class="p-1 text-right text-blue-700">${previstoNovo.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
 
-                                <td class="p-2 text-right text-green-700">R$ ${d.arrecadado.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
+                                <td class="p-1 text-right text-green-700">${d.arrecadado.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
 
-                                <td class="p-2 text-right text-red-700">R$ ${d.inadimplente.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
+                                <td class="p-1 text-right text-red-700">${d.inadimplente.toLocaleString('pt-BR', {minimumFractionDigits:0})}</td>
 
-                                <td class="p-2 text-center font-bold text-purple-700">${pctPotencial}%</td>
+                                <td class="p-1 text-center font-bold text-purple-700">${pctPotencial}%</td>
 
-                                <td class="p-2 text-center font-bold ${pctInadimplencia > 10 ? 'text-red-700' : 'text-amber-700'}">${pctInadimplencia}%</td>
+                                <td class="p-1 text-center font-bold ${pctInadimplencia > 10 ? 'text-red-700' : 'text-amber-700'}">${pctInadimplencia}%</td>
 
                             </tr>`;
 
@@ -10226,25 +10158,25 @@
 
                     tabelaContainer.innerHTML = `
 
-                        <table class="w-full">
+                        <table class="w-full text-[10px]" style="table-layout:fixed;">
 
                             <thead>
 
-                                <tr class="bg-slate-100 text-slate-500 uppercase text-[11px]">
+                                <tr class="bg-slate-100 text-slate-500 uppercase text-[9px]">
 
-                                    <th class="p-2 text-left">Competência</th>
+                                    <th class="p-1 text-left">Compet.</th>
 
-                                    <th class="p-2 text-right">Potencial</th>
+                                    <th class="p-1 text-right">Potenc.</th>
 
-                                    <th class="p-2 text-right">Previsto</th>
+                                    <th class="p-1 text-right">Previsto</th>
 
-                                    <th class="p-2 text-right">Recebido</th>
+                                    <th class="p-1 text-right">Recebido</th>
 
-                                    <th class="p-2 text-right">Inadimplente</th>
+                                    <th class="p-1 text-right">Inadimpl.</th>
 
-                                    <th class="p-2 text-center">% Potencial</th>
+                                    <th class="p-1 text-center">% Pot.</th>
 
-                                    <th class="p-2 text-center">% Inadimplência</th>
+                                    <th class="p-1 text-center">% INAD</th>
 
                                 </tr>
 
@@ -10252,7 +10184,9 @@
 
                             <tbody>${linhasTabela}</tbody>
 
-                        </table>`;
+                        </table>
+
+                        <p class="text-[10px] text-gray-400 italic p-2 border-t border-gray-100">Potencial = aluguel-alvo dos imóveis. Previsto = valor vigente dos contratos ativos (ambos constantes no período). Recebido/Inadimplente variam por competência. % Pot. = Previsto ÷ Potencial. % INAD = Inadimplente ÷ Previsto.</p>`;
 
                 }
 
@@ -10313,7 +10247,7 @@
                 return;
             }
 
-            let html = '<table class="w-full text-[10px]"><tr class="border-b"><th class="p-1 text-left">Data/Hora (Brasília)</th><th class="p-1 text-left">Tipo</th><th class="p-1 text-left">Usuário</th></tr>';
+            let html = '<table class="w-full text-[11px]"><tr class="border-b"><th class="p-1 text-left">Data/Hora (Brasília)</th><th class="p-1 text-left">Tipo</th><th class="p-1 text-left">Usuário</th></tr>';
             acessos.slice(0, 50).forEach(acs => {
                 const hora = acs.dataHoraBrasilia || acs.dataHora || '-';
                 html += `<tr class="border-b"><td class="p-1">${hora}</td><td class="p-1">${acs.tipo || ''}</td><td class="p-1">${acs.usuario || ''}</td></tr>`;
@@ -10357,11 +10291,11 @@
                 return;
             }
 
-            let html = '<table class="w-full text-[10px]"><tr class="border-b"><th class="p-1 text-left">Token</th><th class="p-1 text-left">Imóveis</th><th class="p-1 text-left">Criado (Brasília)</th><th class="p-1">Ação</th></tr>';
+            let html = '<table class="w-full text-[11px]"><tr class="border-b"><th class="p-1 text-left">Token</th><th class="p-1 text-left">Imóveis</th><th class="p-1 text-left">Criado (Brasília)</th><th class="p-1">Ação</th></tr>';
             links.forEach(link => {
                 const data = link.criadoEmBrasilia || link.criadoEm || '-';
                 const qtd = link.qtdImoveis || 0;
-                html += `<tr class="border-b"><td class="p-1 font-mono">${link.token}</td><td class="p-1 text-center">${qtd}</td><td class="p-1 text-[9px]">${data}</td><td class="p-1"><button onclick="dev_apagarLinkEspecifico('${link.token}')" class="text-red-600 text-[9px]">🗑️</button></td></tr>`;
+                html += `<tr class="border-b"><td class="p-1 font-mono">${link.token}</td><td class="p-1 text-center">${qtd}</td><td class="p-1 text-[11px]">${data}</td><td class="p-1"><button onclick="dev_apagarLinkEspecifico('${link.token}')" class="text-red-600 text-[11px]">🗑️</button></td></tr>`;
             });
             html += '</table>';
             lista.innerHTML = html;
@@ -10431,74 +10365,113 @@
         }
 
         // SEÇÃO 4: CONFIGURAÇÃO DE E-MAILS POR SÓCIO
-        function dev_carregarConfigEmailSocios() {
+        // v7.3.5 — Cadastro Sócios: CRUD completo (nome, email, whatsapp,
+        // quais e-mails recebe), no mesmo padrão de usabilidade das demais
+        // seções da aba DEV (cards compactos, ações inline).
+        function dev_renderCadastroSocios() {
             const lista = document.getElementById('dev-email-config-lista');
             if (!lista) return;
 
-            // Usar socios já carregados
             if (!socios || socios.length === 0) {
-                lista.innerHTML = '<p class="p-2 text-gray-500">Nenhum sócio cadastrado.</p>';
+                lista.innerHTML = '<p class="p-2 text-gray-500 text-[11px]">Nenhum sócio cadastrado. Toque no "+" para adicionar.</p>';
                 return;
             }
 
-            let html = '';
-            socios.forEach(socio => {
-                const dia05 = document.getElementById('chk-email-dia05-' + socio.nome) 
-                    ? document.getElementById('chk-email-dia05-' + socio.nome).checked 
-                    : true;
-                const dia01 = document.getElementById('chk-email-dia01-' + socio.nome)
-                    ? document.getElementById('chk-email-dia01-' + socio.nome).checked
-                    : true;
+            lista.innerHTML = socios.map((socio, idx) => {
+                const cfg = emailConfiguracao.find(c => c.socioNome === socio.nome) || {};
+                const dia05 = cfg.recebeEmailDia05 !== undefined ? cfg.recebeEmailDia05 : true;
+                const dia01 = cfg.recebeEmailDia01 !== undefined ? cfg.recebeEmailDia01 : true;
 
-                html += `
-                    <div class="bg-white p-2 rounded border border-gray-200 text-[11px]">
-                        <p class="font-bold text-gray-700 mb-1">${socio.nome}</p>
-                        <label class="flex items-center gap-2">
-                            <input type="checkbox" id="chk-email-dia05-${socio.nome}" ${dia05 ? 'checked' : ''} class="w-4 h-4">
-                            <span>Recebe e-mail Dia 05 (Operações)</span>
-                        </label>
-                        <label class="flex items-center gap-2 mt-1">
-                            <input type="checkbox" id="chk-email-dia01-${socio.nome}" ${dia01 ? 'checked' : ''} class="w-4 h-4">
-                            <span>Recebe e-mail Dia 01 (Lembrete)</span>
-                        </label>
+                return `
+                    <div class="bg-white p-2 rounded border border-gray-200 text-[11px] space-y-1.5" data-socio-idx="${idx}">
+                        <div class="flex gap-1.5 items-center">
+                            <input type="text" class="socio-nome flex-1 p-1 border rounded text-[11px]" value="${socio.nome || ''}" placeholder="Nome do sócio">
+                            <button onclick="dev_removerSocio(${idx})" title="Remover" class="w-6 h-6 flex-none flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-[10px]">🗑️</button>
+                        </div>
+                        <input type="email" class="socio-email w-full p-1 border rounded text-[11px]" value="${socio.email || ''}" placeholder="E-mail">
+                        <input type="tel" class="socio-whatsapp w-full p-1 border rounded text-[11px]" value="${socio.whatsapp || ''}" placeholder="WhatsApp">
+                        <div class="flex gap-3 pt-1">
+                            <label class="flex items-center gap-1">
+                                <input type="checkbox" class="socio-dia05 w-3.5 h-3.5" ${dia05 ? 'checked' : ''}>
+                                <span>Recebe Dia 05</span>
+                            </label>
+                            <label class="flex items-center gap-1">
+                                <input type="checkbox" class="socio-dia01 w-3.5 h-3.5" ${dia01 ? 'checked' : ''}>
+                                <span>Recebe Dia 01</span>
+                            </label>
+                        </div>
                     </div>
                 `;
-            });
+            }).join('');
+        }
 
-            lista.innerHTML = html;
+        function dev_adicionarNovoSocio() {
+            socios.push({ nome: '', email: '', whatsapp: '', dataAdesao: new Date().toISOString().split('T')[0] });
+            dev_renderCadastroSocios();
+            // Rola até o novo card (último da lista) para o usuário já preencher.
+            const lista = document.getElementById('dev-email-config-lista');
+            if (lista) lista.scrollTop = lista.scrollHeight;
+        }
+
+        function dev_removerSocio(idx) {
+            const socio = socios[idx];
+            if (socio && socio.nome && !confirm('Remover o sócio "' + socio.nome + '"? Isso também apaga a configuração de e-mails dele.')) return;
+
+            const nomeRemovido = socio ? socio.nome : '';
+            socios.splice(idx, 1);
+            emailConfiguracao = emailConfiguracao.filter(c => c.socioNome !== nomeRemovido);
+            dev_renderCadastroSocios();
+
+            enviarDadosParaGoogleSheets("socios", socios);
+            enviarDadosParaGoogleSheets("emailConfiguracao", emailConfiguracao);
+            devLog("SOCIO_REMOVIDO", "Sócio removido: " + (nomeRemovido || '(sem nome)'));
         }
 
         function dev_salvarConfigEmailSocios() {
-            const config = [];
-            socios.forEach(socio => {
-                const dia05 = document.getElementById('chk-email-dia05-' + socio.nome)?.checked || false;
-                const dia01 = document.getElementById('chk-email-dia01-' + socio.nome)?.checked || false;
-                
-                config.push({
-                    socioNome: socio.nome,
-                    recebeEmailDia05: dia05,
-                    recebeEmailDia01: dia01,
+            const lista = document.getElementById('dev-email-config-lista');
+            if (!lista) return;
+
+            const cards = lista.querySelectorAll('[data-socio-idx]');
+            const novosSocios = [];
+            const novaConfig = [];
+
+            cards.forEach(card => {
+                const nome = card.querySelector('.socio-nome').value.trim();
+                if (!nome) return; // ignora linhas sem nome preenchido
+
+                const original = socios[parseInt(card.getAttribute('data-socio-idx'))];
+
+                novosSocios.push({
+                    nome: nome,
+                    email: card.querySelector('.socio-email').value.trim(),
+                    whatsapp: card.querySelector('.socio-whatsapp').value.trim(),
+                    dataAdesao: (original && original.dataAdesao) || new Date().toISOString().split('T')[0]
+                });
+
+                novaConfig.push({
+                    socioNome: nome,
+                    recebeEmailDia05: card.querySelector('.socio-dia05').checked,
+                    recebeEmailDia01: card.querySelector('.socio-dia01').checked,
                     dataConfiguracao: new Date().toISOString()
                 });
             });
 
-            fetch(GOOGLE_API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "text/plain;charset=utf-8" },
-                body: JSON.stringify({
-                    rota: "emailConfiguracao",
-                    dados: config
-                })
-            }).then(async (resp) => {
-                const corpo = await resp.json();
-                if (corpo && corpo.status === "sucesso") {
-                    alert("✅ Configuração de e-mails salva com sucesso.");
-                    devLog("EMAIL_CONFIG", "Configurações de e-mail atualizadas para " + config.length + " sócios.");
+            socios = novosSocios;
+            emailConfiguracao = novaConfig;
+            dev_renderCadastroSocios();
+
+            Promise.all([
+                enviarDadosParaGoogleSheets("socios", socios),
+                enviarDadosParaGoogleSheets("emailConfiguracao", emailConfiguracao)
+            ]).then(([okSocios, okConfig]) => {
+                if (okSocios && okConfig) {
+                    alert("✅ Sócios e configurações de e-mail salvos com sucesso.");
+                    devLog("SOCIOS_SALVOS", socios.length + " sócio(s) salvos.");
                 } else {
-                    alert("⚠️ Erro ao salvar: " + (corpo?.mensagem || "Desconhecido"));
+                    alert("⚠️ Houve um problema ao salvar. Tente novamente.");
                 }
-            }).catch((err) => {
-                alert("❌ Falha ao salvar configuração.");
+            }).catch(() => {
+                alert("❌ Falha ao salvar.");
             });
         }
 
@@ -10506,7 +10479,7 @@
         function dev_inicializar() {
             dev_carregarAcessos();
             dev_carregarLinks();
-            dev_carregarConfigEmailSocios();
+            dev_renderCadastroSocios();
         }
 
 
