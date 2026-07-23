@@ -4,9 +4,31 @@
 
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
 
-   VERSÃO: v7.3.9
-   LINHAS: 10917
+   VERSÃO: v7.4.0
+   LINHAS: 11039
    DATA: 2026-07-22
+   NOVIDADES (v7.4.0):
+     - Vitrine pública (link compartilhado): adicionado botão "✕ Sair"
+       (tenta window.close(), com tela de despedida como plano B, já que
+       nem todo navegador permite fechar aba aberta por link direto)
+     - Ao gerar link da vitrine: em vez de só copiar e avisar, agora
+       pergunta se quer abrir o WhatsApp para compartilhar ou só fechar
+       (link já copiado de qualquer forma)
+     - DEV: "Solicitações de Acesso" e "Cadastro Sócios" (que eram duas
+       seções separadas) viraram UM componente só — cada sócio mostra
+       nome/e-mail/whatsapp editáveis, status de acesso com Aprovar/
+       Recusar/Revogar quando aplicável, e os checkboxes de e-mail.
+       Suporta renomear sócio sem perder o histórico de aprovação
+     - CONTROLE DE ACESSO REAL: antes o sistema não validava nada — ao
+       clicar "Acessar Sistema", qualquer um entrava direto. Agora
+       verifica se o dispositivo está aprovado; se não, só o usuário
+       "Nicola-Adm" consegue passar (bypass fixo do administrador);
+       qualquer outro é bloqueado numa tela que não revela dados do
+       sistema, com opção de solicitar acesso. Importante: validação é
+       de front-end — o backend ainda aceita chamadas sem autenticação
+     - Dia do mês configurável para os e-mails automáticos (Dia 01 e
+       Dia 15 eram fixos) — campos numéricos em DEV, 1 a 28
+
    NOVIDADES (v7.3.9):
      - Nenhuma mudança neste HTML — a autorização antecipada do escopo
        de triggers (script.scriptapp) foi feita no appsscript.json e no
@@ -237,7 +259,7 @@
 
             <div class="text-[13px] text-slate-500 font-mono">
 
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.3.9</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.4.0</span>
 
             </div>
 
@@ -253,7 +275,7 @@
 
             <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" onclick="agendarCliqueLogo()" ondblclick="cancelarCliqueLogoEAbrirDev()">
 
-                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.3.9</span>
+                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.4.0</span>
 
                 <span id="header-offline-tag" class="hidden text-[11px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
 
@@ -1525,14 +1547,6 @@
 
             <p class="text-[11px] text-gray-500 mb-4">Aba de depuração ativada. Use as ferramentas abaixo para monitorar a gravação de contratos e a integridade do banco.</p>
 
-            <div class="bg-white border-2 border-blue-200 p-3 rounded-xl mb-4">
-
-                <p class="text-xs font-black text-blue-900 mb-2">🔑 Solicitações de Acesso de Sócios</p>
-
-                <div id="lista-dispositivos-pendentes" class="space-y-2"></div>
-
-            </div>
-
             <div class="bg-red-50 border-2 border-red-300 p-3 rounded-xl mb-4">
 
                 <p class="text-xs font-black text-red-700 mb-1">⚠️ Importar Carga Inicial</p>
@@ -1585,7 +1599,20 @@
             <!-- ============ NOVA SEÇÃO: ENVIO AUTOMÁTICO ============ -->
             <div class="bg-teal-50 border-2 border-teal-300 p-3 rounded-xl mb-4">
                 <p class="text-xs font-black text-teal-700 mb-2">🤖 Envio Automático de E-mails</p>
-                <p class="text-[11px] text-teal-800 mb-2">Quando ativado, envia automaticamente todo Dia 01 (Lembrete) e Dia 15 (Resultado), às 08h, para os sócios cadastrados que optaram por receber cada um.</p>
+                <p class="text-[11px] text-teal-800 mb-2">Quando ativado, envia automaticamente o Lembrete e o Resultado, às 08h, nos dias configurados abaixo, para os sócios cadastrados que optaram por receber cada um.</p>
+                <div class="grid grid-cols-2 gap-2 mb-2">
+                    <div>
+                        <label class="block text-[10px] font-bold text-teal-700 uppercase">Dia — Lembrete (Dia 01)</label>
+                        <input type="number" id="dev-dia-email01" min="1" max="28" value="1" class="w-full p-1.5 border rounded text-sm bg-white">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-bold text-teal-700 uppercase">Dia — Resultado (Dia 15)</label>
+                        <input type="number" id="dev-dia-email15" min="1" max="28" value="15" class="w-full p-1.5 border rounded text-sm bg-white">
+                    </div>
+                </div>
+                <button onclick="dev_salvarDiasEmail()" class="w-full bg-white text-teal-700 border border-teal-300 font-bold text-xs py-2 rounded-lg shadow-sm active:scale-95 transition mb-2">
+                    💾 Salvar Dias
+                </button>
                 <div id="dev-envio-auto-status" class="text-center text-xs font-bold py-2 rounded-lg mb-2 bg-gray-100 text-gray-500">Verificando status...</div>
                 <button id="dev-envio-auto-btn" onclick="dev_toggleEnvioAutomatico()" class="w-full bg-teal-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition">
                     Carregando...
@@ -1619,13 +1646,13 @@
                 </div>
             </div>
 
-            <!-- ============ NOVA SEÇÃO: CADASTRO DE SÓCIOS ============ -->
+            <!-- ============ NOVA SEÇÃO: SÓCIOS — ACESSO, CADASTRO E E-MAILS ============ -->
             <div class="bg-indigo-50 border-2 border-indigo-300 p-3 rounded-xl mb-4">
                 <div class="flex items-center gap-2 mb-2">
-                    <p class="text-xs font-black text-indigo-700 flex-1">👥 Cadastro Sócios</p>
+                    <p class="text-xs font-black text-indigo-700 flex-1">👥 Sócios: Acesso, Cadastro e E-mails</p>
                     <button onclick="dev_adicionarNovoSocio()" class="w-7 h-7 flex-none flex items-center justify-center bg-white text-indigo-700 border border-indigo-300 rounded-full shadow active:scale-90 transition" title="Novo sócio"><svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
                 </div>
-                <div id="dev-email-config-lista" class="space-y-2 max-h-72 overflow-y-auto mb-2">
+                <div id="dev-email-config-lista" class="space-y-2 max-h-96 overflow-y-auto mb-2">
                     <p class="text-[11px] text-gray-500 p-2">Carregando sócios...</p>
                 </div>
                 <button onclick="dev_salvarConfigEmailSocios()" class="w-full bg-indigo-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition">
@@ -2014,6 +2041,8 @@
 
         let socioLogado = null; // preenchido se este aparelho for um sócio aprovado
 
+        let acessoAutorizado = false; // v7.4.0 — só true se aprovado OU for o admin
+
         // Identificador deste aparelho/instalação — gerado uma vez e guardado
 
         // localmente. Não identifica o hardware de verdade (nenhum navegador
@@ -2046,7 +2075,7 @@
 
             const emailSocio = (prompt(`Seu e-mail:`) || '').trim();
 
-            const btn = document.getElementById('btn-solicitar-acesso-socio');
+            const btn = document.getElementById('btn-solicitar-acesso-socio') || document.getElementById('btn-solicitar-acesso-socio-negado');
 
             btn.disabled = true;
 
@@ -2125,6 +2154,36 @@
                 btn.innerText = iconeOriginal;
 
             }
+
+        }
+
+        // v7.4.0 — Bloqueia a entrada no app: reaproveita o mesmo ID de botão
+        // que solicitarAcessoSocio() já espera encontrar, então não precisa
+        // duplicar nenhuma lógica de solicitação.
+        function mostrarTelaAcessoNegado() {
+
+            const splash = document.getElementById('splash-screen');
+
+            splash.classList.remove('opacity-0', 'hidden');
+
+            splash.innerHTML = `
+                <div class="w-full max-w-sm text-center space-y-6 flex flex-col justify-center h-full py-8">
+                    <div>
+                        <h1 class="text-3xl font-black tracking-widest text-blue-400">RUMO</h1>
+                        <p class="text-gray-400 text-sm mt-2 font-medium uppercase tracking-wider">Acesso Restrito</p>
+                    </div>
+                    <div class="bg-slate-800 border border-slate-700 rounded-xl p-5 text-left space-y-3">
+                        <p class="text-sm text-slate-200">🔒 Este aparelho ainda não tem acesso aprovado ao sistema.</p>
+                        <p class="text-xs text-slate-400">Se você é sócio, solicite acesso abaixo. Um administrador vai aprovar e, a partir daí, este aparelho entra direto, sem precisar disso de novo.</p>
+                    </div>
+                    <button id="btn-solicitar-acesso-socio-negado" onclick="solicitarAcessoSocio()" class="w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition active:scale-95">
+                        👤 Solicitar Acesso como Sócio
+                    </button>
+                    <button onclick="location.reload()" class="w-full bg-slate-800 text-slate-300 border border-slate-700 font-bold py-2.5 px-6 rounded-xl transition active:scale-95 text-sm">
+                        🔄 Já fui aprovado — Tentar de novo
+                    </button>
+                </div>
+            `;
 
         }
 
@@ -3551,11 +3610,43 @@
 
                         localStorage.setItem('rumo_device_previously_approved', '1');
 
+                        acessoAutorizado = true;
+
                     } else {
 
                         socioLogado = null;
 
                         localStorage.removeItem('rumo_device_previously_approved');
+
+                        // v7.4.0 — Não é dispositivo aprovado. Único jeito de entrar
+                        // mesmo assim: administrador do sistema, usuário fixo "Nicola-Adm".
+                        let nomeVerificado = localStorage.getItem('rumo_admin_verificado');
+
+                        if (nomeVerificado !== 'Nicola-Adm') {
+
+                            const tentativa = prompt("Este aparelho ainda não tem acesso aprovado.\n\nSe você é o administrador do sistema, digite seu usuário para continuar (ou cancele para solicitar acesso):");
+
+                            if (tentativa === 'Nicola-Adm') {
+
+                                localStorage.setItem('rumo_admin_verificado', 'Nicola-Adm');
+
+                                nomeVerificado = 'Nicola-Adm';
+
+                            }
+
+                        }
+
+                        if (nomeVerificado === 'Nicola-Adm') {
+
+                            socioLogado = 'Nicola-Adm';
+
+                            acessoAutorizado = true;
+
+                        } else {
+
+                            acessoAutorizado = false;
+
+                        }
 
                     }
 
@@ -3619,6 +3710,14 @@
 
                 setTimeout(() => {
 
+                    if (!acessoAutorizado) {
+
+                        mostrarTelaAcessoNegado();
+
+                        return;
+
+                    }
+
                     document.getElementById('splash-screen').classList.add('hidden');
 
                     document.getElementById('main-header').classList.remove('hidden');
@@ -3681,7 +3780,7 @@
 
                         dev_carregarLinks();
 
-                        renderDispositivosPendentes();
+                        dev_renderCadastroSocios();
 
                         atualizarListaSelecaoSociosRepasse();
 
@@ -3967,7 +4066,7 @@
 
             renderManutencistas();
 
-            renderDispositivosPendentes();
+            dev_renderCadastroSocios();
 
             atualizarListaSelecaoSociosRepasse();
 
@@ -5110,130 +5209,6 @@
             administradoras = administradoras.filter(a => a.id !== id);
 
             saveAll(true, "Administradora excluída.");
-
-        }
-
-        function renderDispositivosPendentes() {
-
-            const container = document.getElementById('lista-dispositivos-pendentes');
-
-            if (!container) return;
-
-            if (dispositivosAprovados.length === 0) {
-
-                container.innerHTML = '<p class="text-[11px] text-gray-400">Nenhuma solicitação ainda.</p>';
-
-                return;
-
-            }
-
-            // Mostra pendentes primeiro, depois aprovados (para poder revogar).
-
-            const ordenados = dispositivosAprovados.slice().sort((a, b) => (a.status === 'Pendente' ? -1 : 1) - (b.status === 'Pendente' ? -1 : 1));
-
-            container.innerHTML = ordenados.map(d => {
-
-                const corBadge = d.status === 'Aprovado' ? 'bg-green-100 text-green-800' : (d.status === 'Recusado' ? 'bg-gray-200 text-gray-600' : 'bg-amber-100 text-amber-800');
-
-                const botoes = d.status === 'Pendente'
-
-                    ? `<button onclick="aprovarDispositivo('${d.deviceId}')" class="flex-1 bg-emerald-600 text-white text-[11px] py-1 rounded font-bold">✅ Aprovar</button>
-
-                       <button onclick="recusarDispositivo('${d.deviceId}')" class="flex-1 bg-red-50 text-red-600 border border-red-200 text-[11px] py-1 rounded font-bold">Recusar</button>`
-
-                    : (d.status === 'Aprovado'
-
-                        ? `<button onclick="revogarDispositivo('${d.deviceId}')" class="w-full bg-red-50 text-red-600 border border-red-200 text-[11px] py-1 rounded font-bold">Revogar acesso</button>`
-
-                        : '');
-
-                return `
-
-                    <div class="bg-slate-50 p-2 rounded-lg border border-slate-200 text-[11px] space-y-1">
-
-                        <div class="flex justify-between items-center">
-
-                            <span class="font-bold text-slate-800">👤 ${d.nomeSocio}</span>
-
-                            <span class="px-1.5 py-0.5 rounded font-bold ${corBadge}">${d.status}</span>
-
-                        </div>
-
-                        <p class="text-gray-400">Solicitado em ${d.solicitadoEm ? new Date(d.solicitadoEm).toLocaleString('pt-BR') : '-'}</p>
-
-                        <p class="text-gray-500">💬 ${d.whatsapp || '(sem WhatsApp)'} · ✉️ ${d.email || '(sem e-mail)'}</p>
-
-                        <div class="flex gap-1.5">
-
-                            ${botoes}
-
-                            <button onclick="editarContatoDispositivo('${d.deviceId}')" class="flex-1 bg-slate-100 text-slate-700 border border-slate-300 text-[11px] py-1 rounded font-bold">✏️ Editar contato</button>
-
-                        </div>
-
-                    </div>
-
-                `;
-
-            }).join('');
-
-        }
-
-        function aprovarDispositivo(devId) {
-
-            const d = dispositivosAprovados.find(x => x.deviceId === devId);
-
-            if (!d) return;
-
-            d.status = 'Aprovado';
-
-            d.aprovadoEm = new Date().toISOString();
-
-            enviarDadosParaGoogleSheets("dispositivosAprovados", dispositivosAprovados).then(() => renderDispositivosPendentes());
-
-        }
-
-        function recusarDispositivo(devId) {
-
-            const d = dispositivosAprovados.find(x => x.deviceId === devId);
-
-            if (!d) return;
-
-            d.status = 'Recusado';
-
-            enviarDadosParaGoogleSheets("dispositivosAprovados", dispositivosAprovados).then(() => renderDispositivosPendentes());
-
-        }
-
-        function revogarDispositivo(devId) {
-
-            if (!confirm("Confirma revogar o acesso automático deste aparelho? Ele vai precisar da senha normal na próxima vez.")) return;
-
-            dispositivosAprovados = dispositivosAprovados.filter(x => x.deviceId !== devId);
-
-            enviarDadosParaGoogleSheets("dispositivosAprovados", dispositivosAprovados).then(() => renderDispositivosPendentes());
-
-        }
-
-        function editarContatoDispositivo(devId) {
-
-            const d = dispositivosAprovados.find(x => x.deviceId === devId);
-
-            if (!d) return;
-
-            const novoZap = prompt(`WhatsApp de ${d.nomeSocio}:`, d.whatsapp || '');
-
-            if (novoZap === null) return;
-
-            const novoEmail = prompt(`E-mail de ${d.nomeSocio}:`, d.email || '');
-
-            if (novoEmail === null) return;
-
-            d.whatsapp = novoZap.trim().replace(/\D/g, '');
-
-            d.email = novoEmail.trim();
-
-            enviarDadosParaGoogleSheets("dispositivosAprovados", dispositivosAprovados).then(() => renderDispositivosPendentes());
 
         }
 
@@ -9754,7 +9729,15 @@
 
                 navigator.clipboard.writeText(linkFinal).then(() => {
 
-                    alert(`🔗 Link copiado com sucesso! Envie para seu cliente externo:\n👉 ${linkFinal}`);
+                    const querAbrirWhatsapp = confirm(`🔗 Link copiado com sucesso!\n👉 ${linkFinal}\n\nDeseja abrir o WhatsApp agora para compartilhar?\n\n(OK = abrir WhatsApp / Cancelar = só fechar, o link já está copiado)`);
+
+                    if (querAbrirWhatsapp) {
+
+                        const textoWhats = encodeURIComponent(`Confira estes imóveis: ${linkFinal}`);
+
+                        window.open(`https://wa.me/?text=${textoWhats}`, '_blank');
+
+                    }
 
                 }).catch(() => {
 
@@ -9792,7 +9775,9 @@
 
                 <div class="max-w-md mx-auto p-4 space-y-6 bg-slate-900 min-h-screen text-white">
 
-                    <div class="text-center py-4 border-b border-slate-800">
+                    <div class="text-center py-4 border-b border-slate-800 relative">
+
+                        <button onclick="sairDaVitrinePublica()" class="absolute top-3 right-0 text-xs font-bold text-slate-300 bg-slate-800 border border-slate-700 rounded-full px-3 py-1.5 active:scale-95 transition">✕ Sair</button>
 
                         <h1 class="text-2xl font-black text-blue-400">RUMO</h1>
 
@@ -10005,6 +9990,36 @@
         function fecharLightboxVitrine() {
 
             document.getElementById('lightbox-vitrine').classList.add('hidden');
+
+        }
+
+        // v7.4.0 — Botão "Sair" na vitrine pública. window.close() só funciona
+        // se a aba foi aberta via script; em links visitados diretamente
+        // (o caso mais comum aqui), o navegador bloqueia por segurança — por
+        // isso mostramos uma tela de despedida como plano B.
+        function sairDaVitrinePublica() {
+
+            window.close();
+
+            setTimeout(function () {
+
+                document.body.innerHTML = `
+
+                    <div class="max-w-md mx-auto p-4 min-h-screen bg-slate-900 text-white flex items-center justify-center text-center">
+
+                        <div>
+
+                            <h1 class="text-2xl font-black text-blue-400 mb-2">RUMO</h1>
+
+                            <p class="text-sm text-slate-300">Você já pode fechar esta aba.</p>
+
+                        </div>
+
+                    </div>
+
+                `;
+
+            }, 150);
 
         }
 
@@ -10285,14 +10300,14 @@
 
         // v7.3.8 — Envio automático: consulta o status atual (chamado ao abrir
         // a aba DEV) e atualiza o botão/badge conforme ligado/desligado.
-        function dev_atualizarUiEnvioAutomatico(ativo) {
+        function dev_atualizarUiEnvioAutomatico(ativo, dia01, dia15) {
             const status = document.getElementById('dev-envio-auto-status');
             const btn = document.getElementById('dev-envio-auto-btn');
             if (!status || !btn) return;
 
             if (ativo) {
                 status.className = "text-center text-xs font-bold py-2 rounded-lg mb-2 bg-green-100 text-green-700";
-                status.innerText = "🟢 ATIVO — próximo envio automático nos dias 01 e 15, às 08h";
+                status.innerText = "🟢 ATIVO — próximo envio automático nos dias " + dia01 + " e " + dia15 + ", às 08h";
                 btn.className = "w-full bg-red-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition";
                 btn.innerText = "🔴 Desativar Envio Automático";
             } else {
@@ -10311,11 +10326,43 @@
             }).then(async (resp) => {
                 const corpo = await resp.json();
                 if (corpo && corpo.status === "sucesso") {
-                    dev_atualizarUiEnvioAutomatico(corpo.ativo);
+                    dev_atualizarUiEnvioAutomatico(corpo.ativo, corpo.dia01, corpo.dia15);
+                    const inputDia01 = document.getElementById('dev-dia-email01');
+                    const inputDia15 = document.getElementById('dev-dia-email15');
+                    if (inputDia01) inputDia01.value = corpo.dia01;
+                    if (inputDia15) inputDia15.value = corpo.dia15;
                 }
             }).catch(() => {
                 const btn = document.getElementById('dev-envio-auto-btn');
                 if (btn) btn.innerText = "⚠️ Erro ao verificar status";
+            });
+        }
+
+        function dev_salvarDiasEmail() {
+            const dia01 = parseInt(document.getElementById('dev-dia-email01').value, 10);
+            const dia15 = parseInt(document.getElementById('dev-dia-email15').value, 10);
+
+            if (isNaN(dia01) || dia01 < 1 || dia01 > 28 || isNaN(dia15) || dia15 < 1 || dia15 > 28) {
+                alert("⚠️ Os dias devem ser números entre 1 e 28 (evita problemas com meses curtos).");
+                return;
+            }
+
+            fetch(GOOGLE_API_URL, {
+                method: "POST",
+                headers: { "Content-Type": "text/plain;charset=utf-8" },
+                body: JSON.stringify({ rota: "dev_salvar_dias_email", dia01: dia01, dia15: dia15 })
+            }).then(async (resp) => {
+                const corpo = await resp.json();
+                if (corpo && corpo.status === "sucesso") {
+                    alert("✅ " + corpo.mensagem);
+                    devLog("DIAS_EMAIL_SALVOS", "Dia01=" + dia01 + " Dia15=" + dia15);
+                    dev_verificarStatusEnvioAutomatico();
+                } else {
+                    alert("⚠️ Erro: " + (corpo?.mensagem || "Desconhecido"));
+                }
+            }).catch((err) => {
+                alert("❌ Falha de conexão.");
+                devLog("ERRO_DIAS_EMAIL", err.message);
             });
         }
 
@@ -10330,7 +10377,7 @@
             }).then(async (resp) => {
                 const corpo = await resp.json();
                 if (corpo && corpo.status === "sucesso") {
-                    dev_atualizarUiEnvioAutomatico(corpo.ativo);
+                    dev_verificarStatusEnvioAutomatico();
                     devLog("ENVIO_AUTOMATICO", corpo.mensagem);
                 } else {
                     alert("⚠️ Erro: " + (corpo?.mensagem || "Desconhecido"));
@@ -10476,38 +10523,81 @@
         // v7.3.5 — Cadastro Sócios: CRUD completo (nome, email, whatsapp,
         // quais e-mails recebe), no mesmo padrão de usabilidade das demais
         // seções da aba DEV (cards compactos, ações inline).
+        // v7.4.0 — Unifica em um só componente: solicitações/aprovações de
+        // acesso (dispositivosAprovados), cadastro manual (socios) e
+        // configuração de e-mails (emailConfiguracao). A lista é construída
+        // a partir do conjunto de nomes únicos das duas primeiras fontes.
+        function dev_construirListaSociosUnificada() {
+            const nomes = new Set();
+            socios.forEach(s => { if (s.nome) nomes.add(s.nome); });
+            dispositivosAprovados.forEach(d => { if (d.nomeSocio) nomes.add(d.nomeSocio); });
+            return Array.from(nomes).sort((a, b) => a.localeCompare(b));
+        }
+
         function dev_renderCadastroSocios() {
             const lista = document.getElementById('dev-email-config-lista');
             if (!lista) return;
 
-            if (!socios || socios.length === 0) {
+            const nomesOrdenados = dev_construirListaSociosUnificada();
+
+            if (nomesOrdenados.length === 0) {
                 lista.innerHTML = '<p class="p-2 text-gray-500 text-[11px]">Nenhum sócio cadastrado. Toque no "+" para adicionar.</p>';
                 return;
             }
 
-            lista.innerHTML = socios.map((socio, idx) => {
-                const cfg = emailConfiguracao.find(c => c.socioNome === socio.nome) || {};
+            lista.innerHTML = nomesOrdenados.map((nome, idx) => {
+                const socio = socios.find(s => s.nome === nome) || {};
+                const dispositivosDoNome = dispositivosAprovados.filter(d => d.nomeSocio === nome);
+                const dispositivo = dispositivosDoNome.find(d => d.status === 'Aprovado')
+                    || dispositivosDoNome.find(d => d.status === 'Pendente')
+                    || dispositivosDoNome[0];
+
+                const cfg = emailConfiguracao.find(c => c.socioNome === nome) || {};
                 const dia05 = cfg.recebeEmailDia05 !== undefined ? cfg.recebeEmailDia05 : true;
                 const dia01 = cfg.recebeEmailDia01 !== undefined ? cfg.recebeEmailDia01 : true;
 
+                let badgeAcesso = '<span class="px-1.5 py-0.5 rounded font-bold bg-gray-100 text-gray-500 text-[10px]">Sem solicitação</span>';
+                let botoesAcesso = '';
+
+                if (dispositivo) {
+                    if (dispositivo.status === 'Pendente') {
+                        badgeAcesso = '<span class="px-1.5 py-0.5 rounded font-bold bg-amber-100 text-amber-800 text-[10px]">Pendente</span>';
+                        botoesAcesso = `<button onclick="dev_aprovarAcessoSocio('${dispositivo.deviceId}')" class="flex-1 bg-emerald-600 text-white text-[11px] py-1 rounded font-bold">✅ Aprovar</button>
+                                        <button onclick="dev_recusarAcessoSocio('${dispositivo.deviceId}')" class="flex-1 bg-red-50 text-red-600 border border-red-200 text-[11px] py-1 rounded font-bold">Recusar</button>`;
+                    } else if (dispositivo.status === 'Aprovado') {
+                        badgeAcesso = '<span class="px-1.5 py-0.5 rounded font-bold bg-green-100 text-green-800 text-[10px]">Aprovado</span>';
+                        botoesAcesso = `<button onclick="dev_revogarAcessoSocio('${dispositivo.deviceId}')" class="w-full bg-red-50 text-red-600 border border-red-200 text-[11px] py-1 rounded font-bold">Revogar acesso</button>`;
+                    } else {
+                        badgeAcesso = '<span class="px-1.5 py-0.5 rounded font-bold bg-gray-200 text-gray-600 text-[10px]">Recusado</span>';
+                        botoesAcesso = `<button onclick="dev_aprovarAcessoSocio('${dispositivo.deviceId}')" class="w-full bg-emerald-600 text-white text-[11px] py-1 rounded font-bold">✅ Aprovar mesmo assim</button>`;
+                    }
+                }
+
+                const solicitadoTexto = dispositivo && dispositivo.solicitadoEm
+                    ? '<p class="text-gray-400 text-[10px]">Solicitado em ' + new Date(dispositivo.solicitadoEm).toLocaleString('pt-BR') + '</p>'
+                    : '';
+
                 return `
-                    <div class="bg-white p-2 rounded border border-gray-200 text-[11px] space-y-1.5" data-socio-idx="${idx}">
+                    <div class="bg-white p-2 rounded border border-gray-200 text-[11px] space-y-1.5" data-socio-idx="${idx}" data-socio-nome-original="${nome.replace(/"/g, '&quot;')}">
                         <div class="flex gap-1.5 items-center">
-                            <input type="text" class="socio-nome flex-1 p-1 border rounded text-[11px]" value="${socio.nome || ''}" placeholder="Nome do sócio">
-                            <button onclick="dev_removerSocio(${idx})" title="Remover" class="w-6 h-6 flex-none flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-[10px]">🗑️</button>
+                            <input type="text" class="socio-nome flex-1 p-1 border rounded text-[11px] font-bold" value="${nome}" placeholder="Nome do sócio">
+                            ${badgeAcesso}
+                            <button onclick="dev_removerSocioUnificado('${nome.replace(/'/g, "\\'")}')" title="Remover" class="w-6 h-6 flex-none flex items-center justify-center bg-red-50 text-red-600 rounded-full border border-red-200 text-[10px]">🗑️</button>
                         </div>
-                        <input type="email" class="socio-email w-full p-1 border rounded text-[11px]" value="${socio.email || ''}" placeholder="E-mail">
-                        <input type="tel" class="socio-whatsapp w-full p-1 border rounded text-[11px]" value="${socio.whatsapp || ''}" placeholder="WhatsApp">
+                        <input type="email" class="socio-email w-full p-1 border rounded text-[11px]" value="${socio.email || (dispositivo ? dispositivo.email || '' : '')}" placeholder="E-mail">
+                        <input type="tel" class="socio-whatsapp w-full p-1 border rounded text-[11px]" value="${socio.whatsapp || (dispositivo ? dispositivo.whatsapp || '' : '')}" placeholder="WhatsApp">
+                        ${botoesAcesso ? `<div class="flex gap-1.5">${botoesAcesso}</div>` : ''}
                         <div class="flex gap-3 pt-1">
-                            <label class="flex items-center gap-1">
-                                <input type="checkbox" class="socio-dia05 w-3.5 h-3.5" ${dia05 ? 'checked' : ''}>
-                                <span>Recebe Dia 15</span>
-                            </label>
                             <label class="flex items-center gap-1">
                                 <input type="checkbox" class="socio-dia01 w-3.5 h-3.5" ${dia01 ? 'checked' : ''}>
                                 <span>Recebe Dia 01</span>
                             </label>
+                            <label class="flex items-center gap-1">
+                                <input type="checkbox" class="socio-dia05 w-3.5 h-3.5" ${dia05 ? 'checked' : ''}>
+                                <span>Recebe Dia 15</span>
+                            </label>
                         </div>
+                        ${solicitadoTexto}
                     </div>
                 `;
             }).join('');
@@ -10516,23 +10606,44 @@
         function dev_adicionarNovoSocio() {
             socios.push({ nome: '', email: '', whatsapp: '', dataAdesao: new Date().toISOString().split('T')[0] });
             dev_renderCadastroSocios();
-            // Rola até o novo card (último da lista) para o usuário já preencher.
             const lista = document.getElementById('dev-email-config-lista');
             if (lista) lista.scrollTop = lista.scrollHeight;
         }
 
-        function dev_removerSocio(idx) {
-            const socio = socios[idx];
-            if (socio && socio.nome && !confirm('Remover o sócio "' + socio.nome + '"? Isso também apaga a configuração de e-mails dele.')) return;
+        // Remove o sócio de TUDO: cadastro, dispositivos de acesso e config de e-mail.
+        function dev_removerSocioUnificado(nome) {
+            if (!confirm('Remover o sócio "' + nome + '"? Isso também apaga o acesso aprovado e a configuração de e-mails dele.')) return;
 
-            const nomeRemovido = socio ? socio.nome : '';
-            socios.splice(idx, 1);
-            emailConfiguracao = emailConfiguracao.filter(c => c.socioNome !== nomeRemovido);
+            socios = socios.filter(s => s.nome !== nome);
+            dispositivosAprovados = dispositivosAprovados.filter(d => d.nomeSocio !== nome);
+            emailConfiguracao = emailConfiguracao.filter(c => c.socioNome !== nome);
             dev_renderCadastroSocios();
 
             enviarDadosParaGoogleSheets("socios", socios);
+            enviarDadosParaGoogleSheets("dispositivosAprovados", dispositivosAprovados);
             enviarDadosParaGoogleSheets("emailConfiguracao", emailConfiguracao);
-            devLog("SOCIO_REMOVIDO", "Sócio removido: " + (nomeRemovido || '(sem nome)'));
+            devLog("SOCIO_REMOVIDO", "Sócio removido (cadastro + acesso + e-mail): " + nome);
+        }
+
+        function dev_aprovarAcessoSocio(deviceId) {
+            const d = dispositivosAprovados.find(x => x.deviceId === deviceId);
+            if (!d) return;
+            d.status = 'Aprovado';
+            d.aprovadoEm = new Date().toISOString();
+            enviarDadosParaGoogleSheets("dispositivosAprovados", dispositivosAprovados).then(() => dev_renderCadastroSocios());
+        }
+
+        function dev_recusarAcessoSocio(deviceId) {
+            const d = dispositivosAprovados.find(x => x.deviceId === deviceId);
+            if (!d) return;
+            d.status = 'Recusado';
+            enviarDadosParaGoogleSheets("dispositivosAprovados", dispositivosAprovados).then(() => dev_renderCadastroSocios());
+        }
+
+        function dev_revogarAcessoSocio(deviceId) {
+            if (!confirm("Confirma revogar o acesso automático deste aparelho? Ele vai precisar ser aprovado de novo.")) return;
+            dispositivosAprovados = dispositivosAprovados.filter(x => x.deviceId !== deviceId);
+            enviarDadosParaGoogleSheets("dispositivosAprovados", dispositivosAprovados).then(() => dev_renderCadastroSocios());
         }
 
         function dev_salvarConfigEmailSocios() {
@@ -10544,10 +10655,20 @@
             const novaConfig = [];
 
             cards.forEach(card => {
+                const nomeOriginal = card.getAttribute('data-socio-nome-original');
                 const nome = card.querySelector('.socio-nome').value.trim();
                 if (!nome) return; // ignora linhas sem nome preenchido
 
-                const original = socios[parseInt(card.getAttribute('data-socio-idx'))];
+                // Sócio foi renomeado — atualiza também os registros de acesso
+                // (dispositivosAprovados) que apontavam para o nome antigo, para
+                // não perder a aprovação já concedida.
+                if (nomeOriginal && nomeOriginal !== nome) {
+                    dispositivosAprovados.forEach(d => {
+                        if (d.nomeSocio === nomeOriginal) d.nomeSocio = nome;
+                    });
+                }
+
+                const original = socios.find(s => s.nome === nomeOriginal) || socios[parseInt(card.getAttribute('data-socio-idx'))];
 
                 novosSocios.push({
                     nome: nome,
@@ -10570,10 +10691,11 @@
 
             Promise.all([
                 enviarDadosParaGoogleSheets("socios", socios),
-                enviarDadosParaGoogleSheets("emailConfiguracao", emailConfiguracao)
-            ]).then(([okSocios, okConfig]) => {
-                if (okSocios && okConfig) {
-                    alert("✅ Sócios e configurações de e-mail salvos com sucesso.");
+                enviarDadosParaGoogleSheets("emailConfiguracao", emailConfiguracao),
+                enviarDadosParaGoogleSheets("dispositivosAprovados", dispositivosAprovados)
+            ]).then(([okSocios, okConfig, okDisp]) => {
+                if (okSocios && okConfig && okDisp) {
+                    alert("✅ Sócios, acessos e configurações de e-mail salvos com sucesso.");
                     devLog("SOCIOS_SALVOS", socios.length + " sócio(s) salvos.");
                 } else {
                     alert("⚠️ Houve um problema ao salvar. Tente novamente.");
