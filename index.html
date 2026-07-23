@@ -4,9 +4,32 @@
 
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
 
-   VERSÃO: v7.4.0
-   LINHAS: 11039
-   DATA: 2026-07-22
+   VERSÃO: v7.4.1
+   LINHAS: 11111
+   DATA: 2026-07-23
+   NOVIDADES (v7.4.1) — CORREÇÃO DE 2 BUGS no controle de acesso da v7.4.0:
+     - BUG 1: se o dispositivo do admin já estivesse aprovado como um
+       sócio qualquer (ex: de teste anterior), o sistema nunca chegava
+       a perguntar "Nicola-Adm" — entrava direto como aquele sócio, e a
+       trava pré-existente de DEV ("perfis de sócio não têm acesso")
+       passou a bloquear também o admin, já que agora ele tinha
+       socioLogado preenchido. Corrigido: verificação de admin
+       (localStorage) tem prioridade sobre aprovação de sócio; adicionado
+       link permanente "Sou o administrador" na tela inicial, sempre
+       disponível independente do estado de aprovação do aparelho; DEV
+       agora libera explicitamente para socioLogado === 'Nicola-Adm'
+     - BUG 2: com um pedido de acesso Pendente (não aprovado), era
+       possível entrar mesmo assim caindo no "modo offline" (fallback
+       que carrega dados do cache local quando a rede falha) — esse
+       modo nunca verificava autorização, só herdava o valor da
+       variável de uma tentativa anterior na mesma sessão de página.
+       Corrigido: acessoAutorizado é resetado no início de cada
+       chamada, e o modo offline agora consulta explicitamente uma
+       flag persistida SÓ quando uma autorização foi confirmada de
+       verdade — sem essa flag, nem o modo offline libera acesso
+     - Validado com simulação isolada dos 3 cenários (bug do admin,
+       bypass via offline, e não-regressão do sócio legítimo offline)
+
    NOVIDADES (v7.4.0):
      - Vitrine pública (link compartilhado): adicionado botão "✕ Sair"
        (tenta window.close(), com tela de despedida como plano B, já que
@@ -251,6 +274,8 @@
 
                 </button>
 
+                <button onclick="identificarComoAdmin()" class="text-[11px] text-slate-500 underline">Sou o administrador</button>
+
                 <div id="splash-status" class="text-[13px] text-amber-400 font-semibold px-4 break-words"></div>
 
                 <div id="splash-error-detail" class="text-[11px] text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
@@ -259,7 +284,7 @@
 
             <div class="text-[13px] text-slate-500 font-mono">
 
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.4.0</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.4.1</span>
 
             </div>
 
@@ -275,7 +300,7 @@
 
             <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" onclick="agendarCliqueLogo()" ondblclick="cancelarCliqueLogoEAbrirDev()">
 
-                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.4.0</span>
+                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.4.1</span>
 
                 <span id="header-offline-tag" class="hidden text-[11px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
 
@@ -2051,6 +2076,30 @@
 
         // nesta instalação do PWA, usado para o esquema de aprovação de acesso.
 
+        // v7.4.1 — Escape hatch sempre disponível: independente do dispositivo
+        // já estar (ou não) aprovado como algum sócio, o admin sempre consegue
+        // se identificar explicitamente por aqui. Uma vez verificado, fica
+        // salvo neste aparelho e passa a ter prioridade em todo login futuro.
+        function identificarComoAdmin() {
+
+            const tentativa = prompt("Digite o usuário do administrador:");
+
+            if (tentativa !== 'Nicola-Adm') {
+
+                if (tentativa !== null) alert("⚠️ Usuário não reconhecido.");
+
+                return;
+
+            }
+
+            localStorage.setItem('rumo_admin_verificado', 'Nicola-Adm');
+
+            alert("✅ Identificado como administrador. Entrando...");
+
+            entrarNoSistema();
+
+        }
+
         async function solicitarAcessoSocio() {
 
             const nomeEscolhido = prompt(`Digite seu nome (com a primeira letra maiúscula):`);
@@ -2361,7 +2410,7 @@
 
         function ativarModoDesenvolvedor() {
 
-            if (socioLogado) {
+            if (socioLogado && socioLogado !== 'Nicola-Adm') {
 
                 alert("🔒 Perfis de sócio não têm acesso ao modo desenvolvedor.");
 
@@ -3507,6 +3556,12 @@
 
         async function entrarNoSistema() {
 
+            // v7.4.1 — Reset explícito a cada chamada: sem isso, uma tentativa
+            // anterior bem-sucedida (nesta mesma sessão de página) podia deixar
+            // acessoAutorizado=true "pendurado", e uma tentativa seguinte que
+            // caísse no modo offline herdava esse valor sem verificar nada.
+            acessoAutorizado = false;
+
             const btn = document.getElementById('btn-entrar');
 
             const statusLabel = document.getElementById('splash-status');
@@ -3600,11 +3655,22 @@
                         });
                     }
 
-                    // Checa se este aparelho já foi aprovado como um sócio específico.
+                    // v7.4.1 — Verifica PRIMEIRO se este dispositivo já foi
+                    // identificado como o administrador (persistido localmente) —
+                    // isso tem prioridade sobre qualquer aprovação de sócio que o
+                    // mesmo aparelho possa ter (evita o bug de o admin "virar
+                    // sócio" se o aparelho dele também tiver uma aprovação antiga).
+                    const jaVerificadoComoAdmin = localStorage.getItem('rumo_admin_verificado') === 'Nicola-Adm';
 
                     const dispositivoAtual = dispositivosAprovados.find(d => d.deviceId === deviceId && d.status === 'Aprovado');
 
-                    if (dispositivoAtual) {
+                    if (jaVerificadoComoAdmin) {
+
+                        socioLogado = 'Nicola-Adm';
+
+                        acessoAutorizado = true;
+
+                    } else if (dispositivoAtual) {
 
                         socioLogado = dispositivoAtual.nomeSocio;
 
@@ -3618,25 +3684,11 @@
 
                         localStorage.removeItem('rumo_device_previously_approved');
 
-                        // v7.4.0 — Não é dispositivo aprovado. Único jeito de entrar
-                        // mesmo assim: administrador do sistema, usuário fixo "Nicola-Adm".
-                        let nomeVerificado = localStorage.getItem('rumo_admin_verificado');
+                        const tentativa = prompt("Este aparelho ainda não tem acesso aprovado.\n\nSe você é o administrador do sistema, digite seu usuário para continuar (ou cancele para solicitar acesso):");
 
-                        if (nomeVerificado !== 'Nicola-Adm') {
+                        if (tentativa === 'Nicola-Adm') {
 
-                            const tentativa = prompt("Este aparelho ainda não tem acesso aprovado.\n\nSe você é o administrador do sistema, digite seu usuário para continuar (ou cancele para solicitar acesso):");
-
-                            if (tentativa === 'Nicola-Adm') {
-
-                                localStorage.setItem('rumo_admin_verificado', 'Nicola-Adm');
-
-                                nomeVerificado = 'Nicola-Adm';
-
-                            }
-
-                        }
-
-                        if (nomeVerificado === 'Nicola-Adm') {
+                            localStorage.setItem('rumo_admin_verificado', 'Nicola-Adm');
 
                             socioLogado = 'Nicola-Adm';
 
@@ -3647,6 +3699,20 @@
                             acessoAutorizado = false;
 
                         }
+
+                    }
+
+                    // v7.4.1 — Guarda a decisão para o modo offline poder consultar
+                    // depois (sem rede, não dá pra reconfirmar contra o servidor —
+                    // só libera visualização em cache se este dispositivo já foi
+                    // autorizado com sucesso alguma vez antes).
+                    if (acessoAutorizado) {
+
+                        localStorage.setItem('rumo_ultimo_acesso_autorizado', '1');
+
+                    } else {
+
+                        localStorage.removeItem('rumo_ultimo_acesso_autorizado');
 
                     }
 
@@ -3683,6 +3749,12 @@
                 syncSuccess = false;
 
                 statusLabel.innerText = "Modo Offline Ativo.";
+
+                // v7.4.1 — Sem rede, não dá pra reconfirmar acesso contra o
+                // servidor. Só libera a visualização em cache se este
+                // dispositivo já foi autorizado com sucesso alguma vez antes
+                // (flag gravada só no caminho de sucesso, nunca aqui).
+                acessoAutorizado = localStorage.getItem('rumo_ultimo_acesso_autorizado') === '1';
 
                 
 
