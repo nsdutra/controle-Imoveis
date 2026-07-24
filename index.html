@@ -4,9 +4,35 @@
 
    SISTEMA RUMO - CONTROLE DE IMÓVEIS & GESTÃO PATRIMONIAL
 
-   VERSÃO: v7.4.1
-   LINHAS: 11111
+   VERSÃO: v7.4.2
+   LINHAS: 11135
    DATA: 2026-07-23
+   NOVIDADES (v7.4.2):
+     - Link visível "Sou o administrador" virou duplo clique escondido
+       na palavra "RUMO" da tela inicial (mesmo padrão já usado no
+       cabeçalho interno para abrir o DEV)
+     - Clique simples na palavra "RUMO" do cabeçalho (que volta pra
+       tela inicial) agora recarrega a página de verdade — antes só
+       trocava a tela sem buscar nada novo do servidor, então nunca
+       pegava uma versão mais recente publicada
+     - CORRIGIDO (bug real): seção de Repasses no e-mail Resultado
+       vinha sempre vazia. Causa: o Google Sheets pode converter
+       automaticamente a data digitada em "Registrar Retirada" de
+       texto para um valor de data de verdade — nesse caso o backend
+       devolve a data no formato AAAA-MM-DD, mas o código só sabia
+       interpretar DD/MM/AAAA, e descartava todo registro em silêncio.
+       Agora reconhece os dois formatos. Confirmado o bug e testada a
+       correção isoladamente antes de aplicar
+     - Removidas as referências fixas a "Dia 01"/"Dia 15" no dropdown
+       de e-mail de teste (DEV) e nos checkboxes de opt-in dos sócios
+       — agora são só "Email Lembrete"/"Email Resultado", já que o dia
+       é configurável e não faz mais sentido nomear por número fixo
+     - CORRIGIDO: envio manual de teste usava o nome de quem por acaso
+       tem aquele e-mail cadastrado no Cadastro Sócios, em vez do nome
+       de quem está de fato logado testando. Agora usa o nome de quem
+       está logado (o admin vê "Nicola-Adm"); o envio automático para
+       todos os sócios continua usando o nome real de cada um
+
    NOVIDADES (v7.4.1) — CORREÇÃO DE 2 BUGS no controle de acesso da v7.4.0:
      - BUG 1: se o dispositivo do admin já estivesse aprovado como um
        sócio qualquer (ex: de teste anterior), o sistema nunca chegava
@@ -262,7 +288,7 @@
 
                 <div>
 
-                    <h1 class="text-4xl font-black tracking-widest text-blue-400">RUMO</h1>
+                    <h1 ondblclick="identificarComoAdmin()" class="text-4xl font-black tracking-widest text-blue-400 cursor-default select-none">RUMO</h1>
 
                     <p class="text-gray-400 text-sm mt-2 font-medium uppercase tracking-wider">Gestão Patrimonial Inteligente</p>
 
@@ -274,8 +300,6 @@
 
                 </button>
 
-                <button onclick="identificarComoAdmin()" class="text-[11px] text-slate-500 underline">Sou o administrador</button>
-
                 <div id="splash-status" class="text-[13px] text-amber-400 font-semibold px-4 break-words"></div>
 
                 <div id="splash-error-detail" class="text-[11px] text-red-400 font-mono hidden max-h-24 overflow-y-auto bg-slate-950 p-2 rounded border border-red-900/50 text-left mx-4"></div>
@@ -284,7 +308,7 @@
 
             <div class="text-[13px] text-slate-500 font-mono">
 
-                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.4.1</span>
+                Versão do Sistema: <span class="text-blue-400/70 font-bold">v7.4.2</span>
 
             </div>
 
@@ -300,7 +324,7 @@
 
             <div class="flex items-baseline space-x-2 cursor-pointer active:scale-95 transition-transform select-none" onclick="agendarCliqueLogo()" ondblclick="cancelarCliqueLogoEAbrirDev()">
 
-                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.4.1</span>
+                <span class="text-lg font-black tracking-wider text-blue-400">RUMO</span> <span class="text-xs font-mono font-bold text-emerald-400 bg-slate-800 px-1.5 py-0.5 rounded align-middle">v7.4.2</span>
 
                 <span id="header-offline-tag" class="hidden text-[11px] bg-red-600 text-white font-bold px-1.5 py-0.5 rounded animate-pulse">OFFLINE</span>
 
@@ -1611,8 +1635,8 @@
                 <div class="space-y-2">
                     <select id="dev-email-tipo" class="w-full p-2 border rounded bg-white text-sm">
                         <option value="">-- Selecione o tipo de e-mail --</option>
-                        <option value="dia05">📊 Email Dia 15 (Resultado de Operações)</option>
-                        <option value="dia01">📌 Email Dia 01 (Lembrete Mensal)</option>
+                        <option value="dia05">📊 Email Resultado (Evolução da Carteira)</option>
+                        <option value="dia01">📌 Email Lembrete (Fechamento de Mês)</option>
                     </select>
                     <input type="email" id="dev-email-destino" placeholder="E-mail de destino (teste)" class="w-full p-2 border rounded text-sm">
                     <button onclick="dev_dispararEmailManual()" class="w-full bg-blue-600 text-white font-bold text-xs py-2.5 rounded-lg shadow active:scale-95 transition">
@@ -1627,11 +1651,11 @@
                 <p class="text-[11px] text-teal-800 mb-2">Quando ativado, envia automaticamente o Lembrete e o Resultado, às 08h, nos dias configurados abaixo, para os sócios cadastrados que optaram por receber cada um.</p>
                 <div class="grid grid-cols-2 gap-2 mb-2">
                     <div>
-                        <label class="block text-[10px] font-bold text-teal-700 uppercase">Dia — Lembrete (Dia 01)</label>
+                        <label class="block text-[10px] font-bold text-teal-700 uppercase">Dia — Email Lembrete</label>
                         <input type="number" id="dev-dia-email01" min="1" max="28" value="1" class="w-full p-1.5 border rounded text-sm bg-white">
                     </div>
                     <div>
-                        <label class="block text-[10px] font-bold text-teal-700 uppercase">Dia — Resultado (Dia 15)</label>
+                        <label class="block text-[10px] font-bold text-teal-700 uppercase">Dia — Email Resultado</label>
                         <input type="number" id="dev-dia-email15" min="1" max="28" value="15" class="w-full p-1.5 border rounded text-sm bg-white">
                     </div>
                 </div>
@@ -2390,11 +2414,10 @@
 
             timerCliqueLogo = setTimeout(() => {
 
-                voltarParaSplash();
-
-                window.scrollTo({top: 0, behavior: 'smooth'});
-
-                timerCliqueLogo = null;
+                // v7.4.2 — Antes só mostrava a splash de novo (sem buscar nada
+                // novo do servidor). Agora recarrega a página de verdade, para
+                // sempre pegar a versão mais recente publicada.
+                location.reload();
 
             }, 250);
 
@@ -10354,13 +10377,14 @@
                 body: JSON.stringify({
                     rota: "dev_email_manual",
                     tipo: tipo,
-                    destino: destino
+                    destino: destino,
+                    nomeSimulado: socioLogado || 'Sócio'
                 })
             }).then(async (resp) => {
                 const corpo = await resp.json();
                 if (corpo && corpo.status === "sucesso") {
-                    alert("✅ E-mail disparado com sucesso para " + destino);
-                    devLog("EMAIL_MANUAL", "E-mail " + tipo + " enviado para " + destino);
+                    alert("✅ E-mail disparado com sucesso para " + destino + " (saudação como \"" + (socioLogado || 'Sócio') + "\", que é quem está logado agora)");
+                    devLog("EMAIL_MANUAL", "E-mail " + tipo + " enviado para " + destino + " simulando " + (socioLogado || 'Sócio'));
                 } else {
                     alert("⚠️ Erro ao disparar e-mail: " + (corpo?.mensagem || "Desconhecido"));
                 }
@@ -10662,11 +10686,11 @@
                         <div class="flex gap-3 pt-1">
                             <label class="flex items-center gap-1">
                                 <input type="checkbox" class="socio-dia01 w-3.5 h-3.5" ${dia01 ? 'checked' : ''}>
-                                <span>Recebe Dia 01</span>
+                                <span>Email Lembrete</span>
                             </label>
                             <label class="flex items-center gap-1">
                                 <input type="checkbox" class="socio-dia05 w-3.5 h-3.5" ${dia05 ? 'checked' : ''}>
-                                <span>Recebe Dia 15</span>
+                                <span>Email Resultado</span>
                             </label>
                         </div>
                         ${solicitadoTexto}
